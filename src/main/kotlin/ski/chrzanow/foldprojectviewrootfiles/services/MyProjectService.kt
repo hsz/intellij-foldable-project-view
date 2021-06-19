@@ -1,6 +1,6 @@
-package com.github.hsz.foldprojectviewrootfiles.services
+package ski.chrzanow.foldprojectviewrootfiles.services
 
-import com.github.hsz.foldprojectviewrootfiles.MyBundle
+import ski.chrzanow.foldprojectviewrootfiles.MyBundle
 import com.intellij.openapi.project.Project
 
 class MyProjectService(project: Project) {

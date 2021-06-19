@@ -1,6 +1,6 @@
 <idea-plugin>
-    <id>com.github.hsz.foldprojectviewrootfiles</id>
-    <name>fold-projectview-root-files</name>
+    <id>ski.chrzanow.foldprojectviewrootfiles</id>
+    <name>Fold ProjectView Root Files</name>
     <vendor>hsz</vendor>
 
     <!-- Product and plugin compatibility requirements -->
@@ -8,12 +8,13 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.hsz.foldprojectviewrootfiles.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.hsz.foldprojectviewrootfiles.services.MyProjectService"/>
+        <applicationService serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyApplicationService"/>
+        <projectService serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyProjectService"/>
+
     </extensions>
 
     <applicationListeners>
-        <listener class="com.github.hsz.foldprojectviewrootfiles.listeners.MyProjectManagerListener"
+        <listener class="ski.chrzanow.foldprojectviewrootfiles.listeners.MyProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 </idea-plugin>

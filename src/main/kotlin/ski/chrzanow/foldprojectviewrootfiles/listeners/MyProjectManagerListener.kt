@@ -1,6 +1,6 @@
-package com.github.hsz.foldprojectviewrootfiles.listeners
+package ski.chrzanow.foldprojectviewrootfiles.listeners
 
-import com.github.hsz.foldprojectviewrootfiles.services.MyProjectService
+import ski.chrzanow.foldprojectviewrootfiles.services.MyProjectService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
