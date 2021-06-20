@@ -1,10 +1,10 @@
 package ski.chrzanow.foldprojectviewrootfiles.services
 
-import ski.chrzanow.foldprojectviewrootfiles.MyBundle
+import ski.chrzanow.foldprojectviewrootfiles.FoldProjectViewRootFilesBundle
 
 class MyApplicationService {
 
     init {
-        println(MyBundle.message("applicationService"))
+        println(FoldProjectViewRootFilesBundle.message("applicationService"))
     }
 }

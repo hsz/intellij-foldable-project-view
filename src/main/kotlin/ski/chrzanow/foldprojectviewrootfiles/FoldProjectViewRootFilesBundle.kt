@@ -5,9 +5,11 @@ import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.MyBundle"
+private const val BUNDLE = "messages.FoldProjectViewRootFiles"
 
-object MyBundle : AbstractBundle(BUNDLE) {
+object FoldProjectViewRootFilesBundle : AbstractBundle(BUNDLE) {
+
+    const val FOLD_PROJECT_VIEW_ROOT_FILES = "foldProjectViewRootFiles"
 
     @Suppress("SpreadOperator")
     @JvmStatic

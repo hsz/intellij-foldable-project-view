@@ -15,7 +15,7 @@
 
 <!-- Plugin description -->
 
-The Fold ProjectView Root Files is a plugin for the IntelliJ-based IDEs that lets you folding the files located in the root of your project.
+The Fold ProjectView Root Files is a plugin for the IntelliJ-based IDEs that lets you fold the files located in the root of your project.
 
 <!-- Plugin description end -->
 

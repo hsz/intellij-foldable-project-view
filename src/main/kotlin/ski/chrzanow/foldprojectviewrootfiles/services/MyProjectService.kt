@@ -1,11 +1,11 @@
 package ski.chrzanow.foldprojectviewrootfiles.services
 
-import ski.chrzanow.foldprojectviewrootfiles.MyBundle
+import ski.chrzanow.foldprojectviewrootfiles.FoldProjectViewRootFilesBundle
 import com.intellij.openapi.project.Project
 
 class MyProjectService(project: Project) {
 
     init {
-        println(MyBundle.message("projectService", project.name))
+        println(FoldProjectViewRootFilesBundle.message("projectService", project.name))
     }
 }

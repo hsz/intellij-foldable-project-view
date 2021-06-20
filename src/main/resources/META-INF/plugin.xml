@@ -8,13 +8,30 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyApplicationService"/>
-        <projectService serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyProjectService"/>
-
+        <applicationService
+                serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyApplicationService"/>
+        <projectService
+                serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyProjectService"/>
+<!--        <itemPresentationProvider forClass="com.intellij.psi.PsiDirectory"-->
+<!--                                  implementationClass="com.intellij.navigation.DirectoryPresentationProvider"/>-->
+        <treeStructureProvider
+                implementation="ski.chrzanow.foldprojectviewrootfiles.projectView.FoldableTreeStructureProvider"/>
     </extensions>
 
     <applicationListeners>
         <listener class="ski.chrzanow.foldprojectviewrootfiles.listeners.MyProjectManagerListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
+
+    <actions>
+        <action id="ProjectView.FoldRootFiles"
+                class="ski.chrzanow.foldprojectviewrootfiles.actionSystem.FoldRootFilesAction"
+                text="Fold Root Files"
+                description="Action that lets you fold the files located in the root of your project">
+            <add-to-group
+                    group-id="ProjectView.ToolWindow.SecondaryActions"
+                    relative-to-action="ProjectView.FlattenPackages"
+                    anchor="before"/>
+        </action>
+    </actions>
 </idea-plugin>
