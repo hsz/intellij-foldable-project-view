@@ -1,15 +1,15 @@
-package ski.chrzanow.foldprojectviewrootfiles
+package ski.chrzanow.foldableprojectview
 
 import com.intellij.AbstractBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.FoldProjectViewRootFiles"
+private const val BUNDLE = "messages.FoldableProjectView"
 
-object FoldProjectViewRootFilesBundle : AbstractBundle(BUNDLE) {
+object FoldableProjectViewBundle : AbstractBundle(BUNDLE) {
 
-    const val FOLD_PROJECT_VIEW_ROOT_FILES = "foldProjectViewRootFiles"
+    const val PROJECT_VIEW_FOLDING_ENABLED = "projectViewFoldingEnabled"
 
     @Suppress("SpreadOperator")
     @JvmStatic

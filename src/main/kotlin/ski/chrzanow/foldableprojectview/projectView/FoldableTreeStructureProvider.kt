@@ -1,4 +1,4 @@
-package ski.chrzanow.foldprojectviewrootfiles.projectView
+package ski.chrzanow.foldableprojectview.projectView
 
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
@@ -6,7 +6,7 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.guessProjectDir
-import ski.chrzanow.foldprojectviewrootfiles.isFoldingEnabled
+import ski.chrzanow.foldableprojectview.isFoldingEnabled
 
 
 class FoldableTreeStructureProvider : TreeStructureProvider {

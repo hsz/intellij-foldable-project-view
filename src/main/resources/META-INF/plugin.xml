@@ -1,31 +1,25 @@
 <idea-plugin>
-    <id>ski.chrzanow.foldprojectviewrootfiles</id>
-    <name>Fold ProjectView Root Files</name>
+    <id>ski.chrzanow.foldableprojectview</id>
+    <name>Foldable ProjectView</name>
     <vendor>hsz</vendor>
 
-    <!-- Product and plugin compatibility requirements -->
-    <!-- https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <applicationService
-                serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyApplicationService"/>
-        <projectService
-                serviceImplementation="ski.chrzanow.foldprojectviewrootfiles.services.MyProjectService"/>
-<!--        <itemPresentationProvider forClass="com.intellij.psi.PsiDirectory"-->
-<!--                                  implementationClass="com.intellij.navigation.DirectoryPresentationProvider"/>-->
-        <treeStructureProvider
-                implementation="ski.chrzanow.foldprojectviewrootfiles.projectView.FoldableTreeStructureProvider"/>
-    </extensions>
+        <projectConfigurable
+                groupId="tools"
+                key="foldableProjectView.name"
+                bundle="messages.FoldableProjectView"
+                id="preferences.packagesearch.PackageSearchGeneralConfigurable"
+                instance="ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"/>
 
-    <applicationListeners>
-        <listener class="ski.chrzanow.foldprojectviewrootfiles.listeners.MyProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
+        <treeStructureProvider
+                implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
+    </extensions>
 
     <actions>
         <action id="ProjectView.FoldRootFiles"
-                class="ski.chrzanow.foldprojectviewrootfiles.actionSystem.FoldRootFilesAction"
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction"
                 text="Fold Root Files"
                 description="Action that lets you fold the files located in the root of your project">
             <add-to-group

@@ -1,6 +1,6 @@
-# Fold ProjectView Root Files
+# Foldable ProjectView
 
-![Build](https://github.com/hsz/fold-projectview-root-files/workflows/Build/badge.svg)
+![Build](https://github.com/hsz/intellij-foldable-projectview/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 
@@ -15,7 +15,7 @@
 
 <!-- Plugin description -->
 
-The Fold ProjectView Root Files is a plugin for the IntelliJ-based IDEs that lets you fold the files located in the root of your project.
+The Foldable ProjectView is a plugin for the IntelliJ-based IDEs that lets you fold the files located in the root of your project.
 
 <!-- Plugin description end -->
 
@@ -23,12 +23,12 @@ The Fold ProjectView Root Files is a plugin for the IntelliJ-based IDEs that let
 
 - Using IDE built-in plugin system:
   
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "fold-projectview-root-files"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Foldable ProjectView"</kbd> >
   <kbd>Install Plugin</kbd>
   
 - Manually:
 
-  Download the [latest release](https://github.com/hsz/fold-projectview-root-files/releases/latest) and install it manually using
+  Download the [latest release](https://github.com/hsz/intellij-foldable-projectview/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 

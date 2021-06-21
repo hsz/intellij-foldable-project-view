@@ -1,1 +1,1 @@
-rootProject.name = "fold-projectview-root-files"
+rootProject.name = "Foldable ProjectView"

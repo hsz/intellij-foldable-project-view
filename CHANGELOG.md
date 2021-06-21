@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# fold-projectview-root-files Changelog
+# Foldable ProjectView Changelog
 
 ## [Unreleased]
 ### Added
