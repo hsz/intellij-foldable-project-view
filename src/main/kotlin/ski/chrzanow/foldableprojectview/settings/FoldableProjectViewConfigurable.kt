@@ -48,7 +48,15 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
         }
 
         // TODO: [X] Fold submodules
-        // TODO: [X] Hide group if no items were folded
+
+        row(message("foldableProjectView.settings.hideEmptyGroups")) {
+            checkBox(
+                message("foldableProjectView.settings.hideEmptyGroups.text"),
+                settings::hideEmptyGroups,
+                message("foldableProjectView.settings.hideEmptyGroups.comment"),
+            )
+        }
+
         // TODO: [X] Case insensitive
 
         row(message("foldableProjectView.settings.patterns")) {

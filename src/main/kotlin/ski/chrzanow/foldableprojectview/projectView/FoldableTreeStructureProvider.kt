@@ -46,7 +46,6 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 //            return children
 //        }
 
-//            .filterIsInstance(PsiFileNode::class.java)
         val rootFiles = children
             .filter {
                 when (it) {
@@ -65,6 +64,10 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                     patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
                 } ?: false
             }
+
+        if (rootFiles.isEmpty() && settings.hideEmptyGroups) {
+            return children
+        }
 
         val node = FoldableProjectViewNode(project, viewSettings, rootFiles)
         return children - rootFiles + node

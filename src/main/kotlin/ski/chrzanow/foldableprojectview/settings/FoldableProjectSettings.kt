@@ -16,7 +16,10 @@ class FoldableProjectSettings : BaseState(), PersistentStateComponent<FoldablePr
     @get:OptionTag("FOLD_DIRECTORIES")
     var foldDirectories by property(true)
 
-    @get:OptionTag("FOLDING_ENABLED")
+    @get:OptionTag("HIDE_EMPTY_GROUPS")
+    var hideEmptyGroups by property(true)
+
+    @get:OptionTag("PATTERNS")
     var patterns by string("")
 
     override fun getState() = this
