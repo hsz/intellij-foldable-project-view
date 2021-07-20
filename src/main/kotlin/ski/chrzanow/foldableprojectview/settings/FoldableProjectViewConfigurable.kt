@@ -15,12 +15,10 @@ import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleColoredComponent
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.TitledSeparator
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.layout.panel
 import com.intellij.util.IconUtil
 import com.intellij.util.PlatformIcons
 import com.intellij.util.ui.FormBuilder
-import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.AbstractFileTreeTable
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import javax.swing.JComponent
@@ -33,22 +31,21 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
     private val builder = FormBuilder.createFormBuilder()
     private val settings = project.service<FoldableProjectSettings>()
     private val panel = panel {
-        row {
+        row(message("foldableProjectView.settings.foldingEnabled")) {
             checkBox(
-                message("foldableProjectView.settings.foldingEnabled"),
+                message("foldableProjectView.settings.foldingEnabled.text"),
                 settings::foldingEnabled,
                 message("foldableProjectView.settings.foldingEnabled.comment"),
             )
         }
 
-        row {
+        row(message("foldableProjectView.settings.patterns")) {
             expandableTextField(
                 { settings.patterns ?: "" },
                 { settings.patterns = it },
-            )
+            ).comment(message("foldableProjectView.settings.patterns.comment"))
             //.wrapToLabeledComponent(message("DockerContainerSettingsUI.entrypoint.text"))
             //.applyToComponent { emptyText.text = EFFECTIVE_DEFAULT_BUILD_OPTIONS }
-
         }
     }
 
@@ -70,22 +67,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
             TitledSeparator(message("foldableProjectView.name")),
             0
         )
-
-//        builder.addLabeledComponent(
-//            message("foldableProjectView.pattern"),
-//            patterns,
-//        )
-        builder.addLabeledComponent(
-            null,
-            JBLabel(message("foldableProjectView.pattern.toolTip")).apply {
-                componentStyle = UIUtil.ComponentStyle.SMALL
-                fontColor = UIUtil.FontColor.BRIGHTER
-            },
-        )
-
-        // TODO: [X] Filter files only
-        // TODO: [X] Hide group if no items were folded
-        // TODO: [X] Fold submodules
 
         val patternCache = PatternCache.getInstance(project)
         val fileIndex = ProjectRootManager.getInstance(project).fileIndex

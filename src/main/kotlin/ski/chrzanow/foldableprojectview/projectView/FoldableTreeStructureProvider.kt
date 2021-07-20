@@ -9,6 +9,7 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
+import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
 
@@ -51,10 +52,9 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
                 else -> node.name
             } ?: ""
 
-//            settings.patterns?.any { pattern ->
-//                patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
-//            }
-            false
+            settings.patterns?.split(' ')?.any { pattern ->
+                patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
+            } ?: false
         }
         val node = FoldableProjectViewNode(project, viewSettings, rootFiles)
         return children - rootFiles + node
