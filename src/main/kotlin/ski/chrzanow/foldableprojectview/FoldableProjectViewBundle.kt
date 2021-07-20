@@ -5,9 +5,10 @@ import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-private const val BUNDLE = "messages.FoldableProjectView"
+object FoldableProjectViewBundle : AbstractBundle("messages.FoldableProjectView") {
 
-object FoldableProjectViewBundle : AbstractBundle(BUNDLE) {
+    @NonNls
+    const val BUNDLE = "messages.FoldableProjectView"
 
     const val PROJECT_VIEW_FOLDING_ENABLED = "projectViewFoldingEnabled"
 

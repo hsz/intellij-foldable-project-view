@@ -2,11 +2,12 @@ package ski.chrzanow.foldableprojectview.actionSystem
 
 import com.intellij.ide.projectView.ProjectView
 import com.intellij.openapi.actionSystem.ToggleOptionAction
+import com.intellij.openapi.project.DumbAware
 import ski.chrzanow.foldableprojectview.isFoldingEnabled
 import ski.chrzanow.foldableprojectview.setFoldingEnabled
 import java.util.function.Function
 
-class FoldRootFilesAction : ToggleOptionAction(Function {
+class FoldRootFilesAction : DumbAware, ToggleOptionAction(Function {
     object : Option {
 
         override fun isSelected() = isFoldingEnabled()

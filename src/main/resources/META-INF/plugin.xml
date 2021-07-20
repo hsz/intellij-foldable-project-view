@@ -13,6 +13,9 @@
                 id="preferences.packagesearch.PackageSearchGeneralConfigurable"
                 instance="ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"/>
 
+        <projectService
+                serviceImplementation="ski.chrzanow.foldableprojectview.options.FoldableProjectConfiguration"/>
+
         <treeStructureProvider
                 implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
     </extensions>
