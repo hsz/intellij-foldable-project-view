@@ -5,6 +5,7 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
+import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -13,7 +14,7 @@ import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
 
-class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider {
+class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
     private val settings = project.service<FoldableProjectSettings>()
     private val patternCache = PatternCache.getInstance(project)
@@ -46,16 +47,25 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 //        }
 
 //            .filterIsInstance(PsiFileNode::class.java)
-        val rootFiles = children.filter { node ->
-            val name = when (node) {
-                is ProjectViewNode -> node.virtualFile?.name ?: node.name
-                else -> node.name
-            } ?: ""
+        val rootFiles = children
+            .filter {
+                when (it) {
+                    is PsiDirectoryNode -> settings.foldDirectories
+                    is PsiFileNode -> true
+                    else -> false
+                }
+            }
+            .filter { node ->
+                val name = when (node) {
+                    is ProjectViewNode -> node.virtualFile?.name ?: node.name
+                    else -> node.name
+                } ?: ""
 
-            settings.patterns?.split(' ')?.any { pattern ->
-                patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
-            } ?: false
-        }
+                settings.patterns?.split(' ')?.any { pattern ->
+                    patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
+                } ?: false
+            }
+
         val node = FoldableProjectViewNode(project, viewSettings, rootFiles)
         return children - rootFiles + node
     }

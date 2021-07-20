@@ -39,6 +39,18 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
             )
         }
 
+        row(message("foldableProjectView.settings.foldDirectories")) {
+            checkBox(
+                message("foldableProjectView.settings.foldDirectories.text"),
+                settings::foldDirectories,
+                message("foldableProjectView.settings.foldDirectories.comment"),
+            )
+        }
+
+        // TODO: [X] Fold submodules
+        // TODO: [X] Hide group if no items were folded
+        // TODO: [X] Case insensitive
+
         row(message("foldableProjectView.settings.patterns")) {
             expandableTextField(
                 { settings.patterns ?: "" },

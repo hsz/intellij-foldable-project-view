@@ -13,6 +13,9 @@ class FoldableProjectSettings : BaseState(), PersistentStateComponent<FoldablePr
     @get:OptionTag("FOLDING_ENABLED")
     var foldingEnabled by property(true)
 
+    @get:OptionTag("FOLD_DIRECTORIES")
+    var foldDirectories by property(true)
+
     @get:OptionTag("FOLDING_ENABLED")
     var patterns by string("")
 
