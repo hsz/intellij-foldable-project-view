@@ -11,10 +11,10 @@
                 key="foldableProjectView.name"
                 bundle="messages.FoldableProjectView"
                 id="preferences.packagesearch.PackageSearchGeneralConfigurable"
-                instance="ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"/>
+                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
         <projectService
-                serviceImplementation="ski.chrzanow.foldableprojectview.options.FoldableProjectConfiguration"/>
+                serviceImplementation="ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings"/>
 
         <treeStructureProvider
                 implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>

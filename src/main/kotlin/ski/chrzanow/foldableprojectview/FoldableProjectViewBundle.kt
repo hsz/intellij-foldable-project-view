@@ -10,8 +10,6 @@ object FoldableProjectViewBundle : AbstractBundle("messages.FoldableProjectView"
     @NonNls
     const val BUNDLE = "messages.FoldableProjectView"
 
-    const val PROJECT_VIEW_FOLDING_ENABLED = "projectViewFoldingEnabled"
-
     @Suppress("SpreadOperator")
     @JvmStatic
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =

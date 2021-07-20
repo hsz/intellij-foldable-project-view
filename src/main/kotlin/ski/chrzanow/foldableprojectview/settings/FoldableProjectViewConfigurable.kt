@@ -1,7 +1,8 @@
-package ski.chrzanow.foldableprojectview.options
+package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.impl.ProjectViewTree
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -10,59 +11,73 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
-import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
-import com.intellij.ui.DocumentAdapter
-import com.intellij.ui.RawCommandLineEditor
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleColoredComponent
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.TitledSeparator
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.layout.panel
 import com.intellij.util.IconUtil
 import com.intellij.util.PlatformIcons
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.AbstractFileTreeTable
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import javax.swing.JComponent
 import javax.swing.JTree
-import javax.swing.event.DocumentEvent
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 
 class FoldableProjectViewConfigurable(private val project: Project) : SearchableConfigurable {
 
     private val builder = FormBuilder.createFormBuilder()
-    private val settings = project.service<FoldableProjectConfiguration>()
+    private val settings = project.service<FoldableProjectSettings>()
+    private val panel = panel {
+        row {
+            checkBox(
+                message("foldableProjectView.settings.foldingEnabled"),
+                settings::foldingEnabled,
+                message("foldableProjectView.settings.foldingEnabled.comment"),
+            )
+        }
+
+        row {
+            expandableTextField(
+                { settings.patterns ?: "" },
+                { settings.patterns = it },
+            )
+            //.wrapToLabeledComponent(message("DockerContainerSettingsUI.entrypoint.text"))
+            //.applyToComponent { emptyText.text = EFFECTIVE_DEFAULT_BUILD_OPTIONS }
+
+        }
+    }
 
     companion object {
         const val ID = "ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"
     }
 
-    private val patterns = RawCommandLineEditor().apply {
-        textField.toolTipText = FoldableProjectViewBundle.message("foldableProjectView.pattern.toolTip")
-        textField.text = settings.patterns.joinToString(" ")
-    }
+//    private val patterns = RawCommandLineEditor().apply {
+//        textField.toolTipText = message("foldableProjectView.pattern.toolTip")
+//        textField.text = settings.patterns.joinToString(" ")
+//    }
 
-    private val patternsList: List<String>
-        get() = patterns.text.trim().split(' ').filter(String::isNotEmpty)
+//    private val patternsList: List<String>
+//        get() = patterns.text.trim().split(' ').filter(String::isNotEmpty)
 
 
-    override fun createComponent(): JComponent? {
+    override fun createComponent(): JComponent {
         builder.addComponent(
-            TitledSeparator(FoldableProjectViewBundle.message("foldableProjectView.name")),
+            TitledSeparator(message("foldableProjectView.name")),
             0
         )
 
-        // TODO: [X] isFoldingEnabled
-
-        builder.addLabeledComponent(
-            FoldableProjectViewBundle.message("foldableProjectView.pattern"),
-            patterns,
-        )
+//        builder.addLabeledComponent(
+//            message("foldableProjectView.pattern"),
+//            patterns,
+//        )
         builder.addLabeledComponent(
             null,
-            JBLabel(FoldableProjectViewBundle.message("foldableProjectView.pattern.toolTip")).apply {
+            JBLabel(message("foldableProjectView.pattern.toolTip")).apply {
                 componentStyle = UIUtil.ComponentStyle.SMALL
                 fontColor = UIUtil.FontColor.BRIGHTER
             },
@@ -97,9 +112,10 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     clear()
 
                     val isModule = modules.any { it == file }
-                    val isMatched = patternsList.any {
-                        patternCache.createPattern(it, Syntax.GLOB)?.matcher(file.name)?.matches() ?: false
-                    }
+//                    val isMatched = patternsList.any {
+//                        patternCache.createPattern(it, Syntax.GLOB)?.matcher(file.name)?.matches() ?: false
+//                    }
+                    val isMatched = false
                     append(file.name, when {
                         isModule -> SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
                         isMatched -> SimpleTextAttributes.GRAY_ATTRIBUTES
@@ -117,27 +133,37 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
             expandRow(0)
         }
 
-        patterns.editorField.document.addDocumentListener(object : DocumentAdapter() {
-            override fun textChanged(e: DocumentEvent) {
-                tree.component.repaint()
-            }
-        })
+//        patterns.editorField.document.addDocumentListener(object : DocumentAdapter() {
+//            override fun textChanged(e: DocumentEvent) {
+//                tree.component.repaint()
+//            }
+//        })
 
         builder.addLabeledComponent(
-            FoldableProjectViewBundle.message("foldableProjectView.preview"),
+            message("foldableProjectView.preview"),
             ScrollPaneFactory.createScrollPane(tree),
         )
 
-        return builder.panel
+//        return builder.panel
+
+        return panel
     }
 
-    override fun isModified() = !settings.patterns.containsAll(patternsList) || !patternsList.containsAll(settings.patterns)
+//    private fun patternsField() = patterns
+
+    override fun isModified() = panel.isModified()
 
     override fun apply() {
-        settings.patterns = patternsList
+        panel.apply()
+        ApplicationManager.getApplication()
+            .messageBus
+            .syncPublisher(FoldableProjectSettingsListener.TOPIC)
+            .settingsChanged(settings)
     }
 
-    override fun getDisplayName() = FoldableProjectViewBundle.message("foldableProjectView.name")
+    override fun reset() = panel.reset()
+
+    override fun getDisplayName() = message("foldableProjectView.name")
 
     override fun getId() = ID
 }
