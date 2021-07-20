@@ -57,7 +57,13 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
             )
         }
 
-        // TODO: [X] Case insensitive
+        row(message("foldableProjectView.settings.caseInsensitive")) {
+            checkBox(
+                message("foldableProjectView.settings.caseInsensitive.text"),
+                settings::caseInsensitive,
+                message("foldableProjectView.settings.caseInsensitive.comment"),
+            )
+        }
 
         row(message("foldableProjectView.settings.patterns")) {
             expandableTextField(

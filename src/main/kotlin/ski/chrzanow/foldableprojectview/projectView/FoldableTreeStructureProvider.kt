@@ -58,11 +58,12 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                 val name = when (node) {
                     is ProjectViewNode -> node.virtualFile?.name ?: node.name
                     else -> node.name
-                } ?: ""
+                }.caseInsensitive()
 
-                settings.patterns?.split(' ')?.any { pattern ->
-                    patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
-                } ?: false
+                settings.patterns
+                    .caseInsensitive()
+                    .split(' ')
+                    .any { patternCache?.createPattern(it, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
             }
 
         if (rootFiles.isEmpty() && settings.hideEmptyGroups) {
@@ -71,5 +72,11 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
         val node = FoldableProjectViewNode(project, viewSettings, rootFiles)
         return children - rootFiles + node
+    }
+
+    private fun String?.caseInsensitive() = when {
+        this == null -> ""
+        settings.caseInsensitive -> toLowerCase()
+        else -> this
     }
 }
