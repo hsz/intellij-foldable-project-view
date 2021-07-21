@@ -11,14 +11,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
+import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleColoredComponent
 import com.intellij.ui.SimpleTextAttributes
-import com.intellij.ui.TitledSeparator
+import com.intellij.ui.layout.CCFlags
+import com.intellij.ui.layout.applyToComponent
 import com.intellij.ui.layout.panel
 import com.intellij.util.IconUtil
 import com.intellij.util.PlatformIcons
-import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.tree.AbstractFileTreeTable
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import javax.swing.JComponent
@@ -28,50 +29,62 @@ import javax.swing.tree.DefaultTreeModel
 
 class FoldableProjectViewConfigurable(private val project: Project) : SearchableConfigurable {
 
-    private val builder = FormBuilder.createFormBuilder()
     private val settings = project.service<FoldableProjectSettings>()
     private val panel = panel {
-        row(message("foldableProjectView.settings.foldingEnabled")) {
+        row {
             checkBox(
-                message("foldableProjectView.settings.foldingEnabled.text"),
+                message("foldableProjectView.settings.foldingEnabled"),
                 settings::foldingEnabled,
-                message("foldableProjectView.settings.foldingEnabled.comment"),
             )
+                .comment(message("foldableProjectView.settings.foldingEnabled.comment"), 120)
+                .applyToComponent { setMnemonic('e') }
         }
 
-        row(message("foldableProjectView.settings.foldDirectories")) {
+        row {
             checkBox(
-                message("foldableProjectView.settings.foldDirectories.text"),
+                message("foldableProjectView.settings.foldDirectories"),
                 settings::foldDirectories,
-                message("foldableProjectView.settings.foldDirectories.comment"),
             )
+                .comment(message("foldableProjectView.settings.foldDirectories.comment"), 120)
+                .applyToComponent { setMnemonic('d') }
         }
 
         // TODO: [X] Fold submodules
 
-        row(message("foldableProjectView.settings.hideEmptyGroups")) {
+        row {
             checkBox(
-                message("foldableProjectView.settings.hideEmptyGroups.text"),
+                message("foldableProjectView.settings.hideEmptyGroups"),
                 settings::hideEmptyGroups,
-                message("foldableProjectView.settings.hideEmptyGroups.comment"),
             )
+                .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), 120)
+                .applyToComponent { setMnemonic('h') }
         }
 
-        row(message("foldableProjectView.settings.caseInsensitive")) {
+        row {
             checkBox(
-                message("foldableProjectView.settings.caseInsensitive.text"),
+                message("foldableProjectView.settings.caseInsensitive"),
                 settings::caseInsensitive,
-                message("foldableProjectView.settings.caseInsensitive.comment"),
             )
+                .comment(message("foldableProjectView.settings.caseInsensitive.comment"), 120)
+                .applyToComponent { setMnemonic('c') }
         }
 
-        row(message("foldableProjectView.settings.patterns")) {
-            expandableTextField(
-                { settings.patterns ?: "" },
-                { settings.patterns = it },
-            ).comment(message("foldableProjectView.settings.patterns.comment"))
-            //.wrapToLabeledComponent(message("DockerContainerSettingsUI.entrypoint.text"))
-            //.applyToComponent { emptyText.text = EFFECTIVE_DEFAULT_BUILD_OPTIONS }
+        titledRow("Folding rules") {
+            row {
+                expandableTextField(
+                    { settings.patterns ?: "" },
+                    { settings.patterns = it },
+                )
+                    .comment(message("foldableProjectView.settings.patterns.comment"), 120)
+                    .constraints(CCFlags.growX)
+                    .applyToComponent {
+                        emptyText.text = message("foldableProjectView.settings.patterns")
+                    }
+            }
+
+            row(message("foldableProjectView.settings.preview")) {
+                preview()
+            }
         }
     }
 
@@ -79,21 +92,25 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
         const val ID = "ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"
     }
 
-//    private val patterns = RawCommandLineEditor().apply {
-//        textField.toolTipText = message("foldableProjectView.pattern.toolTip")
-//        textField.text = settings.patterns.joinToString(" ")
-//    }
+    override fun getId() = ID
 
-//    private val patternsList: List<String>
-//        get() = patterns.text.trim().split(' ').filter(String::isNotEmpty)
+    override fun getDisplayName() = message("foldableProjectView.name")
 
+    override fun createComponent() = panel
 
-    override fun createComponent(): JComponent {
-        builder.addComponent(
-            TitledSeparator(message("foldableProjectView.name")),
-            0
-        )
+    override fun isModified() = panel.isModified()
 
+    override fun apply() {
+        panel.apply()
+        ApplicationManager.getApplication()
+            .messageBus
+            .syncPublisher(FoldableProjectSettingsListener.TOPIC)
+            .settingsChanged(settings)
+    }
+
+    override fun reset() = panel.reset()
+
+    private fun preview(): JComponent {
         val patternCache = PatternCache.getInstance(project)
         val fileIndex = ProjectRootManager.getInstance(project).fileIndex
         val modules = ModuleManager.getInstance(project).modules.map(Module::guessModuleDir)
@@ -118,59 +135,38 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
 
                     clear()
 
+                    val name = file.name.caseInsensitive()
+                    val isDirectory = file.isDirectory
                     val isModule = modules.any { it == file }
-//                    val isMatched = patternsList.any {
-//                        patternCache.createPattern(it, Syntax.GLOB)?.matcher(file.name)?.matches() ?: false
-//                    }
-                    val isMatched = false
+                    val isMatched = settings.patterns
+                        .caseInsensitive()
+                        .split(' ')
+                        .any { patternCache?.createPattern(it, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
+
                     append(file.name, when {
                         isModule -> SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
+                        isDirectory && !settings.foldDirectories -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                         isMatched -> SimpleTextAttributes.GRAY_ATTRIBUTES
                         else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                     })
 
                     icon = when {
-                        !file.isDirectory -> IconUtil.getIcon(file, 0, null)
+                        !isDirectory -> IconUtil.getIcon(file, 0, null)
                         fileIndex.isExcluded(file) -> AllIcons.Modules.ExcludeRoot
                         else -> PlatformIcons.FOLDER_ICON
                     }
+                }
+
+                private fun String?.caseInsensitive() = when {
+                    this == null -> ""
+                    settings.caseInsensitive -> toLowerCase()
+                    else -> this
                 }
             }
 
             expandRow(0)
         }
 
-//        patterns.editorField.document.addDocumentListener(object : DocumentAdapter() {
-//            override fun textChanged(e: DocumentEvent) {
-//                tree.component.repaint()
-//            }
-//        })
-
-        builder.addLabeledComponent(
-            message("foldableProjectView.preview"),
-            ScrollPaneFactory.createScrollPane(tree),
-        )
-
-//        return builder.panel
-
-        return panel
+        return ScrollPaneFactory.createScrollPane(tree)
     }
-
-//    private fun patternsField() = patterns
-
-    override fun isModified() = panel.isModified()
-
-    override fun apply() {
-        panel.apply()
-        ApplicationManager.getApplication()
-            .messageBus
-            .syncPublisher(FoldableProjectSettingsListener.TOPIC)
-            .settingsChanged(settings)
-    }
-
-    override fun reset() = panel.reset()
-
-    override fun getDisplayName() = message("foldableProjectView.name")
-
-    override fun getId() = ID
 }
