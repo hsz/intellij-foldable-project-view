@@ -8,6 +8,7 @@ import com.intellij.openapi.observable.properties.GraphPropertyImpl.Companion.gr
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
+import com.intellij.ui.ContextHelpLabel
 import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.layout.CCFlags
 import com.intellij.ui.layout.ComponentPredicate
@@ -69,6 +70,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), -1)
                     .applyToComponent { setMnemonic('h') }
                     .enableIf(foldingEnabledPredicate)
+                    .apply { hideAllGroupsProperty.afterPropagation { enabled = !hideAllGroupsProperty.get() } }
             }
 
             row {
@@ -80,6 +82,11 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     .comment(message("foldableProjectView.settings.hideAllGroups.comment"), -1)
                     .applyToComponent { setMnemonic('i') }
                     .enableIf(foldingEnabledPredicate)
+
+                ContextHelpLabel.create(
+                    message("foldableProjectView.settings.hideAllGroups.help"),
+                    message("foldableProjectView.settings.hideAllGroups.help.description"),
+                )()
             }
 
             row {
