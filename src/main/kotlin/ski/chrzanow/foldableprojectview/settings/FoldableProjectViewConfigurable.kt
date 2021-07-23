@@ -101,7 +101,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
             }
         }
 
-        titledRow("Folding rules") {
+        titledRow(message("foldableProjectView.settings.foldingRules")) {
             row {
                 expandableTextField(patternsProperty)
                     .withTextBinding(settings::patterns.toNullableBinding(""))

@@ -20,8 +20,10 @@ class FoldRootFilesAction : DumbAware, ToggleOptionAction(Function {
             settings?.foldingEnabled = selected
 
             if (updated) {
-                val view = ProjectView.getInstance(it.project)
-                view.currentProjectViewPane?.updateFromRoot(true)
+                it.project?.let { project ->
+                    val view = ProjectView.getInstance(project)
+                    view.currentProjectViewPane?.updateFromRoot(true)
+                }
             }
         }
     }
