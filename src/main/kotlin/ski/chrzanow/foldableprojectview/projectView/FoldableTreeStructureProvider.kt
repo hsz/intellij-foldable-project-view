@@ -13,20 +13,24 @@ import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
+import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 
 class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
     private val settings = project.service<FoldableProjectSettings>()
-    private val patternCache = PatternCache.getInstance(project)
-    private val connection = project.messageBus.connect(project)
-    private val view = ProjectView.getInstance(project)
+    private var previewState: FoldableProjectState? = null
+    private val state get() = previewState ?: settings
 
     init {
-        connection.subscribe(FoldableProjectSettingsListener.TOPIC, object : FoldableProjectSettingsListener {
-            override fun settingsChanged(settings: FoldableProjectSettings) {
-                view.currentProjectViewPane?.updateFromRoot(true)
-            }
-        })
+        val view = ProjectView.getInstance(project)
+
+        project.messageBus
+            .connect(project)
+            .subscribe(FoldableProjectSettingsListener.TOPIC, object : FoldableProjectSettingsListener {
+                override fun settingsChanged(settings: FoldableProjectSettings) {
+                    view.currentProjectViewPane?.updateFromRoot(true)
+                }
+            })
     }
 
     override fun modify(
@@ -35,8 +39,9 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         viewSettings: ViewSettings?,
     ): Collection<AbstractTreeNode<*>> {
         val project = parent.project ?: return children
+        val patternCache = PatternCache.getInstance(project)
 
-        if (!settings.foldingEnabled) {
+        if (!state.foldingEnabled) {
             return children
         }
         if (parent !is PsiDirectoryNode) {
@@ -49,7 +54,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         val rootFiles = children
             .filter {
                 when (it) {
-                    is PsiDirectoryNode -> settings.foldDirectories
+                    is PsiDirectoryNode -> state.foldDirectories
                     is PsiFileNode -> true
                     else -> false
                 }
@@ -60,13 +65,13 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                     else -> node.name
                 }.caseInsensitive()
 
-                settings.patterns
+                state.patterns
                     .caseInsensitive()
                     .split(' ')
                     .any { patternCache?.createPattern(it, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
             }
 
-        if (rootFiles.isEmpty() && settings.hideEmptyGroups) {
+        if (rootFiles.isEmpty() && state.hideEmptyGroups) {
             return children
         }
 
@@ -76,7 +81,11 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
     private fun String?.caseInsensitive() = when {
         this == null -> ""
-        settings.caseInsensitive -> toLowerCase()
+        state.caseInsensitive -> toLowerCase()
         else -> this
+    }
+
+    fun withState(state: FoldableProjectState) {
+        previewState = state
     }
 }

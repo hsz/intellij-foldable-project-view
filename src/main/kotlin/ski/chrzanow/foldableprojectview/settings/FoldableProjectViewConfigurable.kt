@@ -1,89 +1,119 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.icons.AllIcons
-import com.intellij.ide.projectView.impl.ProjectViewTree
+import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure
+import com.intellij.ide.projectView.impl.ProjectViewPane
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.observable.properties.GraphPropertyImpl.Companion.graphProperty
+import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessModuleDir
-import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
-import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
-import com.intellij.ui.ScrollPaneFactory
-import com.intellij.ui.SimpleColoredComponent
-import com.intellij.ui.SimpleTextAttributes
+import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.layout.CCFlags
+import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.ui.layout.applyToComponent
 import com.intellij.ui.layout.panel
-import com.intellij.util.IconUtil
-import com.intellij.util.PlatformIcons
-import com.intellij.util.ui.tree.AbstractFileTreeTable
+import com.intellij.ui.layout.selected
+import com.intellij.ui.layout.toBinding
+import com.intellij.ui.layout.toNullableBinding
+import com.intellij.ui.layout.withSelectedBinding
+import com.intellij.ui.layout.withTextBinding
+import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import javax.swing.JComponent
-import javax.swing.JTree
-import javax.swing.tree.DefaultTreeCellRenderer
-import javax.swing.tree.DefaultTreeModel
+import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
+import javax.swing.BorderFactory.createEmptyBorder
 
 class FoldableProjectViewConfigurable(private val project: Project) : SearchableConfigurable {
 
     private val settings = project.service<FoldableProjectSettings>()
-    private val panel = panel {
-        row {
-            checkBox(
-                message("foldableProjectView.settings.foldingEnabled"),
-                settings::foldingEnabled,
-            )
-                .comment(message("foldableProjectView.settings.foldingEnabled.comment"), 120)
-                .applyToComponent { setMnemonic('e') }
-        }
+    private val propertyGraph = PropertyGraph()
+    private val foldingEnabledProperty = propertyGraph.graphProperty { settings.foldingEnabled }
+    private val foldDirectoriesProperty = propertyGraph.graphProperty { settings.foldDirectories }
+    private val hideEmptyGroupsProperty = propertyGraph.graphProperty { settings.hideEmptyGroups }
+    private val caseInsensitiveProperty = propertyGraph.graphProperty { settings.caseInsensitive }
+    private val patternsProperty = propertyGraph.graphProperty { settings.patterns ?: "" }
 
-        row {
-            checkBox(
-                message("foldableProjectView.settings.foldDirectories"),
-                settings::foldDirectories,
-            )
-                .comment(message("foldableProjectView.settings.foldDirectories.comment"), 120)
-                .applyToComponent { setMnemonic('d') }
-        }
+    private lateinit var foldingEnabledPredicate: ComponentPredicate
 
-        // TODO: [X] Fold submodules
+    private val settingsPanel = panel {
+        blockRow {
+            row {
+                checkBox(
+                    message("foldableProjectView.settings.foldingEnabled"),
+                    foldingEnabledProperty,
+                )
+                    .withSelectedBinding(settings::foldingEnabled.toBinding())
+                    .comment(message("foldableProjectView.settings.foldingEnabled.comment"), -1)
+                    .applyToComponent { setMnemonic('e') }
+                    .apply { foldingEnabledPredicate = selected }
+            }
 
-        row {
-            checkBox(
-                message("foldableProjectView.settings.hideEmptyGroups"),
-                settings::hideEmptyGroups,
-            )
-                .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), 120)
-                .applyToComponent { setMnemonic('h') }
-        }
+            row {
+                checkBox(
+                    message("foldableProjectView.settings.foldDirectories"),
+                    foldDirectoriesProperty,
+                )
+                    .withSelectedBinding(settings::foldDirectories.toBinding())
+                    .comment(message("foldableProjectView.settings.foldDirectories.comment"), -1)
+                    .applyToComponent { setMnemonic('d') }
+                    .enableIf(foldingEnabledPredicate)
+            }
 
-        row {
-            checkBox(
-                message("foldableProjectView.settings.caseInsensitive"),
-                settings::caseInsensitive,
-            )
-                .comment(message("foldableProjectView.settings.caseInsensitive.comment"), 120)
-                .applyToComponent { setMnemonic('c') }
+            // TODO: [X] Fold submodules
+
+            row {
+                checkBox(
+                    message("foldableProjectView.settings.hideEmptyGroups"),
+                    hideEmptyGroupsProperty,
+                )
+                    .withSelectedBinding(settings::hideEmptyGroups.toBinding())
+                    .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), -1)
+                    .applyToComponent { setMnemonic('h') }
+                    .enableIf(foldingEnabledPredicate)
+            }
+
+            row {
+                checkBox(
+                    message("foldableProjectView.settings.caseInsensitive"),
+                    caseInsensitiveProperty,
+                )
+                    .withSelectedBinding(settings::caseInsensitive.toBinding())
+                    .comment(message("foldableProjectView.settings.caseInsensitive.comment"), -1)
+                    .applyToComponent { setMnemonic('c') }
+                    .enableIf(foldingEnabledPredicate)
+            }
         }
 
         titledRow("Folding rules") {
             row {
-                expandableTextField(
-                    { settings.patterns ?: "" },
-                    { settings.patterns = it },
-                )
-                    .comment(message("foldableProjectView.settings.patterns.comment"), 120)
+                expandableTextField(patternsProperty)
+                    .withTextBinding(settings::patterns.toNullableBinding(""))
+                    .comment(message("foldableProjectView.settings.patterns.comment"), -1)
                     .constraints(CCFlags.growX)
                     .applyToComponent {
                         emptyText.text = message("foldableProjectView.settings.patterns")
                     }
+                    .enableIf(foldingEnabledPredicate)
             }
+        }
+    }
+    private val projectView by lazy {
+        object : ProjectViewPane(project) {
+            override fun enableDnD() = Unit
 
-            row(message("foldableProjectView.settings.preview")) {
-                preview()
+            override fun createStructure() = object : AbstractProjectTreeStructure(project) {
+                override fun getProviders() = listOf(FoldableTreeStructureProvider(project).apply {
+                    propertyGraph.afterPropagation {
+                        updateFromRoot(true)
+                    }
+                    withState(FoldableProjectState.fromGraphProperties(
+                        foldingEnabledProperty,
+                        foldDirectoriesProperty,
+                        hideEmptyGroupsProperty,
+                        caseInsensitiveProperty,
+                        patternsProperty,
+                    ))
+                })
             }
         }
     }
@@ -96,77 +126,29 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
 
     override fun getDisplayName() = message("foldableProjectView.name")
 
-    override fun createComponent() = panel
-
-    override fun isModified() = panel.isModified()
-
-    override fun apply() {
-        panel.apply()
-        ApplicationManager.getApplication()
-            .messageBus
-            .syncPublisher(FoldableProjectSettingsListener.TOPIC)
-            .settingsChanged(settings)
+    override fun createComponent() = OnePixelSplitter(.5f).apply {
+        firstComponent = settingsPanel.apply {
+            border = createEmptyBorder(10, 10, 10, 30)
+        }
+        secondComponent = projectView.createComponent().apply {
+            border = createEmptyBorder()
+        }
+        TreeUtil.promiseExpand(projectView.tree, 2)
     }
 
-    override fun reset() = panel.reset()
+    override fun isModified() = settingsPanel.isModified()
 
-    private fun preview(): JComponent {
-        val patternCache = PatternCache.getInstance(project)
-        val fileIndex = ProjectRootManager.getInstance(project).fileIndex
-        val modules = ModuleManager.getInstance(project).modules.map(Module::guessModuleDir)
-        val rootNode = AbstractFileTreeTable.ProjectRootNode(project) { true }
-        val model = DefaultTreeModel(rootNode)
-        val tree = ProjectViewTree(model).apply {
-            isRootVisible = false
-            showsRootHandles = true
-            cellRenderer = object : DefaultTreeCellRenderer() {
-                private val myComponent = SimpleColoredComponent()
+    override fun reset() = settingsPanel.reset()
 
-                override fun getTreeCellRendererComponent(
-                    tree: JTree,
-                    value: Any,
-                    sel: Boolean,
-                    expanded: Boolean,
-                    leaf: Boolean,
-                    row: Int,
-                    hasFocus: Boolean,
-                ) = myComponent.apply {
-                    val file = (value as AbstractFileTreeTable.FileNode).`object`
+    override fun apply() {
+        val updated = isModified
 
-                    clear()
-
-                    val name = file.name.caseInsensitive()
-                    val isDirectory = file.isDirectory
-                    val isModule = modules.any { it == file }
-                    val isMatched = settings.patterns
-                        .caseInsensitive()
-                        .split(' ')
-                        .any { patternCache?.createPattern(it, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
-
-                    append(file.name, when {
-                        isModule -> SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
-                        isDirectory && !settings.foldDirectories -> SimpleTextAttributes.REGULAR_ATTRIBUTES
-                        isMatched -> SimpleTextAttributes.GRAY_ATTRIBUTES
-                        else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
-                    })
-
-                    icon = when {
-                        !isDirectory -> IconUtil.getIcon(file, 0, null)
-                        fileIndex.isExcluded(file) -> AllIcons.Modules.ExcludeRoot
-                        else -> PlatformIcons.FOLDER_ICON
-                    }
-                }
-
-                private fun String?.caseInsensitive() = when {
-                    this == null -> ""
-                    settings.caseInsensitive -> toLowerCase()
-                    else -> this
-                }
-            }
-
-            expandRow(0)
+        settingsPanel.apply()
+        if (updated) {
+            ApplicationManager.getApplication()
+                .messageBus
+                .syncPublisher(FoldableProjectSettingsListener.TOPIC)
+                .settingsChanged(settings)
         }
-
-        return ScrollPaneFactory.createScrollPane(tree)
     }
 }

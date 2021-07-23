@@ -8,22 +8,22 @@ import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.util.xmlb.annotations.OptionTag
 
 @State(name = "FoldableProjectSettings", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
-class FoldableProjectSettings : BaseState(), PersistentStateComponent<FoldableProjectSettings> {
+class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {
 
     @get:OptionTag("FOLDING_ENABLED")
-    var foldingEnabled by property(true)
+    override var foldingEnabled by property(true)
 
     @get:OptionTag("FOLD_DIRECTORIES")
-    var foldDirectories by property(true)
+    override var foldDirectories by property(true)
 
     @get:OptionTag("HIDE_EMPTY_GROUPS")
-    var hideEmptyGroups by property(true)
+    override var hideEmptyGroups by property(true)
 
     @get:OptionTag("CASE_INSENSITIVE")
-    var caseInsensitive by property(true)
+    override var caseInsensitive by property(true)
 
     @get:OptionTag("PATTERNS")
-    var patterns by string("")
+    override var patterns by string("")
 
     override fun getState() = this
 
