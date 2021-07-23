@@ -18,6 +18,7 @@ import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
     private val settings = project.service<FoldableProjectSettings>()
+    private val patternCache = PatternCache.getInstance(project)
     private var previewState: FoldableProjectState? = null
     private val state get() = previewState ?: settings
 
@@ -39,45 +40,39 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         viewSettings: ViewSettings?,
     ): Collection<AbstractTreeNode<*>> {
         val project = parent.project ?: return children
-        val patternCache = PatternCache.getInstance(project)
 
-        if (!state.foldingEnabled) {
-            return children
-        }
-        if (parent !is PsiDirectoryNode) {
-            return children
-        }
-//        if (parent.virtualFile != project.guessProjectDir()?.canonicalFile) {
-//            return children
-//        }
-
-        val rootFiles = children
-            .filter {
-                when (it) {
-                    is PsiDirectoryNode -> state.foldDirectories
-                    is PsiFileNode -> true
-                    else -> false
+        return when {
+            !state.foldingEnabled -> children
+            parent !is PsiDirectoryNode -> children
+            else -> children.match().let { matched ->
+                when {
+                    state.hideAllGroups -> children - matched
+                    state.hideEmptyGroups && matched.isEmpty() -> children
+                    else -> children - matched + FoldableProjectViewNode(project, viewSettings, matched)
                 }
             }
-            .filter { node ->
-                val name = when (node) {
-                    is ProjectViewNode -> node.virtualFile?.name ?: node.name
-                    else -> node.name
-                }.caseInsensitive()
+        }
+    }
 
+    private fun MutableCollection<AbstractTreeNode<*>>.match() = this
+        .filter {
+            when (it) {
+                is PsiDirectoryNode -> state.foldDirectories
+                is PsiFileNode -> true
+                else -> false
+            }
+        }
+        .filter {
+            when (it) {
+                is ProjectViewNode -> it.virtualFile?.name ?: it.name
+                else -> it.name
+            }.caseInsensitive().let { name ->
                 state.patterns
                     .caseInsensitive()
                     .split(' ')
-                    .any { patternCache?.createPattern(it, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
+                    .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
             }
-
-        if (rootFiles.isEmpty() && state.hideEmptyGroups) {
-            return children
         }
-
-        val node = FoldableProjectViewNode(project, viewSettings, rootFiles)
-        return children - rootFiles + node
-    }
 
     private fun String?.caseInsensitive() = when {
         this == null -> ""

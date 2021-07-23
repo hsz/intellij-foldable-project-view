@@ -30,6 +30,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
     private val foldingEnabledProperty = propertyGraph.graphProperty { settings.foldingEnabled }
     private val foldDirectoriesProperty = propertyGraph.graphProperty { settings.foldDirectories }
     private val hideEmptyGroupsProperty = propertyGraph.graphProperty { settings.hideEmptyGroups }
+    private val hideAllGroupsProperty = propertyGraph.graphProperty { settings.hideAllGroups }
     private val caseInsensitiveProperty = propertyGraph.graphProperty { settings.caseInsensitive }
     private val patternsProperty = propertyGraph.graphProperty { settings.patterns ?: "" }
 
@@ -59,8 +60,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     .enableIf(foldingEnabledPredicate)
             }
 
-            // TODO: [X] Fold submodules
-
             row {
                 checkBox(
                     message("foldableProjectView.settings.hideEmptyGroups"),
@@ -69,6 +68,17 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     .withSelectedBinding(settings::hideEmptyGroups.toBinding())
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), -1)
                     .applyToComponent { setMnemonic('h') }
+                    .enableIf(foldingEnabledPredicate)
+            }
+
+            row {
+                checkBox(
+                    message("foldableProjectView.settings.hideAllGroups"),
+                    hideAllGroupsProperty,
+                )
+                    .withSelectedBinding(settings::hideAllGroups.toBinding())
+                    .comment(message("foldableProjectView.settings.hideAllGroups.comment"), -1)
+                    .applyToComponent { setMnemonic('i') }
                     .enableIf(foldingEnabledPredicate)
             }
 
@@ -110,6 +120,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                         foldingEnabledProperty,
                         foldDirectoriesProperty,
                         hideEmptyGroupsProperty,
+                        hideAllGroupsProperty,
                         caseInsensitiveProperty,
                         patternsProperty,
                     ))
@@ -126,7 +137,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
 
     override fun getDisplayName() = message("foldableProjectView.name")
 
-    override fun createComponent() = OnePixelSplitter(.5f).apply {
+    override fun createComponent() = OnePixelSplitter(.3f).apply {
         firstComponent = settingsPanel.apply {
             border = createEmptyBorder(10, 10, 10, 30)
         }

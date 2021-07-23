@@ -19,6 +19,9 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_EMPTY_GROUPS")
     override var hideEmptyGroups by property(true)
 
+    @get:OptionTag("HIDE_ALL_GROUPS")
+    override var hideAllGroups by property(false)
+
     @get:OptionTag("CASE_INSENSITIVE")
     override var caseInsensitive by property(true)
 
@@ -27,7 +30,5 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
 
     override fun getState() = this
 
-    override fun loadState(state: FoldableProjectSettings) {
-        copyFrom(state)
-    }
+    override fun loadState(state: FoldableProjectSettings) = copyFrom(state)
 }
