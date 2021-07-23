@@ -19,6 +19,10 @@ Available features:
 
 <!-- Plugin description end -->
 
+## Demo
+
+![Foldable ProjectView Demo](.github/readme/foldable-projectview.gif)
+
 ## Screenshots
 
 ### Project View
