@@ -17,11 +17,11 @@ Available features:
 - Case-insensitive matching
 - Live ProjectView preview
 
-<!-- Plugin description end -->
-
 ## Demo
 
-![Foldable ProjectView Demo](.github/readme/foldable-projectview.gif)
+![Foldable ProjectView Demo][file:foldable-projectview.gif]
+
+<!-- Plugin description end -->
 
 ## Screenshots
 
@@ -48,3 +48,4 @@ Available features:
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
+[file:foldable-projectview.gif]: https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif
