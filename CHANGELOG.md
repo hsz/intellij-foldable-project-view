@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 ## [1.0.2]
+## [1.0.2]
 ### Added
 - Dark/light icons
 - Support for 2021.3
