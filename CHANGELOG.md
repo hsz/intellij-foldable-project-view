@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 ### Added
+- Dark/light icons
+- Support for 2021.3
+
+## [1.0.0]
+### Added
 - Fold matching root elements of the project modules in the Project View
 - Enable/disable folding via Preferences or Project View options menu
 - Optionally fold directories
