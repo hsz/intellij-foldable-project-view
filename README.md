@@ -19,7 +19,7 @@ Available features:
 
 ## Demo
 
-![Foldable ProjectView Demo][file:foldable-projectview.gif]
+<img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable ProjectView Demo" />
 
 <!-- Plugin description end -->
 
@@ -48,4 +48,3 @@ Available features:
 Plugin based on the [IntelliJ Platform Plugin Template][template].
 
 [template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[file:foldable-projectview.gif]: https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif
