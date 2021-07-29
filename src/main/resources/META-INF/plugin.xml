@@ -27,6 +27,15 @@
                 description="Action that lets you fold the files located in the root of your project">
             <add-to-group
                     group-id="ProjectView.ToolWindow.SecondaryActions"
+                    relative-to-action="ProjectView.FoldIgnoredFiles"
+                    anchor="before"/>
+        </action>
+        <action id="ProjectView.FoldIgnoredFiles"
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
+                text="Fold Ignored Files"
+                description="Action that lets you fold the ignored files">
+            <add-to-group
+                    group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FlattenPackages"
                     anchor="before"/>
         </action>
