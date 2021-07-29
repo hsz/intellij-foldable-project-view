@@ -3,6 +3,7 @@
 # Foldable ProjectView Changelog
 
 ## [Unreleased]
+## [1.1.0]
 ### Added
 - Hide files or folders that are ignored or excluded (@Recks11)
 
