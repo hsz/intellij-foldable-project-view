@@ -12,6 +12,8 @@ import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.vcs.FileStatus
+import com.intellij.openapi.vcs.FileStatusListener
+import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
@@ -23,18 +25,25 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
     private val settings = project.service<FoldableProjectSettings>()
     private val patternCache = PatternCache.getInstance(project)
     private var previewState: FoldableProjectState? = null
+    private val projectView = ProjectView.getInstance(project)
     private val state get() = previewState ?: settings
 
     init {
-        val view = ProjectView.getInstance(project)
-
         project.messageBus
             .connect(project)
             .subscribe(FoldableProjectSettingsListener.TOPIC, object : FoldableProjectSettingsListener {
                 override fun settingsChanged(settings: FoldableProjectSettings) {
-                    view.currentProjectViewPane?.updateFromRoot(true)
+                    refreshProjectView()
                 }
             })
+
+        FileStatusManager.getInstance(project).addFileStatusListener(object : FileStatusListener {
+            override fun fileStatusesChanged() {
+                if (settings.foldIgnoredFiles) {
+                    refreshProjectView()
+                }
+            }
+        }, project)
     }
 
     override fun modify(
@@ -56,6 +65,10 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                 }
             }
         }
+    }
+
+    fun withState(state: FoldableProjectState) {
+        previewState = state
     }
 
     private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile?.let {
@@ -88,7 +101,5 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         else -> this
     }
 
-    fun withState(state: FoldableProjectState) {
-        previewState = state
-    }
+    private fun refreshProjectView() = projectView.currentProjectViewPane?.updateFromRoot(true)
 }

@@ -20,12 +20,6 @@
                 implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
     </extensions>
 
-    <projectListeners>
-        <listener
-                class="ski.chrzanow.foldableprojectview.projectView.FoldableChangeListListener"
-                topic="com.intellij.openapi.vcs.changes.ChangeListListener"/>
-    </projectListeners>
-
     <actions>
         <action id="ProjectView.FoldRootFiles"
                 class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction"
