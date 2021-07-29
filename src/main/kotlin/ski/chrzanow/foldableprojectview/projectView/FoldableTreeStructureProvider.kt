@@ -11,6 +11,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
+import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
@@ -78,7 +79,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                     .caseInsensitive()
                     .split(' ')
                     .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
-            }
+            }.or(state.foldIgnoredFiles and(it.fileStatus.equals(FileStatus.IGNORED)))
         }
 
     private fun String?.caseInsensitive() = when {

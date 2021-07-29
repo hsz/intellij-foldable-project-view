@@ -30,6 +30,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
     private val propertyGraph = PropertyGraph()
     private val foldingEnabledProperty = propertyGraph.graphProperty { settings.foldingEnabled }
     private val foldDirectoriesProperty = propertyGraph.graphProperty { settings.foldDirectories }
+    private val foldIgnoredFilesProperty = propertyGraph.graphProperty { settings.foldIgnoredFiles }
     private val hideEmptyGroupsProperty = propertyGraph.graphProperty { settings.hideEmptyGroups }
     private val hideAllGroupsProperty = propertyGraph.graphProperty { settings.hideAllGroups }
     private val caseInsensitiveProperty = propertyGraph.graphProperty { settings.caseInsensitive }
@@ -59,6 +60,17 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                     .comment(message("foldableProjectView.settings.foldDirectories.comment"), -1)
                     .applyToComponent { setMnemonic('d') }
                     .enableIf(foldingEnabledPredicate)
+            }
+
+            row {
+                checkBox(
+                        message("foldableProjectView.settings.foldIgnoredFiles"),
+                        foldIgnoredFilesProperty,
+                )
+                        .withSelectedBinding(settings::foldIgnoredFiles.toBinding())
+                        .comment(message("foldableProjectView.settings.foldIgnoredFiles.comment"), -1)
+                        .applyToComponent { setMnemonic('h') }
+                        .enableIf(foldingEnabledPredicate)
             }
 
             row {
@@ -128,6 +140,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : Searchable
                         foldDirectoriesProperty,
                         hideEmptyGroupsProperty,
                         hideAllGroupsProperty,
+                        foldIgnoredFilesProperty,
                         caseInsensitiveProperty,
                         patternsProperty,
                     ))

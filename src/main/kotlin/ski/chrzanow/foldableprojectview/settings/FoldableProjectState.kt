@@ -6,6 +6,7 @@ interface FoldableProjectState {
 
     val foldingEnabled: Boolean
     val foldDirectories: Boolean
+    val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean
     val caseInsensitive: Boolean
@@ -15,6 +16,7 @@ interface FoldableProjectState {
         fun fromGraphProperties(
             foldingEnabledProperty: GraphProperty<Boolean>,
             foldDirectoriesProperty: GraphProperty<Boolean>,
+            foldIgnoredFilesProperty: GraphProperty<Boolean>,
             hideEmptyGroupsProperty: GraphProperty<Boolean>,
             hideAllGroupsProperty: GraphProperty<Boolean>,
             caseInsensitiveProperty: GraphProperty<Boolean>,
@@ -22,6 +24,7 @@ interface FoldableProjectState {
         ) = object : FoldableProjectState {
             override val foldingEnabled: Boolean get() = foldingEnabledProperty.get()
             override val foldDirectories: Boolean get() = foldDirectoriesProperty.get()
+            override val foldIgnoredFiles: Boolean get() = foldIgnoredFilesProperty.get()
             override val hideEmptyGroups: Boolean get() = hideEmptyGroupsProperty.get()
             override val hideAllGroups: Boolean get() = hideAllGroupsProperty.get()
             override val caseInsensitive: Boolean get() = caseInsensitiveProperty.get()

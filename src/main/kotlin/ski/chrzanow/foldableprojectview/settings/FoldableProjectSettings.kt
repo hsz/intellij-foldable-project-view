@@ -25,6 +25,9 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("CASE_INSENSITIVE")
     override var caseInsensitive by property(true)
 
+    @get:OptionTag("HIDE_IGNORED_FILES")
+    override var foldIgnoredFiles by property(true)
+
     @get:OptionTag("PATTERNS")
     override var patterns by string("")
 
