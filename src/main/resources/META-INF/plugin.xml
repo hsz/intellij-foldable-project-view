@@ -10,7 +10,7 @@
                 groupId="tools"
                 key="foldableProjectView.name"
                 bundle="messages.FoldableProjectView"
-                id="preferences.packagesearch.PackageSearchGeneralConfigurable"
+                id="FoldableProjectViewConfigurable"
                 instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
         <projectService
