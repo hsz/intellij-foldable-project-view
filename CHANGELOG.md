@@ -3,6 +3,7 @@
 # Foldable ProjectView Changelog
 
 ## [Unreleased]
+## [1.1.1]
 ### Fixed
 - Fixed incorrect `projectConfigurable` name
 
