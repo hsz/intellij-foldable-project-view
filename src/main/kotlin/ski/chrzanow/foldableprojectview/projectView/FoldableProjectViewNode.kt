@@ -13,7 +13,7 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
 class FoldableProjectViewNode(
     project: Project,
     settings: ViewSettings?,
-    private val children: List<AbstractTreeNode<*>>,
+    private val children: Set<AbstractTreeNode<*>>,
 ) : ProjectViewNode<String>(project, FoldableProjectViewBundle.message("foldableProjectView.name"), settings) {
 
     override fun update(presentation: PresentationData) {

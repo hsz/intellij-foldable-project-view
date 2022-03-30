@@ -57,7 +57,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
             !state.foldingEnabled -> children
             parent !is PsiDirectoryNode -> children
             !isModule(parent, project) -> children
-            else -> children.match().let { matched ->
+            else -> children.match().toSet().let { matched ->
                 when {
                     state.hideAllGroups -> children - matched
                     state.hideEmptyGroups && matched.isEmpty() -> children
@@ -97,7 +97,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
 
     private fun String?.caseInsensitive() = when {
         this == null -> ""
-        state.caseInsensitive -> toLowerCase()
+        state.caseInsensitive -> lowercase()
         else -> this
     }
 
