@@ -3,6 +3,9 @@
 # Foldable ProjectView Changelog
 
 ## [Unreleased]
+### Added
+- Support 221.* IDE releases
+
 ## [1.1.1]
 ### Fixed
 - Fixed incorrect `projectConfigurable` name
