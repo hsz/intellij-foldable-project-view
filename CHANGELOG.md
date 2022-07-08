@@ -3,8 +3,10 @@
 # Foldable ProjectView Changelog
 
 ## [Unreleased]
+
+## [1.1.3]
 ### Added
-- Support 221.* IDE releases
+- Support 222.* IDE releases
 
 ## [1.1.1]
 ### Fixed
