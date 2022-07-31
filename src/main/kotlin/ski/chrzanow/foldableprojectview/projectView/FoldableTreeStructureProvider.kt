@@ -8,9 +8,7 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
@@ -57,7 +55,6 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         return when {
             !state.foldingEnabled -> children
             parent !is PsiDirectoryNode -> children
-            !isModule(parent, project) -> children
             else -> children.match().toSet().let { matched ->
                 when {
                     state.hideAllGroups -> children - matched
@@ -71,11 +68,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
     fun withState(state: FoldableProjectState) {
         previewState = state
     }
-
-    private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile?.let {
-        ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it
-    } ?: false
-
+    
     private fun MutableCollection<AbstractTreeNode<*>>.match() = this
         .filter {
             when (it) {
