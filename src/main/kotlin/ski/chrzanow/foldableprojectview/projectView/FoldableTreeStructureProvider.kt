@@ -14,6 +14,8 @@ import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
+import com.intellij.ui.SimpleTextAttributes
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
@@ -55,11 +57,31 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         return when {
             !state.foldingEnabled -> children
             parent !is PsiDirectoryNode -> children
-            else -> children.match().toSet().let { matched ->
+            else -> children.match().run {
+                val matchedByPattern = first.toSet()
+                val matchedByIgnore = second.toSet()
+
                 when {
-                    state.hideAllGroups -> children - matched
-                    state.hideEmptyGroups && matched.isEmpty() -> children
-                    else -> children - matched + FoldableProjectViewNode(project, viewSettings, matched)
+                    state.hideAllGroups -> children - matchedByPattern - matchedByIgnore
+                    else -> {
+                        children -= matchedByPattern
+                        if (matchedByPattern.isNotEmpty() || !state.hideEmptyGroups) children += FoldableProjectViewNode(
+                            project,
+                            viewSettings,
+                            matchedByPattern,
+                            FoldableProjectViewBundle.message("foldableProjectView.node.byPattern"),
+                            SimpleTextAttributes.REGULAR_ATTRIBUTES
+                        )
+                        children -= matchedByIgnore
+                        if (matchedByIgnore.isNotEmpty()) children += FoldableProjectViewNode(
+                            project,
+                            viewSettings,
+                            matchedByIgnore,
+                            FoldableProjectViewBundle.message("foldableProjectView.node.byIgnored"),
+                            SimpleTextAttributes.GRAY_SMALL_ATTRIBUTES
+                        )
+                        children
+                    }
                 }
             }
         }
@@ -68,26 +90,33 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
     fun withState(state: FoldableProjectState) {
         previewState = state
     }
-    
-    private fun MutableCollection<AbstractTreeNode<*>>.match() = this
-        .filter {
-            when (it) {
-                is PsiDirectoryNode -> state.foldDirectories
-                is PsiFileNode -> true
-                else -> false
+
+    private fun MutableCollection<AbstractTreeNode<*>>.match() =
+        this
+            .filter {
+                when (it) {
+                    is PsiDirectoryNode -> state.foldDirectories
+                    is PsiFileNode -> true
+                    else -> false
+                }
+            }.partition {
+                when (it) {
+                    is ProjectViewNode -> it.virtualFile?.name ?: it.name
+                    else -> it.name
+                }.caseInsensitive().let { name ->
+                    state.patterns
+                        .caseInsensitive()
+                        .split(' ')
+                        .any { pattern ->
+                            patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
+                        }
+                }
+            }.apply {
+                return Pair(
+                    first,
+                    second.filter { state.foldIgnoredFiles && (it.fileStatus.id in ignoredStatuses) }.toMutableList()
+                )
             }
-        }
-        .filter {
-            when (it) {
-                is ProjectViewNode -> it.virtualFile?.name ?: it.name
-                else -> it.name
-            }.caseInsensitive().let { name ->
-                state.patterns
-                    .caseInsensitive()
-                    .split(' ')
-                    .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
-            }.or(state.foldIgnoredFiles and(it.fileStatus.id in ignoredStatuses))
-        }
 
     private fun String?.caseInsensitive() = when {
         this == null -> ""
