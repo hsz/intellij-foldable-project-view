@@ -27,6 +27,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
     private var previewState: FoldableProjectState? = null
     private val projectView = ProjectView.getInstance(project)
     private val state get() = previewState ?: settings
+    private val ignoredStatuses = listOf(FileStatus.IGNORED.id, "IGNORE.PROJECT_VIEW.IGNORED")
 
     init {
         project.messageBus
@@ -92,7 +93,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
                     .caseInsensitive()
                     .split(' ')
                     .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
-            }.or(state.foldIgnoredFiles and(it.fileStatus.equals(FileStatus.IGNORED)))
+            }.or(state.foldIgnoredFiles and(it.fileStatus.id in ignoredStatuses))
         }
 
     private fun String?.caseInsensitive() = when {
