@@ -1,11 +1,8 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.components.BaseState
-import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.State
-import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.StoragePathMacros
+import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.annotations.OptionTag
+import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 
 @State(name = "FoldableProjectSettings", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {
@@ -28,8 +25,8 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_IGNORED_FILES")
     override var foldIgnoredFiles by property(true)
 
-    @get:OptionTag("PATTERNS")
-    override var patterns by string("")
+    @get:OptionTag("RULES")
+    override var rules by list<Rule>()
 
     override fun getState() = this
 

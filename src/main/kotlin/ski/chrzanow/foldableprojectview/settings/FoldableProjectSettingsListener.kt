@@ -1,10 +1,10 @@
 package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.util.messages.Topic
-import java.util.EventListener
+import java.util.*
 
 @FunctionalInterface
-interface FoldableProjectSettingsListener : EventListener {
+fun interface FoldableProjectSettingsListener : EventListener {
 
     companion object {
         @Topic.ProjectLevel
