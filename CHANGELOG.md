@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 ### Added
-- Support 221.* IDE releases
+- Support 231.* IDE releases
 
 ## [1.1.1]
 ### Fixed
