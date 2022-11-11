@@ -1,6 +1,11 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.observable.properties.GraphProperty
+import com.intellij.ui.JBColor
+import com.intellij.util.xmlb.Converter
+import com.intellij.util.xmlb.annotations.OptionTag
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
+import java.awt.Color
 
 interface FoldableProjectState {
 
@@ -10,25 +15,24 @@ interface FoldableProjectState {
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean
     val caseInsensitive: Boolean
-    val patterns: String?
+    val rules: MutableList<Rule>
 
-    companion object {
-        fun fromGraphProperties(
-            foldingEnabledProperty: GraphProperty<Boolean>,
-            foldDirectoriesProperty: GraphProperty<Boolean>,
-            foldIgnoredFilesProperty: GraphProperty<Boolean>,
-            hideEmptyGroupsProperty: GraphProperty<Boolean>,
-            hideAllGroupsProperty: GraphProperty<Boolean>,
-            caseInsensitiveProperty: GraphProperty<Boolean>,
-            patternsProperty: GraphProperty<String>,
-        ) = object : FoldableProjectState {
-            override val foldingEnabled: Boolean get() = foldingEnabledProperty.get()
-            override val foldDirectories: Boolean get() = foldDirectoriesProperty.get()
-            override val foldIgnoredFiles: Boolean get() = foldIgnoredFilesProperty.get()
-            override val hideEmptyGroups: Boolean get() = hideEmptyGroupsProperty.get()
-            override val hideAllGroups: Boolean get() = hideAllGroupsProperty.get()
-            override val caseInsensitive: Boolean get() = caseInsensitiveProperty.get()
-            override val patterns: String get() = patternsProperty.get()
-        }
-    }
+    data class Rule(
+        var name: String = DEFAULT_RULE_NAME,
+
+        var pattern: String = DEFAULT_RULE_PATTERN,
+
+        @get:OptionTag(converter = ColorConverter::class)
+        var background: Color? = null,
+
+        @get:OptionTag(converter = ColorConverter::class)
+        var foreground: Color? = null,
+    )
+}
+
+private class ColorConverter : Converter<Color>() {
+
+    override fun toString(value: Color) = value.rgb.toString()
+
+    override fun fromString(value: String) = runCatching { JBColor.decode(value) }.getOrNull()
 }

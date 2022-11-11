@@ -13,12 +13,13 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
 class FoldableProjectViewNode(
     project: Project,
     settings: ViewSettings?,
+    private val label: String,
     private val children: Set<AbstractTreeNode<*>>,
 ) : ProjectViewNode<String>(project, FoldableProjectViewBundle.message("foldableProjectView.name"), settings) {
 
     override fun update(presentation: PresentationData) {
         presentation.apply {
-            val text = FoldableProjectViewBundle.message("foldableProjectView.node", children.size)
+            val text = "$label: ${children.size}"
             val toolTip = children.mapNotNull { it.name }.joinToString(", ")
             val textAttributes = SimpleTextAttributes.GRAY_SMALL_ATTRIBUTES
             addText(ColoredFragment(text, toolTip, textAttributes))
