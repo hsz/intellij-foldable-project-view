@@ -49,6 +49,8 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                 ApplicationManager.getApplication().invokeLater {
                     rulesTable.tableView.updateUI()
                 }
+
+                settingsProperty.setValue(null, FoldableProjectState::rules, settingsProperty.get())
             }
         }
 
@@ -113,7 +115,10 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
     private val projectView by lazy {
         object : ProjectViewPane(project) {
 
-            private val treeStructureProvider = FoldableTreeStructureProvider(project).withProjectViewPane(this).withState(settingsProperty)
+            private val treeStructureProvider =
+                FoldableTreeStructureProvider(project)
+                    .withProjectViewPane(this)
+                    .withState(settingsProperty)
 
             override fun enableDnD() = Unit
 

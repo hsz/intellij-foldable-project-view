@@ -10,7 +10,7 @@ import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleUtil
-import com.intellij.openapi.observable.properties.GraphProperty
+import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.vcs.FileStatus
@@ -27,7 +27,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
     private val settings by lazy { project.service<FoldableProjectSettings>() }
     private val patternCache = PatternCache.getInstance(project)
     private var previewProjectViewPane: ProjectViewPane? = null
-    private var previewGraphProperty: GraphProperty<FoldableProjectSettings>? = null
+    private var previewGraphProperty: ObservableMutableProperty<FoldableProjectSettings>? = null
     private val state get() = previewGraphProperty?.get() ?: settings
 
     init {
@@ -81,17 +81,18 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         previewProjectViewPane = projectViewPane
     }
 
-    fun withState(graphProperty: GraphProperty<FoldableProjectSettings>) = apply {
-        previewGraphProperty = graphProperty.also {
+    fun withState(property: ObservableMutableProperty<FoldableProjectSettings>) = apply {
+        previewGraphProperty = property.also {
             it.afterChange {
                 refreshProjectView()
             }
         }
     }
 
-    private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile
-        ?.let { ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it }
-        ?: false
+    private fun isModule(node: PsiDirectoryNode, project: Project) =
+        node.virtualFile
+            ?.let { ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it }
+            ?: false
 
     private fun Collection<AbstractTreeNode<*>>.match(patterns: String) = this
         .filter {

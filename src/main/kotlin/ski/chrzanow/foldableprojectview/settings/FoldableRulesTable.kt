@@ -2,7 +2,7 @@ package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.execution.util.ListTableWithButtons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
-import com.intellij.openapi.observable.properties.GraphProperty
+import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.util.ui.ColumnInfo
@@ -17,7 +17,7 @@ import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
 
-class FoldableRulesTable(private val settingsProperty: GraphProperty<FoldableProjectSettings>) : ListTableWithButtons<Rule>() {
+class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty<FoldableProjectSettings>) : ListTableWithButtons<Rule>() {
 
     private val rulesProperty = settingsProperty.transform(
         { it.rules },
