@@ -18,6 +18,7 @@ import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
+import ski.chrzanow.foldableprojectview.or
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
 
@@ -88,9 +89,9 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         }
     }
 
-    private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile?.let {
-        ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it
-    } ?: false
+    private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile
+        ?.let { ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it }
+        ?: false
 
     private fun Collection<AbstractTreeNode<*>>.match(patterns: String) = this
         .filter {
@@ -108,7 +109,13 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
                 patterns
                     .caseInsensitive()
                     .split(' ')
-                    .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
+                    .any { pattern ->
+                        patternCache
+                            ?.createPattern(pattern, Syntax.GLOB)
+                            ?.matcher(name)
+                            ?.matches()
+                            .or(false)
+                    }
             }.or(state.foldIgnoredFiles and (it.fileStatus.equals(FileStatus.IGNORED)))
         }
 
@@ -118,6 +125,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         else -> this
     }
 
-    private fun refreshProjectView() = (previewProjectViewPane ?: ProjectView.getInstance(project).currentProjectViewPane)
+    private fun refreshProjectView() = previewProjectViewPane
+        .or { ProjectView.getInstance(project).currentProjectViewPane }
         ?.updateFromRoot(true)
 }
