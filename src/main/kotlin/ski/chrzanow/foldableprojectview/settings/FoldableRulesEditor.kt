@@ -1,6 +1,6 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.observable.properties.GraphProperty
+import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.isNotNull
 import com.intellij.openapi.options.UiDslUnnamedConfigurable
 import com.intellij.ui.ColorPanel
@@ -19,7 +19,7 @@ import ski.chrzanow.foldableprojectview.bindColorControl
 import ski.chrzanow.foldableprojectview.bindText
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 
-class FoldableRulesEditor(val ruleProperty: GraphProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
+class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
 
     private lateinit var backgroundCheckBox: Cell<JBCheckBox>
     private lateinit var backgroundColorPanel: Cell<ColorPanel>
