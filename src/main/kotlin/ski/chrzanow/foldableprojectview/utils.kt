@@ -46,7 +46,8 @@ fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<F
                 { it?.let(property::get) != null },
                 { selected ->
                     get()?.apply {
-                        property.set(this, (property.get(this) ?: defaultValue).takeIf { selected })
+                        val value = property.get(this).or(defaultValue).takeIf { selected }
+                        property.set(this, value)
                     }
                 },
             )
@@ -78,3 +79,7 @@ fun <T : FoldableProjectState> ObservableMutableProperty<T>.createPredicate(prop
 
         override fun addListener(listener: (Boolean) -> Unit) = observableProperty.afterChange(listener)
     }
+
+fun <T> T?.or(other: T): T = this ?: other
+
+fun <T> T?.or(block: () -> T): T = this ?: block()
