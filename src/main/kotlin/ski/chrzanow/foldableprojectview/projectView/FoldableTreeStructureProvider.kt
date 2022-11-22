@@ -61,14 +61,14 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
                 val matched = mutableSetOf<AbstractTreeNode<*>>()
 
                 // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
-                val folders = state.rules.mapNotNull { (name, pattern) ->
+                val folders = state.rules.mapNotNull { rule ->
                     (children - matched)
-                        .match(pattern)
+                        .match(rule.pattern)
                         .also { matched.addAll(it) }
                         .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
                         ?.run {
                             matched.addAll(this)
-                            FoldableProjectViewNode(project, viewSettings, name, toSet())
+                            FoldableProjectViewNode(project, viewSettings, rule, toSet())
                         }
                 }
 
