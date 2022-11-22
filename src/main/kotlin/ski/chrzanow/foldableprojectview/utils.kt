@@ -33,6 +33,7 @@ fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Foldable
                 mutex.lockOrSkip {
                     get()?.let {
                         property.set(it, selectedColor)
+                        graphProperty.setValue(null, property, it)
                     }
                 }
             }
@@ -46,8 +47,11 @@ fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<F
                 { it?.let(property::get) != null },
                 { selected ->
                     get()?.apply {
-                        val value = property.get(this).or(defaultValue).takeIf { selected }
-                        property.set(this, value)
+                        property
+                            .get(this)
+                            .or(defaultValue)
+                            .takeIf { selected }
+                            .also { property.set(this, it) }
                     }
                 },
             )

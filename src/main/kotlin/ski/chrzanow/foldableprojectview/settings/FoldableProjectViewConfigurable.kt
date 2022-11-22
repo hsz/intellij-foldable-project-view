@@ -174,11 +174,16 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
     override fun isModified() = settingsProperty.get() != settings
 
     override fun apply() {
-        rulesTable
         settings.copyFrom(settingsProperty.get())
     }
 
-    override fun reset() = with(settingsProperty) {
-        set(get().apply { copyFrom(settings) })
+    override fun reset()  {
+        settingsProperty.set(settingsProperty.get().apply {
+            copyFrom(settings)
+        })
+        rulesTable.apply {
+            setValues(settingsProperty.get().rules)
+            tableView.selection.clear()
+        }
     }
 }

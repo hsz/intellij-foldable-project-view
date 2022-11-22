@@ -8,24 +8,30 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.SimpleTextAttributes
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
+import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
+import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 
 class FoldableProjectViewNode(
     project: Project,
     settings: ViewSettings?,
-    private val label: String,
+    private val rule: FoldableProjectState.Rule,
     private val children: Set<AbstractTreeNode<*>>,
-) : ProjectViewNode<String>(project, FoldableProjectViewBundle.message("foldableProjectView.name"), settings) {
+) : ProjectViewNode<String>(project, rule.name, settings) {
 
     override fun update(presentation: PresentationData) {
         presentation.apply {
-            val text = "$label: ${children.size}"
+            val text = "${rule.name}: ${children.size}"
             val toolTip = children.mapNotNull { it.name }.joinToString(", ")
-            val textAttributes = SimpleTextAttributes.GRAY_SMALL_ATTRIBUTES
+            val textAttributes = SimpleTextAttributes(STYLE_PLAIN, rule.foreground)
+
             addText(ColoredFragment(text, toolTip, textAttributes))
             setIcon(CollapseComponent)
         }
     }
+
+    override fun getName() = rule.name
+
+    override fun computeBackgroundColor() = rule.background
 
     override fun getChildren() = children
 
