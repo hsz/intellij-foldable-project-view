@@ -67,9 +67,9 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
 
         rowsRange {
             row {
-                checkBox(message("foldableProjectView.settings.foldDirectories"))
-                    .bindSelected(settingsProperty, FoldableProjectSettings::foldDirectories)
-                    .comment(message("foldableProjectView.settings.foldDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                checkBox(message("foldableProjectView.settings.matchDirectories"))
+                    .bindSelected(settingsProperty, FoldableProjectSettings::matchDirectories)
+                    .comment(message("foldableProjectView.settings.matchDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('d') }
             }
 

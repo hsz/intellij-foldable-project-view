@@ -97,7 +97,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
     private fun Collection<AbstractTreeNode<*>>.match(patterns: String) = this
         .filter {
             when (it) {
-                is PsiDirectoryNode -> state.foldDirectories
+                is PsiDirectoryNode -> state.matchDirectories
                 is PsiFileNode -> true
                 else -> false
             }

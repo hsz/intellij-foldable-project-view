@@ -10,7 +10,7 @@ import java.awt.Color
 interface FoldableProjectState {
 
     val foldingEnabled: Boolean
-    val foldDirectories: Boolean
+    val matchDirectories: Boolean
     val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean
