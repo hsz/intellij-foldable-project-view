@@ -11,8 +11,8 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("FOLDING_ENABLED")
     override var foldingEnabled by property(true)
 
-    @get:OptionTag("FOLD_DIRECTORIES")
-    override var foldDirectories by property(true)
+    @get:OptionTag("MATCH_DIRECTORIES")
+    override var matchDirectories by property(true)
 
     @get:OptionTag("HIDE_EMPTY_GROUPS")
     override var hideEmptyGroups by property(true)
