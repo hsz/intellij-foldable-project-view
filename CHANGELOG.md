@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Added
+- Support for multiple rules/groups in the Project View
+- Possibility for specifying the background/foreground of the rule
+
+### Changed
+- Use a separated storage file within the `.idea` directory: `FoldableProjectView.xml`
+
 ## [1.1.4] - 2022-11-13
 
 ### Added
