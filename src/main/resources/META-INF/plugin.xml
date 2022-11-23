@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>ski.chrzanow.foldableprojectview</id>
-    <name>Foldable ProjectView</name>
+    <name>Foldable Project View</name>
     <vendor>hsz</vendor>
 
     <depends>com.intellij.modules.platform</depends>
