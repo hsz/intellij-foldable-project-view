@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Foldable ProjectView Changelog
+# Foldable Project View Changelog
 
 ## [Unreleased]
 
