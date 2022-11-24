@@ -16,19 +16,19 @@ interface FoldableProjectState {
     val hideAllGroups: Boolean
     val caseInsensitive: Boolean
     val rules: MutableList<Rule>
-
-    data class Rule(
-        var name: String = DEFAULT_RULE_NAME,
-
-        var pattern: String = DEFAULT_RULE_PATTERN,
-
-        @get:OptionTag(converter = ColorConverter::class)
-        var background: Color? = null,
-
-        @get:OptionTag(converter = ColorConverter::class)
-        var foreground: Color? = null,
-    )
 }
+
+data class Rule(
+    var name: String = DEFAULT_RULE_NAME,
+
+    var pattern: String = DEFAULT_RULE_PATTERN,
+
+    @get:OptionTag(converter = ColorConverter::class)
+    var background: Color? = null,
+
+    @get:OptionTag(converter = ColorConverter::class)
+    var foreground: Color? = null,
+)
 
 private class ColorConverter : Converter<Color>() {
 

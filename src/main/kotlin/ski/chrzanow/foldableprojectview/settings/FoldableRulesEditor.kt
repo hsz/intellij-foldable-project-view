@@ -17,7 +17,6 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.bindColor
 import ski.chrzanow.foldableprojectview.bindColorControl
 import ski.chrzanow.foldableprojectview.bindText
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 
 class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
 

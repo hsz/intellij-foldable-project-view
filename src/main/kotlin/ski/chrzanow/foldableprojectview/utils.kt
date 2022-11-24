@@ -11,12 +11,13 @@ import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.layout.ComponentPredicate
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
+import ski.chrzanow.foldableprojectview.settings.Rule
 import java.awt.Color
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.text.JTextComponent
 import kotlin.reflect.KMutableProperty1
 
-fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<FoldableProjectState.Rule?>, property: KMutableProperty1<FoldableProjectState.Rule, Color?>) =
+fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, Color?>) =
     applyToComponent {
         with(graphProperty) {
             val mutex = AtomicBoolean()
@@ -40,7 +41,7 @@ fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Foldable
         }
     }
 
-fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<FoldableProjectState.Rule?>, property: KMutableProperty1<FoldableProjectState.Rule, Color?>, defaultValue: Color) =
+fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, Color?>, defaultValue: Color) =
     applyToComponent {
         bind(with(graphProperty) {
             transform(
@@ -66,7 +67,7 @@ fun <T : FoldableProjectState> Cell<JBCheckBox>.bindSelected(graphProperty: Obse
         )
     })
 
-fun <T : JTextComponent> Cell<T>.bindText(graphProperty: ObservableMutableProperty<FoldableProjectState.Rule?>, property: KMutableProperty1<FoldableProjectState.Rule, String>) =
+fun <T : JTextComponent> Cell<T>.bindText(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, String>) =
     bindText(with(graphProperty) {
         transform(
             { it?.let(property::get).orEmpty() },
