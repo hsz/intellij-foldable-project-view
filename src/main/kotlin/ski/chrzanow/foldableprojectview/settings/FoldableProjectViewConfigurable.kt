@@ -21,7 +21,6 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.bindSelected
 import ski.chrzanow.foldableprojectview.createPredicate
 import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 import java.awt.Dimension
 import javax.swing.BorderFactory.createEmptyBorder
 

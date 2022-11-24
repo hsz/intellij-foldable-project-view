@@ -3,7 +3,6 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 
 @State(name = "FoldableProjectSettings", storages = [Storage(FoldableProjectViewConstants.STORAGE_FILE)])
 class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {

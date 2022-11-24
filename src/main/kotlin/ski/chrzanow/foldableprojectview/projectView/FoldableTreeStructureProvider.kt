@@ -54,9 +54,15 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         val project = parent.project ?: return children
 
         return when {
+            // Folding is disabled
             !state.foldingEnabled -> children
+
+            // Parent is not a directory node
             parent !is PsiDirectoryNode -> children
+
+            // Parent is a directory node, not a module, and matching nested is disabled
             !isModule(parent, project) -> children
+
             else -> {
                 val matched = mutableSetOf<AbstractTreeNode<*>>()
 

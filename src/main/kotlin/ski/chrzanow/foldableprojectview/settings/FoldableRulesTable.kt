@@ -10,7 +10,6 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUMN_TEXT
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState.Rule
 import java.awt.Component
 import javax.swing.JTable
 import javax.swing.ListSelectionModel

@@ -9,12 +9,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
+import ski.chrzanow.foldableprojectview.settings.Rule
 
 class FoldableProjectViewNode(
     project: Project,
     settings: ViewSettings?,
-    private val rule: FoldableProjectState.Rule,
+    private val rule: Rule,
     private val children: Set<AbstractTreeNode<*>>,
 ) : ProjectViewNode<String>(project, rule.name, settings) {
 
