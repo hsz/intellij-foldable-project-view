@@ -65,6 +65,12 @@ tasks {
         gradleVersion = properties("gradleVersion")
     }
 
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+
     patchPluginXml {
         version.set(properties("pluginVersion"))
         sinceBuild.set(properties("pluginSinceBuild"))

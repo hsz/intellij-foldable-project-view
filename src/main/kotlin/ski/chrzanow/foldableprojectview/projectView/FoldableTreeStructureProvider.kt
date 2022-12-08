@@ -8,14 +8,14 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
+import com.intellij.ui.SimpleTextAttributes
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
@@ -27,6 +27,7 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
     private var previewState: FoldableProjectState? = null
     private val projectView = ProjectView.getInstance(project)
     private val state get() = previewState ?: settings
+    private val ignoredStatuses = listOf(FileStatus.IGNORED.id, "IGNORE.PROJECT_VIEW.IGNORED")
 
     init {
         project.messageBus
@@ -56,12 +57,31 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         return when {
             !state.foldingEnabled -> children
             parent !is PsiDirectoryNode -> children
-            !isModule(parent, project) -> children
-            else -> children.match().toSet().let { matched ->
+            else -> children.match().run {
+                val matchedByPattern = first.toSet()
+                val matchedByIgnore = second.toSet()
+
                 when {
-                    state.hideAllGroups -> children - matched
-                    state.hideEmptyGroups && matched.isEmpty() -> children
-                    else -> children - matched + FoldableProjectViewNode(project, viewSettings, matched)
+                    state.hideAllGroups -> children - matchedByPattern - matchedByIgnore
+                    else -> {
+                        children -= matchedByPattern
+                        if (matchedByPattern.isNotEmpty() || !state.hideEmptyGroups) children += FoldableProjectViewNode(
+                            project,
+                            viewSettings,
+                            matchedByPattern,
+                            FoldableProjectViewBundle.message("foldableProjectView.node.byPattern"),
+                            SimpleTextAttributes.REGULAR_ATTRIBUTES
+                        )
+                        children -= matchedByIgnore
+                        if (matchedByIgnore.isNotEmpty()) children += FoldableProjectViewNode(
+                            project,
+                            viewSettings,
+                            matchedByIgnore,
+                            FoldableProjectViewBundle.message("foldableProjectView.node.byIgnored"),
+                            SimpleTextAttributes.GRAY_SMALL_ATTRIBUTES
+                        )
+                        children
+                    }
                 }
             }
         }
@@ -71,29 +91,32 @@ class FoldableTreeStructureProvider(project: Project) : TreeStructureProvider {
         previewState = state
     }
 
-    private fun isModule(node: PsiDirectoryNode, project: Project) = node.virtualFile?.let {
-        ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it
-    } ?: false
-
-    private fun MutableCollection<AbstractTreeNode<*>>.match() = this
-        .filter {
-            when (it) {
-                is PsiDirectoryNode -> state.foldDirectories
-                is PsiFileNode -> true
-                else -> false
+    private fun MutableCollection<AbstractTreeNode<*>>.match() =
+        this
+            .filter {
+                when (it) {
+                    is PsiDirectoryNode -> state.foldDirectories
+                    is PsiFileNode -> true
+                    else -> false
+                }
+            }.partition {
+                when (it) {
+                    is ProjectViewNode -> it.virtualFile?.name ?: it.name
+                    else -> it.name
+                }.caseInsensitive().let { name ->
+                    state.patterns
+                        .caseInsensitive()
+                        .split(' ')
+                        .any { pattern ->
+                            patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false
+                        }
+                }
+            }.apply {
+                return Pair(
+                    first,
+                    second.filter { state.foldIgnoredFiles && (it.fileStatus.id in ignoredStatuses) }.toMutableList()
+                )
             }
-        }
-        .filter {
-            when (it) {
-                is ProjectViewNode -> it.virtualFile?.name ?: it.name
-                else -> it.name
-            }.caseInsensitive().let { name ->
-                state.patterns
-                    .caseInsensitive()
-                    .split(' ')
-                    .any { pattern -> patternCache?.createPattern(pattern, Syntax.GLOB)?.matcher(name)?.matches() ?: false }
-            }.or(state.foldIgnoredFiles and(it.fileStatus.equals(FileStatus.IGNORED)))
-        }
 
     private fun String?.caseInsensitive() = when {
         this == null -> ""

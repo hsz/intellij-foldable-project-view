@@ -14,13 +14,14 @@ class FoldableProjectViewNode(
     project: Project,
     settings: ViewSettings?,
     private val children: Set<AbstractTreeNode<*>>,
-) : ProjectViewNode<String>(project, FoldableProjectViewBundle.message("foldableProjectView.name"), settings) {
+    private val foldName: String,
+    private val textAttributes: SimpleTextAttributes,
+) : ProjectViewNode<String>(project, FoldableProjectViewBundle.message("foldableProjectView.name") + foldName, settings) {
 
     override fun update(presentation: PresentationData) {
         presentation.apply {
-            val text = FoldableProjectViewBundle.message("foldableProjectView.node", children.size)
+            val text = FoldableProjectViewBundle.message("foldableProjectView.node", foldName, children.size)
             val toolTip = children.mapNotNull { it.name }.joinToString(", ")
-            val textAttributes = SimpleTextAttributes.GRAY_SMALL_ATTRIBUTES
             addText(ColoredFragment(text, toolTip, textAttributes))
             setIcon(CollapseComponent)
         }
