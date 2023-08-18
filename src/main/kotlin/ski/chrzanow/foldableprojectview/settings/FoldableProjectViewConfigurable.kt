@@ -10,11 +10,10 @@ import com.intellij.openapi.options.Configurable.NoScroll
 import com.intellij.openapi.project.Project
 import com.intellij.ui.ContextHelpLabel
 import com.intellij.ui.OnePixelSplitter
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.ui.layout.not
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
@@ -150,14 +149,12 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
         panel {
             row {
                 cell(splitter)
-                    .horizontalAlign(HorizontalAlign.FILL)
-                    .verticalAlign(VerticalAlign.FILL)
+                    .align(Align.FILL)
             }
             group(message("foldableProjectView.settings.foldingRules")) {
                 row {
                     cell(rulesTable.component)
-                        .horizontalAlign(HorizontalAlign.FILL)
-                        .verticalAlign(VerticalAlign.FILL)
+                        .align(Align.FILL)
                         .resizableColumn()
 
                     cell(rulesEditor.createPanel())
