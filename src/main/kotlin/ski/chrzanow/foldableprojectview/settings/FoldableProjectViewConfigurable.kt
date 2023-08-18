@@ -66,6 +66,13 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
 
         rowsRange {
             row {
+                checkBox(message("foldableProjectView.settings.caseSensitive"))
+                    .bindSelected(settingsProperty, FoldableProjectSettings::caseSensitive)
+                    .comment(message("foldableProjectView.settings.caseSensitive.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                    .applyToComponent { setMnemonic('c') }
+            }
+
+            row {
                 checkBox(message("foldableProjectView.settings.matchDirectories"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::matchDirectories)
                     .comment(message("foldableProjectView.settings.matchDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
@@ -77,6 +84,8 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     .bindSelected(settingsProperty, FoldableProjectSettings::foldIgnoredFiles)
                     .comment(message("foldableProjectView.settings.foldIgnoredFiles.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('h') }
+
+                visible(false)
             }
 
             row {
@@ -92,6 +101,8 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                         message("foldableProjectView.settings.hideAllGroups.help.description"),
                     )
                     .let(::cell)
+
+                visible(false)
             }
 
             row {
@@ -100,13 +111,8 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('h') }
                     .enabledIf(hideAllGroupsPredicate.not())
-            }
 
-            row {
-                checkBox(message("foldableProjectView.settings.caseInsensitive"))
-                    .bindSelected(settingsProperty, FoldableProjectSettings::caseInsensitive)
-                    .comment(message("foldableProjectView.settings.caseInsensitive.comment"), MAX_LINE_LENGTH_WORD_WRAP)
-                    .applyToComponent { setMnemonic('c') }
+                visible(false)
             }
         }.enabledIf(foldingEnabledPredicate)
     }

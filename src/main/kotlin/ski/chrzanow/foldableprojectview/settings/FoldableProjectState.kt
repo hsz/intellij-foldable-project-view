@@ -14,7 +14,7 @@ interface FoldableProjectState {
     val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean
-    val caseInsensitive: Boolean
+    val caseSensitive: Boolean
     val rules: MutableList<Rule>
 }
 
