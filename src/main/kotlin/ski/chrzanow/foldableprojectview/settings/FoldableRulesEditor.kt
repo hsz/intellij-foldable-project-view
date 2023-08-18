@@ -8,10 +8,10 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.fields.ExpandableTextField
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.selected
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.layout.ComponentPredicate
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.bindColor
@@ -41,13 +41,13 @@ class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : 
         rowsRange {
             row(message("foldableProjectView.settings.name")) {
                 nameTextField = textField()
-                    .horizontalAlign(HorizontalAlign.FILL)
+                    .align(Align.FILL)
                     .bindText(ruleProperty, Rule::name)
 
             }
             row(message("foldableProjectView.settings.rules")) {
                 patternTextField = expandableTextField()
-                    .horizontalAlign(HorizontalAlign.FILL)
+                    .align(Align.FILL)
                     .comment(message("foldableProjectView.settings.rules.comment"), 40)
                     .bindText(ruleProperty, Rule::pattern)
             }
@@ -56,7 +56,7 @@ class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : 
                     .bindColorControl(ruleProperty, Rule::foreground, JBColor.foreground().brighter())
 
                 foregroundColorPanel = cell(ColorPanel())
-                    .horizontalAlign(HorizontalAlign.RIGHT)
+                    .align(Align.FILL)
                     .enabledIf(foregroundCheckBox.selected)
                     .bindColor(ruleProperty, Rule::foreground)
             }
@@ -65,7 +65,7 @@ class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : 
                     .bindColorControl(ruleProperty, Rule::background, JBColor.background().darker())
 
                 backgroundColorPanel = cell(ColorPanel())
-                    .horizontalAlign(HorizontalAlign.RIGHT)
+                    .align(Align.FILL)
                     .enabledIf(backgroundCheckBox.selected)
                     .bindColor(ruleProperty, Rule::background)
             }
