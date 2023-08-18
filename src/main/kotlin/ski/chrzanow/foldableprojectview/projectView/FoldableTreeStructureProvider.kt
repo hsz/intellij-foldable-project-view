@@ -5,6 +5,7 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.projectView.impl.ProjectViewPane
+import com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -30,6 +31,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
     private var previewGraphProperty: ObservableMutableProperty<FoldableProjectSettings>? = null
     private val state get() = previewGraphProperty?.get() ?: settings
 
+    // TODO: Move to project service?
     init {
         project.messageBus
             .connect(project)
@@ -52,34 +54,38 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         viewSettings: ViewSettings?,
     ): Collection<AbstractTreeNode<*>> {
         val project = parent.project ?: return children
+        val foldingGroup = parent.foldingFolder
 
         return when {
             // Folding is disabled
             !state.foldingEnabled -> children
 
+//            foldingGroup != null -> {
+//                val parentPath = (foldingGroup.parent as PsiDirectoryNode).virtualFile?.toNioPath()
+//
+//                children.filter {
+//                    true
+//                }
+//            }
+
             // Parent is not a directory node
             parent !is PsiDirectoryNode -> children
 
             // Parent is a directory node, not a module, and matching nested is disabled
-            !isModule(parent, project) -> children
+//            !isModule(parent, project) -> children
 
-            else -> {
+            parent.parent is ProjectViewProjectNode -> {
                 val matched = mutableSetOf<AbstractTreeNode<*>>()
 
                 // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
-                val folders = state.rules.mapNotNull { rule ->
-                    (children - matched)
-                        .match(rule.pattern)
-                        .also { matched.addAll(it) }
-                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
-                        ?.run {
-                            matched.addAll(this)
-                            FoldableProjectViewNode(project, viewSettings, rule, toSet())
-                        }
+                val groups = state.rules.map {
+                    FoldableProjectViewNode(project, viewSettings, state, it, parent)
                 }
 
-                children - matched + folders
+                children - matched + groups
             }
+
+            else -> children
         }
     }
 
@@ -112,27 +118,26 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             when (it) {
                 is ProjectViewNode -> it.virtualFile?.name ?: it.name
                 else -> it.name
-            }.caseInsensitive().let { name ->
+            }.let { name ->
                 patterns
-                    .caseInsensitive()
                     .split(' ')
                     .any { pattern ->
                         patternCache
-                            ?.createPattern(pattern, Syntax.GLOB)
+                            .createPattern(pattern, Syntax.GLOB)
                             ?.matcher(name)
                             ?.matches()
-                            .or(false)
+                            ?: false
                     }
             }.or(state.foldIgnoredFiles and (it.fileStatus.equals(FileStatus.IGNORED)))
         }
 
-    private fun String?.caseInsensitive() = when {
-        this == null -> ""
-        state.caseInsensitive -> lowercase()
-        else -> this
-    }
-
     private fun refreshProjectView() = previewProjectViewPane
         .or { ProjectView.getInstance(project).currentProjectViewPane }
         ?.updateFromRoot(true)
+
+    private val <T> AbstractTreeNode<T>.isFolded: Boolean
+        get() = parent?.run { this is FoldableProjectViewNode || isFolded } ?: false
+
+    private val <T> AbstractTreeNode<T>.foldingFolder: AbstractTreeNode<*>?
+        get() = parent.takeIf { it is FoldableProjectViewNode } ?: parent?.foldingFolder
 }

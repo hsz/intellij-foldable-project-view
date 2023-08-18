@@ -1,6 +1,9 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.components.*
+import com.intellij.openapi.components.BaseState
+import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.State
+import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 
@@ -19,8 +22,8 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_ALL_GROUPS")
     override var hideAllGroups by property(false)
 
-    @get:OptionTag("CASE_INSENSITIVE")
-    override var caseInsensitive by property(true)
+    @get:OptionTag("CASE_SENSITIVE")
+    override var caseSensitive by property(true)
 
     @get:OptionTag("HIDE_IGNORED_FILES")
     override var foldIgnoredFiles by property(true)
