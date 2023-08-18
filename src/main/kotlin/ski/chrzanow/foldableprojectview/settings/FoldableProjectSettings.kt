@@ -1,12 +1,10 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.components.BaseState
-import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.State
-import com.intellij.openapi.components.Storage
+import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 
+@Service(Service.Level.PROJECT)
 @State(name = "FoldableProjectSettings", storages = [Storage(FoldableProjectViewConstants.STORAGE_FILE)])
 class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {
 

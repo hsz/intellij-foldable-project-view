@@ -13,9 +13,6 @@
                 id="FoldableProjectViewConfigurable"
                 instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
-        <projectService
-                serviceImplementation="ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings"/>
-
         <searchScopesProvider
                 implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
 
