@@ -1,21 +1,8 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# Foldable Project View Changelog
+# Foldable ProjectView Changelog
 
 ## [Unreleased]
-
-This is an EAP release.
-Please report any issues or ideas via [GitHub Issues](https://github.com/hsz/intellij-foldable-project-view/issues).
-
-Thanks!
-@hsz
-
-### Added
-- Support for multiple rules/groups in the Project View
-- Possibility for specifying the background/foreground of the rule
-
-### Changed
-- Use a separated storage file within the `.idea` directory: `FoldableProjectView.xml`
 
 ## [1.1.4] - 2022-11-13
 
