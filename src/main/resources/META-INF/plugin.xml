@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>ski.chrzanow.foldableprojectview</id>
-    <name>Foldable ProjectView</name>
+    <name>Foldable Project View</name>
     <vendor>hsz</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -13,8 +13,8 @@
                 id="FoldableProjectViewConfigurable"
                 instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
-        <projectService
-                serviceImplementation="ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings"/>
+        <searchScopesProvider
+                implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
 
         <treeStructureProvider
                 implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
@@ -29,6 +29,8 @@
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FoldIgnoredFiles"
                     anchor="before"/>
+            <add-to-group group-id="WelcomeScreen.QuickStart" anchor="first"/>
+
         </action>
         <action id="ProjectView.FoldIgnoredFiles"
                 class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"

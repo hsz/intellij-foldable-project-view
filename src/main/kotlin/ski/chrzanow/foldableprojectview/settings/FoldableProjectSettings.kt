@@ -1,20 +1,18 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.components.BaseState
-import com.intellij.openapi.components.PersistentStateComponent
-import com.intellij.openapi.components.State
-import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.StoragePathMacros
+import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.annotations.OptionTag
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 
-@State(name = "FoldableProjectSettings", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
+@Service(Service.Level.PROJECT)
+@State(name = "FoldableProjectSettings", storages = [Storage(FoldableProjectViewConstants.STORAGE_FILE)])
 class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {
 
     @get:OptionTag("FOLDING_ENABLED")
     override var foldingEnabled by property(true)
 
-    @get:OptionTag("FOLD_DIRECTORIES")
-    override var foldDirectories by property(true)
+    @get:OptionTag("MATCH_DIRECTORIES")
+    override var matchDirectories by property(true)
 
     @get:OptionTag("HIDE_EMPTY_GROUPS")
     override var hideEmptyGroups by property(true)
@@ -22,14 +20,14 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_ALL_GROUPS")
     override var hideAllGroups by property(false)
 
-    @get:OptionTag("CASE_INSENSITIVE")
-    override var caseInsensitive by property(true)
+    @get:OptionTag("CASE_SENSITIVE")
+    override var caseSensitive by property(true)
 
     @get:OptionTag("HIDE_IGNORED_FILES")
     override var foldIgnoredFiles by property(true)
 
-    @get:OptionTag("PATTERNS")
-    override var patterns by string("")
+    @get:OptionTag("RULES")
+    override var rules by list<Rule>()
 
     override fun getState() = this
 
