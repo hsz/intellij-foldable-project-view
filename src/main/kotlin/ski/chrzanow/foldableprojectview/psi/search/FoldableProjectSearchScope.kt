@@ -20,7 +20,7 @@ class FoldableProjectSearchScope(
     private val patternCache = PatternCache.getInstance(project)
     private val patterns = pattern
         .applySettings()
-        .split(',')
+        .split(' ')
         .filter(String::isNotBlank)
         .mapNotNull {
             patternCache.createPattern(it, Syntax.GLOB)
