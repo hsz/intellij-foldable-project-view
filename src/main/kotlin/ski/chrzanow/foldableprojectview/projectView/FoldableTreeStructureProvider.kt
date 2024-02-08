@@ -5,7 +5,6 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.projectView.impl.ProjectViewPane
-import com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
@@ -72,20 +71,25 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             parent !is PsiDirectoryNode -> children
 
             // Parent is a directory node, not a module, and matching nested is disabled
-//            !isModule(parent, project) -> children
+            !isModule(parent, project) -> children
 
-            parent.parent is ProjectViewProjectNode -> {
+            else -> {
                 val matched = mutableSetOf<AbstractTreeNode<*>>()
 
                 // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
-                val groups = state.rules.map {
-                    FoldableProjectViewNode(project, viewSettings, state, it, parent)
+                val folders = state.rules.mapNotNull { rule ->
+                    (children - matched)
+                        .match(rule.pattern)
+                        .also { matched.addAll(it) }
+                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
+                        ?.run {
+                            matched.addAll(this)
+                            FoldableProjectViewNode(project, viewSettings, state, rule, parent)
+                        }
                 }
 
-                children - matched + groups
+                children - matched + folders
             }
-
-            else -> children
         }
     }
 
