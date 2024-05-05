@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.projectView
+package com.pj.foldableprojectview.projectView
 
 import com.intellij.icons.AllIcons.General.CollapseComponent
 import com.intellij.ide.projectView.PresentationData
@@ -15,9 +15,9 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.search.PsiElementProcessor
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
-import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
-import ski.chrzanow.foldableprojectview.settings.Rule
+import com.pj.foldableprojectview.psi.search.FoldableProjectSearchScope
+import com.pj.foldableprojectview.settings.FoldableProjectSettings
+import com.pj.foldableprojectview.settings.Rule
 
 class FoldableProjectViewNode(
     project: Project,
@@ -25,7 +25,8 @@ class FoldableProjectViewNode(
     private val settings: FoldableProjectSettings,
     private val rule: Rule,
     private val parent: PsiDirectoryNode,
-) : ProjectViewNode<String>(project, rule.name, viewSettings), PsiFileSystemItemFilter, PsiElementProcessor<PsiFileSystemItem> {
+) : ProjectViewNode<String>(project, rule.name, viewSettings), PsiFileSystemItemFilter,
+    PsiElementProcessor<PsiFileSystemItem> {
 
     val containsMatchedChildKey: Key<Boolean> = Key.create("FOLDABLE_PROJECT_VIEW_CONTAINS_MATCHED_CHILD")
     val ruleScope = FoldableProjectSearchScope(project, rule.pattern, settings)

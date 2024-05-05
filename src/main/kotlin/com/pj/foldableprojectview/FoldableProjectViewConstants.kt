@@ -1,12 +1,12 @@
-package ski.chrzanow.foldableprojectview
+package com.pj.foldableprojectview
 
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.vcs.FileStatusFactory
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.messagePointer
+import com.pj.foldableprojectview.FoldableProjectViewBundle.messagePointer
 
 object FoldableProjectViewConstants {
 
-    const val PLUGIN_ID = "ski.chrzanow.foldableprojectview"
+    const val PLUGIN_ID = "com.pj.foldableprojectview"
     const val DEFAULT_RULE_NAME = "Rule name"
     const val DEFAULT_RULE_PATTERN = "*.md"
     const val COLOR_COLUMN_TEXT = "Aa"

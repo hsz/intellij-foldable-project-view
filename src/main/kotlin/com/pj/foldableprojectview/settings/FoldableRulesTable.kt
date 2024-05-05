@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.execution.util.ListTableWithButtons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
@@ -8,15 +8,16 @@ import com.intellij.ui.ToolbarDecorator
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUMN_TEXT
+import com.pj.foldableprojectview.FoldableProjectViewBundle.message
+import com.pj.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUMN_TEXT
 import java.awt.Component
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
 
-class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty<FoldableProjectSettings>) : ListTableWithButtons<Rule>() {
+class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty<FoldableProjectSettings>) :
+    ListTableWithButtons<Rule>() {
 
     private val rulesProperty = settingsProperty.transform(
         { it.rules },
@@ -84,9 +85,23 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
         override fun getRenderer(item: Rule?) = object : DefaultTableCellRenderer() {
 
-            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+            override fun getTableCellRendererComponent(
+                table: JTable?,
+                value: Any?,
+                isSelected: Boolean,
+                hasFocus: Boolean,
+                row: Int,
+                column: Int
+            ): Component {
                 val hasNoColor = item?.foreground == null && item?.background == null
-                return super.getTableCellRendererComponent(table, value, isSelected && hasNoColor, hasFocus, row, column)
+                return super.getTableCellRendererComponent(
+                    table,
+                    value,
+                    isSelected && hasNoColor,
+                    hasFocus,
+                    row,
+                    column
+                )
                     .apply {
                         foreground = item?.foreground
                         background = item?.background

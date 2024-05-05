@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview
+package com.pj.foldableprojectview
 
 import com.intellij.AbstractBundle
 import org.jetbrains.annotations.NonNls

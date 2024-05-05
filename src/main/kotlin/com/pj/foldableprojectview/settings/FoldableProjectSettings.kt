@@ -1,8 +1,8 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.annotations.OptionTag
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
+import com.pj.foldableprojectview.FoldableProjectViewConstants
 
 @Service(Service.Level.PROJECT)
 @State(name = "FoldableProjectSettings", storages = [Storage(FoldableProjectViewConstants.STORAGE_FILE)])

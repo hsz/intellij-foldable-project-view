@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.psi.search
+package com.pj.foldableprojectview.psi.search
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
@@ -8,7 +8,7 @@ import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
 import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
+import com.pj.foldableprojectview.settings.FoldableProjectSettings
 import kotlin.io.path.relativeToOrNull
 
 class FoldableProjectSearchScope(

@@ -1,12 +1,12 @@
-package ski.chrzanow.foldableprojectview.psi.search
+package com.pj.foldableprojectview.psi.search
 
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.SearchScopeProvider
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
+import com.pj.foldableprojectview.FoldableProjectViewBundle
+import com.pj.foldableprojectview.settings.FoldableProjectSettings
 
 class FoldableProjectScopesProvider : SearchScopeProvider {
 
