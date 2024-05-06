@@ -8,7 +8,6 @@ import com.pj.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATT
 import java.awt.Color
 
 interface FoldableProjectState {
-
     val foldingEnabled: Boolean
     val matchDirectories: Boolean
     val foldIgnoredFiles: Boolean
@@ -31,8 +30,6 @@ data class Rule(
 )
 
 private class ColorConverter : Converter<Color>() {
-
     override fun toString(value: Color) = value.rgb.toString()
-
     override fun fromString(value: String) = runCatching { JBColor.decode(value) }.getOrNull()
 }

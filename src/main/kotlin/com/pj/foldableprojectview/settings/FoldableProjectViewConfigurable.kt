@@ -26,7 +26,7 @@ import javax.swing.BorderFactory.createEmptyBorder
 class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigurable(
     helpTopic = "FoldableProjectView",
     _id = "FoldableProjectView",
-    displayName = "FOOO", // TODO: ???
+    displayName = "FoldableProjectView",
 ), NoScroll {
 
     companion object {
@@ -90,7 +90,7 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     )
                     .applyToComponent { setMnemonic('h') }
 
-                visible(false)
+                visible(true)
             }
 
             row {
@@ -107,7 +107,7 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     )
                     .let(::cell)
 
-                visible(false)
+                visible(true)
             }
 
             row {
@@ -117,7 +117,7 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     .applyToComponent { setMnemonic('h') }
                     .enabledIf(hideAllGroupsPredicate.not())
 
-                visible(false)
+                visible(true)
             }
         }.enabledIf(foldingEnabledPredicate)
     }
