@@ -1,2 +1,2 @@
 rootProject.name = "Foldable Project View"
-//includeBuild("/Users/hsz/Projects/JetBrains/gradle-intellij-plugin")
+//includeBuild("/Users/pavankjadda/Projects/JetBrains/gradle-intellij-plugin")
