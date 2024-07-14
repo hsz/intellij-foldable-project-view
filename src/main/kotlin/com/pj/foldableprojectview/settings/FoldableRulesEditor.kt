@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.isNotNull
@@ -13,10 +13,10 @@ import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.selected
 import com.intellij.ui.layout.ComponentPredicate
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import ski.chrzanow.foldableprojectview.bindColor
-import ski.chrzanow.foldableprojectview.bindColorControl
-import ski.chrzanow.foldableprojectview.bindText
+import com.pj.foldableprojectview.FoldableProjectViewBundle.message
+import com.pj.foldableprojectview.bindColor
+import com.pj.foldableprojectview.bindColorControl
+import com.pj.foldableprojectview.bindText
 
 class FoldableRulesEditor(val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
 

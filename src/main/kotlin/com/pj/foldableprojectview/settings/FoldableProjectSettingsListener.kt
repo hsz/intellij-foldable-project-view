@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.util.messages.Topic
 import java.util.*

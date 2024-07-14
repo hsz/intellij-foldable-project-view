@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview
+package com.pj.foldableprojectview
 
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.bind
@@ -10,14 +10,17 @@ import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.layout.ComponentPredicate
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
-import ski.chrzanow.foldableprojectview.settings.Rule
+import com.pj.foldableprojectview.settings.FoldableProjectState
+import com.pj.foldableprojectview.settings.Rule
 import java.awt.Color
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.text.JTextComponent
 import kotlin.reflect.KMutableProperty1
 
-fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, Color?>) =
+fun Cell<ColorPanel>.bindColor(
+    graphProperty: ObservableMutableProperty<Rule?>,
+    property: KMutableProperty1<Rule, Color?>
+) =
     applyToComponent {
         with(graphProperty) {
             val mutex = AtomicBoolean()
@@ -41,7 +44,11 @@ fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Rule?>, 
         }
     }
 
-fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, Color?>, defaultValue: Color) =
+fun Cell<JBCheckBox>.bindColorControl(
+    graphProperty: ObservableMutableProperty<Rule?>,
+    property: KMutableProperty1<Rule, Color?>,
+    defaultValue: Color
+) =
     applyToComponent {
         bind(with(graphProperty) {
             transform(
@@ -59,7 +66,10 @@ fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<R
         })
     }
 
-fun <T : FoldableProjectState> Cell<JBCheckBox>.bindSelected(graphProperty: ObservableMutableProperty<T>, property: KMutableProperty1<T, Boolean>) =
+fun <T : FoldableProjectState> Cell<JBCheckBox>.bindSelected(
+    graphProperty: ObservableMutableProperty<T>,
+    property: KMutableProperty1<T, Boolean>
+) =
     bindSelected(with(graphProperty) {
         transform(
             { it.let(property::get) },
@@ -67,7 +77,10 @@ fun <T : FoldableProjectState> Cell<JBCheckBox>.bindSelected(graphProperty: Obse
         )
     })
 
-fun <T : JTextComponent> Cell<T>.bindText(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, String>) =
+fun <T : JTextComponent> Cell<T>.bindText(
+    graphProperty: ObservableMutableProperty<Rule?>,
+    property: KMutableProperty1<Rule, String>
+) =
     bindText(with(graphProperty) {
         transform(
             { it?.let(property::get).orEmpty() },

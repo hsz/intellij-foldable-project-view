@@ -1,13 +1,14 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.openapi.components.*
+import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.annotations.OptionTag
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
+import com.pj.foldableprojectview.FoldableProjectViewConstants
+import java.io.File
 
 @Service(Service.Level.PROJECT)
 @State(name = "FoldableProjectSettings", storages = [Storage(FoldableProjectViewConstants.STORAGE_FILE)])
 class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentStateComponent<FoldableProjectSettings> {
-
     @get:OptionTag("FOLDING_ENABLED")
     override var foldingEnabled by property(true)
 
@@ -15,7 +16,7 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     override var matchDirectories by property(true)
 
     @get:OptionTag("HIDE_EMPTY_GROUPS")
-    override var hideEmptyGroups by property(true)
+    override var hideEmptyGroups by property(false)
 
     @get:OptionTag("HIDE_ALL_GROUPS")
     override var hideAllGroups by property(false)
@@ -28,6 +29,22 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
 
     @get:OptionTag("RULES")
     override var rules by list<Rule>()
+
+    init {
+        val tempRules = mutableListOf<Rule>()
+        tempRules.add(Rule("Ignored Files", getGitIgnorePatterns().joinToString(" "), null, null))
+        rules = tempRules
+    }
+
+    private fun getGitIgnorePatterns(): List<String> {
+        val currentPath = System.getProperty("user.dir")
+        val gitIgnoreFile = File("$currentPath/.gitignore")
+        return if (gitIgnoreFile.exists()) {
+            gitIgnoreFile.readLines().filter { it.isNotBlank() && !it.startsWith("#") }
+        } else {
+            emptyList()
+        }
+    }
 
     override fun getState() = this
 

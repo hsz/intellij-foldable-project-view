@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>ski.chrzanow.foldableprojectview</id>
+    <id>com.pj.foldableprojectview</id>
     <name>Foldable Project View</name>
     <vendor>pavankjadda</vendor>
 
@@ -11,18 +11,18 @@
                 key="foldableProjectView.name"
                 bundle="messages.FoldableProjectView"
                 id="FoldableProjectViewConfigurable"
-                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
+                instance="com.pj.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
         <searchScopesProvider
-                implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
+                implementation="com.pj.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
 
         <treeStructureProvider
-                implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
+                implementation="com.pj.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
     </extensions>
 
     <actions>
         <action id="ProjectView.FoldRootFiles"
-                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction"
+                class="com.pj.foldableprojectview.actionSystem.FoldRootFilesAction"
                 text="Fold Root Files"
                 description="Action that lets you fold the files located in the root of your project">
             <add-to-group
@@ -33,7 +33,7 @@
 
         </action>
         <action id="ProjectView.FoldIgnoredFiles"
-                class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
+                class="com.pj.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
                 text="Fold Ignored Files"
                 description="Action that lets you fold the ignored files">
             <add-to-group

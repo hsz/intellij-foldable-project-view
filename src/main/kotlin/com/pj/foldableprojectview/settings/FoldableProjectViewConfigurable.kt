@@ -1,4 +1,4 @@
-package ski.chrzanow.foldableprojectview.settings
+package com.pj.foldableprojectview.settings
 
 import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure
 import com.intellij.ide.projectView.impl.ProjectViewPane
@@ -16,21 +16,21 @@ import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.not
 import com.intellij.util.ui.tree.TreeUtil
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import ski.chrzanow.foldableprojectview.bindSelected
-import ski.chrzanow.foldableprojectview.createPredicate
-import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
+import com.pj.foldableprojectview.FoldableProjectViewBundle.message
+import com.pj.foldableprojectview.bindSelected
+import com.pj.foldableprojectview.createPredicate
+import com.pj.foldableprojectview.projectView.FoldableTreeStructureProvider
 import java.awt.Dimension
 import javax.swing.BorderFactory.createEmptyBorder
 
 class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigurable(
     helpTopic = "FoldableProjectView",
     _id = "FoldableProjectView",
-    displayName = "FOOO", // TODO: ???
+    displayName = "FoldableProjectView",
 ), NoScroll {
 
     companion object {
-        const val ID = "ski.chrzanow.foldableprojectview.options.FoldableProjectViewConfigurable"
+        const val ID = "com.pj.foldableprojectview.options.FoldableProjectViewConfigurable"
     }
 
     private val settings = project.service<FoldableProjectSettings>()
@@ -74,17 +74,23 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
             row {
                 checkBox(message("foldableProjectView.settings.matchDirectories"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::matchDirectories)
-                    .comment(message("foldableProjectView.settings.matchDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                    .comment(
+                        message("foldableProjectView.settings.matchDirectories.comment"),
+                        MAX_LINE_LENGTH_WORD_WRAP
+                    )
                     .applyToComponent { setMnemonic('d') }
             }
 
             row {
                 checkBox(message("foldableProjectView.settings.foldIgnoredFiles"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::foldIgnoredFiles)
-                    .comment(message("foldableProjectView.settings.foldIgnoredFiles.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                    .comment(
+                        message("foldableProjectView.settings.foldIgnoredFiles.comment"),
+                        MAX_LINE_LENGTH_WORD_WRAP
+                    )
                     .applyToComponent { setMnemonic('h') }
 
-                visible(false)
+                visible(true)
             }
 
             row {
@@ -101,7 +107,7 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     )
                     .let(::cell)
 
-                visible(false)
+                visible(true)
             }
 
             row {
@@ -111,7 +117,7 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
                     .applyToComponent { setMnemonic('h') }
                     .enabledIf(hideAllGroupsPredicate.not())
 
-                visible(false)
+                visible(true)
             }
         }.enabledIf(foldingEnabledPredicate)
     }
