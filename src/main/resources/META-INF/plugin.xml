@@ -29,8 +29,6 @@
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FoldIgnoredFiles"
                     anchor="before"/>
-            <add-to-group group-id="WelcomeScreen.QuickStart" anchor="first"/>
-
         </action>
         <action id="ProjectView.FoldIgnoredFiles"
                 class="com.pj.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
