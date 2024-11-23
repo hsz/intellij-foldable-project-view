@@ -4,11 +4,17 @@
 
 ## [Unreleased]
 
-This is an EAP release.
-Please report any issues or ideas via [GitHub Issues](https://github.com/hsz/intellij-foldable-project-view/issues).
+It has been a while since the last Foldable Project View release, right?
+A lot was on my plate during this time, trust me.
+
+However, I decided to reboot this project and start with the 2.0.0 release, which may work.
+Or not. 
+But we have to start with anything after this time!
+
+Please, report any issues or ideas via [GitHub Issues](https://github.com/hsz/intellij-foldable-project-view/issues).
 
 Thanks!
-@hsz
+Jakub
 
 ### Added
 - Support for multiple rules/groups in the Project View
