@@ -28,7 +28,7 @@ class FoldableProjectViewNode(
 ) : ProjectViewNode<String>(project, rule.name, viewSettings), PsiFileSystemItemFilter, PsiElementProcessor<PsiFileSystemItem> {
 
     val containsMatchedChildKey: Key<Boolean> = Key.create("FOLDABLE_PROJECT_VIEW_CONTAINS_MATCHED_CHILD")
-    val ruleScope = FoldableProjectSearchScope(project, rule.pattern, settings)
+    val ruleScope = FoldableProjectSearchScope(project, settings, rule.pattern)
 
     override fun update(presentation: PresentationData) {
         presentation.apply {
@@ -71,6 +71,11 @@ class FoldableProjectViewNode(
         ProjectViewDirectoryHelper
             .getInstance(myProject)
             .getDirectoryChildren(parent.value, viewSettings, true, this)
+
+//    override fun getChildren() = parent.children.filter {
+//        val file = (it as ProjectViewNode).virtualFile ?: return@filter false
+//        rule.getScope(project).contains(file)
+//    }
 
     override fun contains(file: VirtualFile) = children.firstOrNull {
         it is ProjectViewNode && it.virtualFile == file

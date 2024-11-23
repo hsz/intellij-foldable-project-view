@@ -14,6 +14,7 @@ import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
@@ -84,6 +85,50 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
                 children - matched + groups
             }
+
+//            false -> {
+//                val matched = mutableSetOf<AbstractTreeNode<*>>()
+//                val fileIndex = ProjectFileIndex.getInstance(project)
+//
+//                // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
+//                val folders = state.rules.mapNotNull { rule ->
+//                    (children - matched)
+//                        .match(rule.pattern)
+//                        .also { matched.addAll(it) }
+//                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
+//                        ?.run {
+//                            matched.addAll(this)
+//                            FoldableProjectViewNode(project,viewSettings,settings, rule, toSet())
+//                        }
+//
+//
+//
+//
+////                    (children - matched)
+////                        .match(rule.pattern)
+////                        .also { matched.addAll(it) }
+////                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
+////                        ?.run {
+////                            matched.addAll(this)
+////                            FoldableProjectViewNode(project, viewSettings, rule, toSet())
+////                        }
+//
+////                    children.forEach {
+////                        val file = when (it) {
+////                            is ProjectViewNode -> it.virtualFile
+////                            else -> null
+////                        } ?: return@forEach
+////
+////                        val contains = scope.contains(file)
+////                        println("file ($contains) = ${file}")
+////                    }
+//
+//                    FoldableProjectViewNode(project, viewSettings, rule, parent)
+//                }
+//
+//                children - matched + folders
+//
+//            }
 
             else -> children
         }

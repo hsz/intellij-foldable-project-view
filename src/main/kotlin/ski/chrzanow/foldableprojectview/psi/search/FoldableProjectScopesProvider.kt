@@ -14,6 +14,9 @@ class FoldableProjectScopesProvider : SearchScopeProvider {
 
     override fun getSearchScopes(project: Project, dataContext: DataContext): MutableList<SearchScope> {
         val settings = project.service<FoldableProjectSettings>()
-        return settings.rules.map { FoldableProjectSearchScope(project, it.pattern) }.toMutableList()
+
+        return settings.rules.map {
+            FoldableProjectSearchScope(project, settings, it.pattern)
+        }.toMutableList()
     }
 }
