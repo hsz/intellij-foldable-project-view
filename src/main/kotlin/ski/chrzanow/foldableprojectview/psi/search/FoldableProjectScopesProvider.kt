@@ -5,18 +5,18 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.SearchScopeProvider
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 
 class FoldableProjectScopesProvider : SearchScopeProvider {
 
-    override fun getDisplayName() = FoldableProjectViewBundle.getMessage("foldableProjectView.name")
+    override fun getDisplayName() = message("foldableProjectView.name")
 
-    override fun getSearchScopes(project: Project, dataContext: DataContext): MutableList<SearchScope> {
+    override fun getSearchScopes(project: Project, dataContext: DataContext): List<SearchScope> {
         val settings = project.service<FoldableProjectSettings>()
 
-        return settings.rules.map {
-            FoldableProjectSearchScope(project, settings, it.pattern)
-        }.toMutableList()
+        return settings.rules
+            .filter { it.pattern.isNotBlank() }
+            .map { it.getScope(project, settings) }
     }
 }

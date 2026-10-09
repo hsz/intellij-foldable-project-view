@@ -19,9 +19,21 @@ Jakub
 ### Added
 - Support for multiple rules/groups in the Project View
 - Possibility for specifying the background/foreground of the rule
+- Folding rules are available as search scopes (e.g., in Find in Files)
+- Ignored files are folded into a dedicated `Ignored files` group
+- Folding groups show the number of folded elements
 
 ### Changed
 - Use a separated storage file within the `.idea` directory: `FoldableProjectView.xml`
+- Patterns are matched against the path relative to the module content root, using gitignore-like glob syntax
+- Folding groups are sorted right after directories
+- Require IntelliJ Platform 2025.3+
+
+### Fixed
+- Matched elements were duplicated in the Project View instead of being moved into the group
+- `Hide empty groups`, `Hide all groups`, and `Fold ignored files` options were not applied
+- Project View was not refreshed after applying the settings
+- Space-separated patterns in a single rule were treated as one pattern
 
 ## [1.1.4] - 2022-11-13
 

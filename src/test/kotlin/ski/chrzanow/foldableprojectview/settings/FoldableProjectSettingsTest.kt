@@ -1,0 +1,51 @@
+package ski.chrzanow.foldableprojectview.settings
+
+import com.intellij.configurationStore.deserialize
+import com.intellij.configurationStore.serialize
+import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.util.xmlb.XmlSerializer
+import org.jdom.output.XMLOutputter
+import java.awt.Color
+
+class FoldableProjectSettingsTest : LightPlatformTestCase() {
+
+    fun `test rule colors survive serialization`() {
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md", background = Color(0x10, 0x20, 0x30), foreground = Color(0xFF, 0x00, 0x7F, 0x80)))
+            rules.add(Rule("Gradle", "gradle*"))
+        }
+
+        val element = serialize(settings)!!
+        val xml = XMLOutputter().outputString(element)
+        assertTrue(xml, xml.contains("background"))
+        assertTrue(xml, xml.contains("foreground"))
+
+        val restored = FoldableProjectSettings().apply { loadState(element.deserialize(FoldableProjectSettings::class.java)) }
+
+        assertEquals(settings.rules, restored.rules)
+        assertEquals(Color(0x10, 0x20, 0x30), restored.rules[0].background)
+        assertEquals(Color(0xFF, 0x00, 0x7F, 0x80), restored.rules[0].foreground)
+        assertNull(restored.rules[1].background)
+        assertNull(restored.rules[1].foreground)
+    }
+
+    fun `test rule colors survive xml serializer roundtrip`() {
+        val rule = Rule("Docs", "*.md", background = Color(0x10, 0x20, 0x30), foreground = Color(0xFF, 0x00, 0x7F))
+
+        val element = XmlSerializer.serialize(rule)
+        val restored = XmlSerializer.deserialize(element, Rule::class.java)
+
+        assertEquals(rule, restored)
+    }
+
+    fun `test copyFrom keeps rule colors`() {
+        val source = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md", background = Color.RED, foreground = Color.BLUE))
+        }
+        val target = FoldableProjectSettings().apply { copyFrom(source) }
+
+        assertEquals(source.rules, target.rules)
+        assertEquals(Color.RED, target.rules[0].background)
+        assertEquals(Color.BLUE, target.rules[0].foreground)
+    }
+}

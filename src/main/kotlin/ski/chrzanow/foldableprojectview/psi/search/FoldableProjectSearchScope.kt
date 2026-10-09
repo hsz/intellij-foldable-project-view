@@ -2,45 +2,48 @@ package ski.chrzanow.foldableprojectview.psi.search
 
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
-import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
-import kotlin.io.path.pathString
-import kotlin.io.path.relativeToOrNull
+import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
+import ski.chrzanow.foldableprojectview.settings.Rule
 
-class FoldableProjectSearchScope(project: Project, val settings: FoldableProjectSettings, val rule: String) : GlobalSearchScope(project) {
+/**
+ * Search scope that contains files matching the rule's glob patterns.
+ *
+ * Patterns are space-separated, gitignore-like globs (`README.md *.yml gradle*`) matched
+ * against the file path relative to its content root, see [GlobPattern].
+ */
+class FoldableProjectSearchScope(project: Project, state: FoldableProjectState, val rule: Rule) : GlobalSearchScope(project) {
 
     private val fileIndex = ProjectFileIndex.getInstance(project)
-    private fun String.caseSensitive() = when (settings.caseSensitive) {
-        true -> this
-        false -> this.lowercase()
-    }
-
-    private val pattern = PatternCache.getInstance(project).createPattern(rule.caseSensitive(), Syntax.GLOB)
+    private val patterns = rule.pattern
+        .split(WHITESPACE)
+        .filter(String::isNotBlank)
+        .mapNotNull { GlobPattern.compile(it, state.caseSensitive) }
 
     override fun contains(file: VirtualFile): Boolean {
-        if (pattern == null) {
+        if (patterns.isEmpty()) {
             return false
         }
 
-        val moduleDir = fileIndex.getModuleForFile(file)?.guessModuleDir() ?: project?.guessProjectDir() ?: return false
-        val base = moduleDir.toNioPath()
-        val relativePath = file.toNioPath().relativeToOrNull(base) ?: return false
-        val path = relativePath.pathString.caseSensitive()
+        val root = fileIndex.getContentRootForFile(file, false) ?: project?.guessProjectDir() ?: return false
+        val path = VfsUtilCore.getRelativePath(file, root) ?: return false
 
-        return pattern.matcher(path).matches()
+        return patterns.any { it.matches(path) }
     }
 
     override fun isSearchInModuleContent(aModule: Module) = true
 
     override fun isSearchInLibraries() = false
 
-    override fun getDisplayName() = rule
+    override fun getDisplayName() = rule.name
 
-    override fun toString() = rule
+    override fun toString() = "${rule.name}: ${rule.pattern}"
+
+    companion object {
+        private val WHITESPACE = Regex("\\s+")
+    }
 }

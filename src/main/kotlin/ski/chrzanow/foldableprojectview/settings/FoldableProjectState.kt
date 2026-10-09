@@ -1,7 +1,6 @@
 package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBColor
 import com.intellij.util.xmlb.Converter
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
@@ -32,12 +31,12 @@ data class Rule(
     var foreground: Color? = null,
 ) {
 
-    fun getScope(project: Project, settings: FoldableProjectSettings) = FoldableProjectSearchScope(project, settings, pattern)
+    fun getScope(project: Project, state: FoldableProjectState) = FoldableProjectSearchScope(project, state, this)
 }
 
 private class ColorConverter : Converter<Color>() {
 
     override fun toString(value: Color) = value.rgb.toString()
 
-    override fun fromString(value: String) = runCatching { JBColor.decode(value) }.getOrNull()
+    override fun fromString(value: String) = runCatching { Color(value.toInt()) }.getOrNull()
 }

@@ -1,6 +1,11 @@
 package ski.chrzanow.foldableprojectview.settings
 
-import com.intellij.openapi.components.*
+import com.intellij.openapi.components.BaseState
+import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.State
+import com.intellij.openapi.components.Storage
+import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 
@@ -32,4 +37,14 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     override fun getState() = this
 
     override fun loadState(state: FoldableProjectSettings) = copyFrom(state)
+}
+
+/**
+ * Applies [block] to the settings and notifies [FoldableProjectSettingsListener]s of the [project] about the change.
+ */
+fun FoldableProjectSettings.update(project: Project, block: FoldableProjectSettings.() -> Unit) {
+    block()
+    project.messageBus
+        .syncPublisher(FoldableProjectSettingsListener.TOPIC)
+        .settingsChanged(this)
 }

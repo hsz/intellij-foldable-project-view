@@ -1,6 +1,5 @@
 package ski.chrzanow.foldableprojectview.projectView
 
-import com.intellij.ide.projectView.ProjectView
 import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
@@ -10,43 +9,30 @@ import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
-import com.intellij.openapi.module.ModuleUtil
-import com.intellij.openapi.observable.properties.ObservableMutableProperty
+import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.observable.properties.ObservableProperty
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
-import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
-import com.intellij.openapi.vcs.FileStatusListener
-import com.intellij.openapi.vcs.FileStatusManager
-import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
-import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
-import ski.chrzanow.foldableprojectview.or
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
+import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
+import ski.chrzanow.foldableprojectview.settings.Rule
 
-class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider {
+/**
+ * Folds the root elements of the project modules into the [FoldableProjectViewNode] groups
+ * according to the configured [Rule]s.
+ */
+class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider, DumbAware {
 
-    private val settings by lazy { project.service<FoldableProjectSettings>() }
-    private val patternCache = PatternCache.getInstance(project)
-    private var previewProjectViewPane: ProjectViewPane? = null
-    private var previewGraphProperty: ObservableMutableProperty<FoldableProjectSettings>? = null
-    private val state get() = previewGraphProperty?.get() ?: settings
+    private var stateProvider: () -> FoldableProjectState = { project.service<FoldableProjectSettings>() }
 
-    // TODO: Move to project service?
     init {
-        project.messageBus
-            .connect(project)
-            .subscribe(FoldableProjectSettingsListener.TOPIC, FoldableProjectSettingsListener {
-                refreshProjectView()
-            })
-
-        FileStatusManager.getInstance(project).addFileStatusListener(object : FileStatusListener {
-            override fun fileStatusesChanged() {
-                if (state.foldIgnoredFiles) {
-                    refreshProjectView()
-                }
-            }
-        }, project)
+        // Make sure the Project View gets refreshed when the settings or file statuses change.
+        if (!project.isDefault) {
+            project.service<FoldableProjectViewRefresher>()
+        }
     }
 
     override fun modify(
@@ -54,135 +40,62 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         children: MutableCollection<AbstractTreeNode<*>>,
         viewSettings: ViewSettings?,
     ): Collection<AbstractTreeNode<*>> {
-        val project = parent.project ?: return children
-        val foldingGroup = parent.foldingFolder
+        val state = stateProvider()
+        if (!state.foldingEnabled || parent !is PsiDirectoryNode || !parent.isModuleRoot()) {
+            return children
+        }
 
-        return when {
-            // Folding is disabled
-            !state.foldingEnabled -> children
+        val remaining = children.toMutableList()
+        val groups = mutableListOf<FoldableProjectViewNode>()
 
-//            foldingGroup != null -> {
-//                val parentPath = (foldingGroup.parent as PsiDirectoryNode).virtualFile?.toNioPath()
-//
-//                children.filter {
-//                    true
-//                }
-//            }
+        fun fold(rule: Rule, predicate: (AbstractTreeNode<*>) -> Boolean) {
+            val matched = remaining.filter { it.isFoldable(state) && predicate(it) }
+            remaining -= matched
 
-            // Parent is not a directory node
-            parent !is PsiDirectoryNode -> children
+            if (!state.hideAllGroups && (matched.isNotEmpty() || !state.hideEmptyGroups)) {
+                groups += FoldableProjectViewNode(project, viewSettings, rule, matched)
+            }
+        }
 
-            // Parent is a directory node, not a module, and matching nested is disabled
-//            !isModule(parent, project) -> children
-
-            parent.parent is ProjectViewProjectNode -> {
-                val matched = mutableSetOf<AbstractTreeNode<*>>()
-
-                // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
-                val groups = state.rules.map {
-                    FoldableProjectViewNode(project, viewSettings, state, it, parent)
-                }
-
-                children - matched + groups
+        state.rules
+            .filter { it.pattern.isNotBlank() }
+            .forEach { rule ->
+                val scope = rule.getScope(project, state)
+                fold(rule) { node -> node.virtualFile?.let(scope::contains) ?: false }
             }
 
-//            false -> {
-//                val matched = mutableSetOf<AbstractTreeNode<*>>()
-//                val fileIndex = ProjectFileIndex.getInstance(project)
-//
-//                // TODO: allow for duplicates? – checkbox in settings; otherwise the first rule will take the precedence
-//                val folders = state.rules.mapNotNull { rule ->
-//                    (children - matched)
-//                        .match(rule.pattern)
-//                        .also { matched.addAll(it) }
-//                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
-//                        ?.run {
-//                            matched.addAll(this)
-//                            FoldableProjectViewNode(project,viewSettings,settings, rule, toSet())
-//                        }
-//
-//
-//
-//
-////                    (children - matched)
-////                        .match(rule.pattern)
-////                        .also { matched.addAll(it) }
-////                        .takeUnless { state.hideAllGroups || (state.hideEmptyGroups && matched.isEmpty()) }
-////                        ?.run {
-////                            matched.addAll(this)
-////                            FoldableProjectViewNode(project, viewSettings, rule, toSet())
-////                        }
-//
-////                    children.forEach {
-////                        val file = when (it) {
-////                            is ProjectViewNode -> it.virtualFile
-////                            else -> null
-////                        } ?: return@forEach
-////
-////                        val contains = scope.contains(file)
-////                        println("file ($contains) = ${file}")
-////                    }
-//
-//                    FoldableProjectViewNode(project, viewSettings, rule, parent)
-//                }
-//
-//                children - matched + folders
-//
-//            }
+        if (state.foldIgnoredFiles) {
+            fold(Rule(message("foldableProjectView.ignoredFiles"), "")) { node -> node.fileStatus == FileStatus.IGNORED }
+        }
 
-            else -> children
+        return remaining + groups
+    }
+
+    /**
+     * Makes the provider use the given [property] as the settings source and refresh the [pane] when it changes.
+     * Used to render the live preview in the plugin settings.
+     */
+    fun withPreview(pane: ProjectViewPane, property: ObservableProperty<out FoldableProjectState>) = apply {
+        stateProvider = property::get
+        property.afterChange(pane) {
+            pane.updateFromRoot(true)
         }
     }
 
-    fun withProjectViewPane(projectViewPane: ProjectViewPane) = apply {
-        previewProjectViewPane = projectViewPane
+    private fun PsiDirectoryNode.isModuleRoot(): Boolean {
+        if (parent is ProjectViewProjectNode) {
+            return true
+        }
+        val file = virtualFile ?: return false
+        return ModuleUtilCore.findModuleForFile(file, project)?.guessModuleDir() == file
     }
 
-    fun withState(property: ObservableMutableProperty<FoldableProjectSettings>) = apply {
-        previewGraphProperty = property.also {
-            it.afterChange {
-                refreshProjectView()
-            }
-        }
+    private fun AbstractTreeNode<*>.isFoldable(state: FoldableProjectState) = when (this) {
+        is PsiDirectoryNode -> state.matchDirectories
+        is PsiFileNode -> true
+        else -> false
     }
 
-    private fun isModule(node: PsiDirectoryNode, project: Project) =
-        node.virtualFile
-            ?.let { ModuleUtil.findModuleForFile(it, project)?.guessModuleDir() == it }
-            ?: false
-
-    private fun Collection<AbstractTreeNode<*>>.match(patterns: String) = this
-        .filter {
-            when (it) {
-                is PsiDirectoryNode -> state.matchDirectories
-                is PsiFileNode -> true
-                else -> false
-            }
-        }
-        .filter {
-            when (it) {
-                is ProjectViewNode -> it.virtualFile?.name ?: it.name
-                else -> it.name
-            }.let { name ->
-                patterns
-                    .split(' ')
-                    .any { pattern ->
-                        patternCache
-                            .createPattern(pattern, Syntax.GLOB)
-                            ?.matcher(name)
-                            ?.matches()
-                            ?: false
-                    }
-            }.or(state.foldIgnoredFiles and (it.fileStatus.equals(FileStatus.IGNORED)))
-        }
-
-    private fun refreshProjectView() = previewProjectViewPane
-        .or { ProjectView.getInstance(project).currentProjectViewPane }
-        ?.updateFromRoot(true)
-
-    private val <T> AbstractTreeNode<T>.isFolded: Boolean
-        get() = parent?.run { this is FoldableProjectViewNode || isFolded } ?: false
-
-    private val <T> AbstractTreeNode<T>.foldingFolder: AbstractTreeNode<*>?
-        get() = parent.takeIf { it is FoldableProjectViewNode } ?: parent?.foldingFolder
+    private val AbstractTreeNode<*>.virtualFile
+        get() = (this as? ProjectViewNode<*>)?.virtualFile
 }

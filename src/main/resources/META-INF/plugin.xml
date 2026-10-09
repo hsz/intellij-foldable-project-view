@@ -8,12 +8,15 @@
         Available features:
         <ul>
           <li>Fold matching root elements of the project modules in the Project View</li>
+          <li>Multiple named folding rules with custom foreground/background colors</li>
           <li>Enable/disable folding via Preferences or Project View options menu</li>
           <li>Optionally fold directories</li>
+          <li>Fold VCS-ignored files</li>
           <li>Hide empty groups</li>
           <li>Hide all groups</li>
           <li>Case-insensitive matching</li>
-          <li>Live ProjectView preview</li>
+          <li>Search scopes based on the folding rules</li>
+          <li>Live Project View preview</li>
         </ul>
         <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />
         ]]></description>
@@ -26,7 +29,8 @@
                 key="foldableProjectView.name"
                 bundle="messages.FoldableProjectView"
                 id="FoldableProjectViewConfigurable"
-                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
+                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"
+                nonDefaultProject="true"/>
 
         <searchScopesProvider
                 implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
@@ -44,8 +48,6 @@
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FoldIgnoredFiles"
                     anchor="before"/>
-            <add-to-group group-id="WelcomeScreen.QuickStart" anchor="first"/>
-
         </action>
         <action id="ProjectView.FoldIgnoredFiles"
                 class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
