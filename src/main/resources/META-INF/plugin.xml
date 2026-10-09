@@ -3,6 +3,21 @@
     <name>Foldable Project View</name>
     <vendor>hsz</vendor>
 
+    <description><![CDATA[
+        The Foldable Project View is a plugin for the IntelliJ-based IDEs that lets you fold files located in the root of your project.<br><br>
+        Available features:
+        <ul>
+          <li>Fold matching root elements of the project modules in the Project View</li>
+          <li>Enable/disable folding via Preferences or Project View options menu</li>
+          <li>Optionally fold directories</li>
+          <li>Hide empty groups</li>
+          <li>Hide all groups</li>
+          <li>Case-insensitive matching</li>
+          <li>Live ProjectView preview</li>
+        </ul>
+        <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />
+        ]]></description>
+
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">

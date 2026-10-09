@@ -2,3 +2,20 @@
 .idea
 .intellijPlatform
 build
+
+# Kotlin compiler daemon / session data
+.kotlin/
+
+# Local tool output and logs
+*.log
+.output.txt
+
+# Local configuration and secrets: never commit these
+local.properties
+.env*
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+signing/
