@@ -6,6 +6,12 @@
 
 <!-- Plugin description -->
 
+> **Support Foldable Project View**
+>
+> If you find this plugin useful, support its development via **[GitHub Sponsors](https://github.com/sponsors/hsz)**, **[Ko-fi](https://ko-fi.com/hszanowski)**, or **[PayPal](https://paypal.me/hsz)**.
+>
+> You can also find my other projects on [GitHub](https://github.com/hsz).
+
 The Foldable Project View is a plugin for the IntelliJ-based IDEs that lets you fold files located in the root of your project.
 
 Available features:

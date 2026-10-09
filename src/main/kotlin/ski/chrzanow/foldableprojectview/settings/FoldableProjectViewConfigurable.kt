@@ -150,6 +150,9 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
 
     override fun createPanel() = panel {
         row {
+            comment(message("foldableProjectView.settings.support.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+        }
+        row {
             cell(createSettingsWithPreview())
                 .align(Align.FILL)
         }
