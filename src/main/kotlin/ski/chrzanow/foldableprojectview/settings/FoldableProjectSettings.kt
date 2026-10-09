@@ -26,6 +26,9 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_IGNORED_FILES")
     override var foldIgnoredFiles by property(true)
 
+    @get:OptionTag("LIMIT_TO_GO_WORK_MODULES")
+    override var limitToGoWorkModules by property(false)
+
     @get:OptionTag("RULES")
     override var rules by list<Rule>()
 

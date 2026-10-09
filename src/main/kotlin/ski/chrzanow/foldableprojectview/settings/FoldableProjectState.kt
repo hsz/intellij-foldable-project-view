@@ -17,6 +17,7 @@ interface FoldableProjectState {
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean
     val caseSensitive: Boolean
+    val limitToGoWorkModules: Boolean
     val rules: MutableList<Rule>
 }
 

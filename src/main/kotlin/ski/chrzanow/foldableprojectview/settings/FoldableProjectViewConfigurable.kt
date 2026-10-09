@@ -65,6 +65,12 @@ class FoldableProjectViewConfigurable(project: Project) : BoundSearchableConfigu
 
         rowsRange {
             row {
+                checkBox(message("foldableProjectView.settings.limitToGoWorkModules"))
+                    .bindSelected(settingsProperty, FoldableProjectSettings::limitToGoWorkModules)
+                    .comment(message("foldableProjectView.settings.limitToGoWorkModules.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
+
+            row {
                 checkBox(message("foldableProjectView.settings.caseSensitive"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::caseSensitive)
                     .comment(message("foldableProjectView.settings.caseSensitive.comment"), MAX_LINE_LENGTH_WORD_WRAP)

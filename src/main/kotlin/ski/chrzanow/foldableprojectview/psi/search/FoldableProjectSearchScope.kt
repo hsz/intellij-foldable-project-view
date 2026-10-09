@@ -5,10 +5,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.vcs.changes.ignore.cache.PatternCache
-import com.intellij.openapi.vcs.changes.ignore.lang.Syntax
+import java.nio.file.FileSystems
+import java.nio.file.PathMatcher
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.search.GlobalSearchScope
+import ski.chrzanow.foldableprojectview.go.GoWorkService
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import kotlin.io.path.pathString
 import kotlin.io.path.relativeToOrNull
@@ -21,19 +22,43 @@ class FoldableProjectSearchScope(project: Project, val settings: FoldableProject
         false -> this.lowercase()
     }
 
-    private val pattern = PatternCache.getInstance(project).createPattern(rule.caseSensitive(), Syntax.GLOB)
+    private val patterns: List<PathMatcher> =
+        rule
+            .split(' ')
+            .mapNotNull { raw ->
+                val p = raw.trim().takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                try {
+                    FileSystems.getDefault().getPathMatcher("glob:${p.caseSensitive()}")
+                } catch (_: Exception) {
+                    null
+                }
+            }
 
     override fun contains(file: VirtualFile): Boolean {
-        if (pattern == null) {
+        if (patterns.isEmpty()) {
+            return false
+        }
+        // Keep base detection for future relative logic (currently we match by name only)
+        val goWorkService = project?.getService(GoWorkService::class.java)
+        val workspaceRoot = goWorkService?.findWorkspaceRootFor(file)
+        val moduleDir = workspaceRoot ?: fileIndex.getModuleForFile(file)?.guessModuleDir() ?: project?.guessProjectDir() ?: return false
+        moduleDir.toNioPath()
+
+        // Match by file/directory name only (consistent with UI/Tree filtering)
+        val name = file.name.caseSensitive()
+        val pathToMatch = try {
+            java.nio.file.Paths.get(name)
+        } catch (_: Exception) {
             return false
         }
 
-        val moduleDir = fileIndex.getModuleForFile(file)?.guessModuleDir() ?: project?.guessProjectDir() ?: return false
-        val base = moduleDir.toNioPath()
-        val relativePath = file.toNioPath().relativeToOrNull(base) ?: return false
-        val path = relativePath.pathString.caseSensitive()
-
-        return pattern.matcher(path).matches()
+        return patterns.any { m ->
+            try {
+                m.matches(pathToMatch.fileName ?: pathToMatch)
+            } catch (_: Exception) {
+                false
+            }
+        }
     }
 
     override fun isSearchInModuleContent(aModule: Module) = true

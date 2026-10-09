@@ -1,3 +1,4 @@
+import org.gradle.api.JavaVersion
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
@@ -15,7 +16,13 @@ version = providers.gradleProperty("pluginVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
+}
+
+java {
+    // IntelliJ Platform 2025.2 requires Java 21
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 // Configure project's dependencies
@@ -86,6 +93,11 @@ intellijPlatform {
         }
     }
 
+    // The IDE bundled JBR 25 cannot resolve the `java.system.class.loader` class from a shortened
+    // (manifest-based) classpath, so `buildSearchableOptions` fails with ClassNotFoundException.
+    // Use a literal `lib/*` wildcard classpath instead to keep the command line short.
+    // See `tasks.withType<BuildSearchableOptionsTask>` below.
+
     signing {
         certificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
         privateKey = providers.environmentVariable("PRIVATE_KEY")
@@ -127,6 +139,14 @@ kover {
 tasks {
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
+    }
+
+    withType<org.jetbrains.intellij.platform.gradle.tasks.BuildSearchableOptionsTask>().configureEach {
+        classpath = layout.files(
+            providers.provider {
+                listOf(File(platformPath.toFile(), "lib/*"))
+            }
+        )
     }
 
     publishPlugin {

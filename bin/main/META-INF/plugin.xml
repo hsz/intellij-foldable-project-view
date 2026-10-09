@@ -1,0 +1,45 @@
+<idea-plugin>
+    <id>ski.chrzanow.foldableprojectview</id>
+    <name>Foldable Project View</name>
+    <vendor>hsz</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable
+                groupId="tools"
+                key="foldableProjectView.name"
+                bundle="messages.FoldableProjectView"
+                id="FoldableProjectViewConfigurable"
+                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
+
+        <searchScopesProvider
+                implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
+
+        <treeStructureProvider
+                implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
+    </extensions>
+
+    <actions>
+        <action id="ProjectView.FoldRootFiles"
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction"
+                text="Fold Root Files"
+                description="Action that lets you fold the files located in the root of your project">
+            <add-to-group
+                    group-id="ProjectView.ToolWindow.SecondaryActions"
+                    relative-to-action="ProjectView.FoldIgnoredFiles"
+                    anchor="before"/>
+            <add-to-group group-id="WelcomeScreen.QuickStart" anchor="first"/>
+
+        </action>
+        <action id="ProjectView.FoldIgnoredFiles"
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
+                text="Fold Ignored Files"
+                description="Action that lets you fold the ignored files">
+            <add-to-group
+                    group-id="ProjectView.ToolWindow.SecondaryActions"
+                    relative-to-action="ProjectView.FlattenPackages"
+                    anchor="before"/>
+        </action>
+    </actions>
+</idea-plugin>

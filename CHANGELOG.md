@@ -22,6 +22,7 @@ Jakub
 
 ### Changed
 - Use a separated storage file within the `.idea` directory: `FoldableProjectView.xml`
+- Support 252–262.* IDE releases with a single 2025.2-based build
 
 ## [1.1.4] - 2022-11-13
 
