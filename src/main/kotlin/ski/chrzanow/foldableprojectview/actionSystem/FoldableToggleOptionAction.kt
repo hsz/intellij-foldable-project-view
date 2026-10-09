@@ -17,6 +17,13 @@ abstract class FoldableToggleOptionAction(property: KMutableProperty1<FoldablePr
     Function { event: AnActionEvent -> event.project?.let { SettingsOption(it, property) } }
 ) {
 
+    override fun update(event: AnActionEvent) {
+        super.update(event)
+        if (event.project == null) {
+            event.presentation.isEnabledAndVisible = false
+        }
+    }
+
     private class SettingsOption(
         private val project: Project,
         private val property: KMutableProperty1<FoldableProjectSettings, Boolean>,
