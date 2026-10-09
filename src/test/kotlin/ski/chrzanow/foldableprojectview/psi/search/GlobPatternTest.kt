@@ -83,6 +83,46 @@ class GlobPatternTest {
     }
 
     @Test
+    fun `pattern is trimmed before compiling`() {
+        assertTrue("  *.md  ".matches("README.md"))
+    }
+
+    @Test
+    fun `unclosed or empty bracket is treated literally`() {
+        assertTrue("a[b".matches("a[b"))
+        assertFalse("a[b".matches("ab"))
+        assertTrue("a[]b".matches("a[]b"))
+    }
+
+    @Test
+    fun `invalid character class range is not compiled`() {
+        assertNull(GlobPattern.compile("[z-a].md"))
+    }
+
+    @Test
+    fun `double star alone matches everything`() {
+        assertTrue("**".matches("a"))
+        assertTrue("**".matches("a/b/c.txt"))
+    }
+
+    @Test
+    fun `double star inside a segment spans segments`() {
+        assertTrue("a**b".matches("a/x/b"))
+        assertTrue("a**b".matches("ab"))
+    }
+
+    @Test
+    fun `trailing backslash is matched literally`() {
+        assertTrue("a\\".matches("a\\"))
+    }
+
+    @Test
+    fun `star does not cross segment boundary`() {
+        assertFalse("src/*/Main.kt".matches("src/a/b/Main.kt"))
+        assertTrue("src/*/Main.kt".matches("src/a/Main.kt"))
+    }
+
+    @Test
     fun `case sensitivity`() {
         assertFalse("readme.md".matches("README.md"))
         assertTrue("readme.md".matches("README.md", caseSensitive = false))
