@@ -44,6 +44,6 @@ class FoldableProjectSearchScope(project: Project, state: FoldableProjectState, 
     override fun toString() = "${rule.name}: ${rule.pattern}"
 
     companion object {
-        private val WHITESPACE = Regex("\\s+")
+        private val WHITESPACE = Regex("[\\s,]+")
     }
 }

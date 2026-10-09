@@ -33,7 +33,7 @@ Jakub
 - Matched elements were duplicated in the Project View instead of being moved into the group, and folding was not applied to module roots reached through other Project View parent nodes or content roots ([#92](https://github.com/hsz/intellij-foldable-project-view/issues/92))
 - `Hide empty groups`, `Hide all groups`, and `Fold ignored files` options were not applied
 - Project View was not refreshed after applying the settings
-- Space-separated patterns in a single rule were treated as one pattern
+- Space-separated patterns in a single rule were treated as one pattern; patterns can now be separated by spaces, commas, or both ([#64](https://github.com/hsz/intellij-foldable-project-view/issues/64))
 - `Select Opened File` was delayed on large projects due to excessive pattern matching ([#93](https://github.com/hsz/intellij-foldable-project-view/issues/93))
 - `Fold Root Files` and `Fold Ignored Files` actions were shown on the Welcome screen, where no project is available ([#82](https://github.com/hsz/intellij-foldable-project-view/issues/82))
 
