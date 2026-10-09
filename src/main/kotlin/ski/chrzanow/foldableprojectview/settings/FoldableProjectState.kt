@@ -6,6 +6,7 @@ import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
+import com.intellij.ui.JBColor
 import java.awt.Color
 
 interface FoldableProjectState {
@@ -38,5 +39,5 @@ private class ColorConverter : Converter<Color>() {
 
     override fun toString(value: Color) = value.rgb.toString()
 
-    override fun fromString(value: String) = runCatching { Color(value.toInt()) }.getOrNull()
+    override fun fromString(value: String) = runCatching { Color(value.toInt()).let { JBColor(it, it) } }.getOrNull()
 }
