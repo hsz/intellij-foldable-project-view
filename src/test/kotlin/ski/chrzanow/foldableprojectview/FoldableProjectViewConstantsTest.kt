@@ -1,0 +1,29 @@
+package ski.chrzanow.foldableprojectview
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import ski.chrzanow.foldableprojectview.psi.search.GlobPattern
+
+class FoldableProjectViewConstantsTest {
+
+    @Test
+    fun `default rule pattern is a valid glob`() {
+        val regex = GlobPattern.compile(FoldableProjectViewConstants.DEFAULT_RULE_PATTERN)
+
+        assertNotNull(regex)
+        assertTrue(regex!!.matches("README.md"))
+    }
+
+    @Test
+    fun `storage file is xml`() {
+        assertTrue(FoldableProjectViewConstants.STORAGE_FILE.endsWith(".xml"))
+    }
+
+    @Test
+    fun `default rule name is not blank`() {
+        assertTrue(FoldableProjectViewConstants.DEFAULT_RULE_NAME.isNotBlank())
+        assertEquals("Aa", FoldableProjectViewConstants.COLOR_COLUMN_TEXT)
+    }
+}
