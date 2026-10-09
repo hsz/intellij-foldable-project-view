@@ -6,6 +6,7 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.SimpleTextAttributes.GRAYED_ATTRIBUTES
@@ -40,7 +41,7 @@ class FoldableProjectViewNode(
     override fun getChildren() = children
 
     override fun contains(file: VirtualFile) = children.any {
-        it is ProjectViewNode<*> && (it.virtualFile == file || it.contains(file))
+        it is ProjectViewNode<*> && it.virtualFile?.let { parent -> VfsUtilCore.isAncestor(parent, file, false) } == true
     }
 
     override fun getTypeSortWeight(sortByType: Boolean) = TYPE_SORT_WEIGHT

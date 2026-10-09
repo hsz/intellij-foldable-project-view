@@ -34,6 +34,7 @@ Jakub
 - `Hide empty groups`, `Hide all groups`, and `Fold ignored files` options were not applied
 - Project View was not refreshed after applying the settings
 - Space-separated patterns in a single rule were treated as one pattern
+- `Select Opened File` was delayed on large projects due to excessive pattern matching ([#93](https://github.com/hsz/intellij-foldable-project-view/issues/93))
 
 ## [1.1.4] - 2022-11-13
 
