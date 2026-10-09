@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
@@ -37,6 +38,10 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     override fun getState() = this
 
     override fun loadState(state: FoldableProjectSettings) = copyFrom(state)
+
+    override fun noStateLoaded() {
+        service<FoldableProjectDefaults>().state?.let(::copyFrom)
+    }
 }
 
 /**
@@ -44,6 +49,7 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
  */
 fun FoldableProjectSettings.update(project: Project, block: FoldableProjectSettings.() -> Unit) {
     block()
+    service<FoldableProjectDefaults>().store(this)
     project.messageBus
         .syncPublisher(FoldableProjectSettingsListener.TOPIC)
         .settingsChanged(this)
