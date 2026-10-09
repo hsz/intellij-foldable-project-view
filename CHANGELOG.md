@@ -30,7 +30,7 @@ Jakub
 - Require IntelliJ Platform 2025.3+
 
 ### Fixed
-- Matched elements were duplicated in the Project View instead of being moved into the group
+- Matched elements were duplicated in the Project View instead of being moved into the group, and folding was not applied to module roots reached through other Project View parent nodes or content roots ([#92](https://github.com/hsz/intellij-foldable-project-view/issues/92))
 - `Hide empty groups`, `Hide all groups`, and `Fold ignored files` options were not applied
 - Project View was not refreshed after applying the settings
 - Space-separated patterns in a single rule were treated as one pattern

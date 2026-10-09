@@ -11,7 +11,7 @@ import java.awt.Color
 class RuleTest {
 
     @Test
-    fun `default rule uses constants and no colors`() {
+    fun `defaults`() {
         val rule = Rule()
 
         assertEquals(DEFAULT_RULE_NAME, rule.name)
@@ -21,23 +21,16 @@ class RuleTest {
     }
 
     @Test
-    fun `rules with same values are equal`() {
-        assertEquals(Rule("a", "*.kt", Color.RED, Color.BLUE), Rule("a", "*.kt", Color.RED, Color.BLUE))
-    }
-
-    @Test
-    fun `rules with different values are not equal`() {
+    fun `equality`() {
+        assertEquals(Rule("a", "*.kt", Color.RED), Rule("a", "*.kt", Color.RED))
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.md"))
         assertNotEquals(Rule("a", "*.kt", Color.RED), Rule("a", "*.kt", Color.BLUE))
     }
 
     @Test
-    fun `copy keeps colors and overrides given fields`() {
+    fun `copy overrides only given fields`() {
         val copy = Rule("a", "*.kt", Color.RED, Color.BLUE).copy(name = "b")
 
-        assertEquals("b", copy.name)
-        assertEquals("*.kt", copy.pattern)
-        assertEquals(Color.RED, copy.background)
-        assertEquals(Color.BLUE, copy.foreground)
+        assertEquals(Rule("b", "*.kt", Color.RED, Color.BLUE), copy)
     }
 }

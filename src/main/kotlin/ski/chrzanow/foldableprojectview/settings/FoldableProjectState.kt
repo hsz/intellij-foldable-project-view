@@ -39,5 +39,5 @@ private class ColorConverter : Converter<Color>() {
 
     override fun toString(value: Color) = value.rgb.toString()
 
-    override fun fromString(value: String) = runCatching { Color(value.toInt()).let { JBColor(it, it) } }.getOrNull()
+    override fun fromString(value: String) = runCatching { Color(value.toInt(), true).let { JBColor(it, it) } }.getOrNull()
 }

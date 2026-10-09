@@ -4,6 +4,8 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.TreeStructureProvider
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.projectView.impl.ProjectViewPane
+import com.intellij.ide.projectView.impl.nodes.AbstractModuleNode
+import com.intellij.ide.projectView.impl.nodes.AbstractProjectNode
 import com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
@@ -14,6 +16,7 @@ import com.intellij.openapi.observable.properties.ObservableProperty
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
@@ -83,10 +86,13 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
     }
 
     private fun PsiDirectoryNode.isModuleRoot(): Boolean {
-        if (parent is ProjectViewProjectNode) {
+        if (parent is ProjectViewProjectNode || parent is AbstractProjectNode || parent is AbstractModuleNode) {
             return true
         }
         val file = virtualFile ?: return false
+        if (ProjectFileIndex.getInstance(project).getContentRootForFile(file) == file) {
+            return true
+        }
         return ModuleUtilCore.findModuleForFile(file, project)?.guessModuleDir() == file
     }
 

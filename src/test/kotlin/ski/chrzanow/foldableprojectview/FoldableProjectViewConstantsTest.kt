@@ -17,12 +17,8 @@ class FoldableProjectViewConstantsTest {
     }
 
     @Test
-    fun `storage file is xml`() {
+    fun `constants have expected values`() {
         assertTrue(FoldableProjectViewConstants.STORAGE_FILE.endsWith(".xml"))
-    }
-
-    @Test
-    fun `default rule name is not blank`() {
         assertTrue(FoldableProjectViewConstants.DEFAULT_RULE_NAME.isNotBlank())
         assertEquals("Aa", FoldableProjectViewConstants.COLOR_COLUMN_TEXT)
     }
