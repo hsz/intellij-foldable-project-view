@@ -5,7 +5,6 @@ import com.intellij.ide.projectView.impl.ProjectViewPane
 import com.intellij.openapi.components.service
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.openapi.options.BoundSearchableConfigurable
-import com.intellij.openapi.options.Configurable.NoScroll
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.OnePixelSplitter
@@ -25,7 +24,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     displayName = message("foldableProjectView.name"),
     helpTopic = "FoldableProjectView",
     _id = ID,
-), NoScroll {
+) {
 
     companion object {
         const val ID = "FoldableProjectViewConfigurable"
@@ -69,7 +68,8 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 .applyToComponent { setMnemonic('e') }
         }
 
-        rowsRange {
+        // Indented to show that the options apply only when folding is enabled.
+        indent {
             row {
                 checkBox(message("foldableProjectView.settings.caseSensitive"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::caseSensitive)
@@ -139,9 +139,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     }
 
     override fun createPanel() = panel {
-        row {
-            comment(message("foldableProjectView.settings.support.comment"), MAX_LINE_LENGTH_WORD_WRAP)
-        }
         if (project.isDefault) {
             row {
                 comment(message("foldableProjectView.settings.defaults.description"), MAX_LINE_LENGTH_WORD_WRAP)
@@ -174,6 +171,11 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 button(message("foldableProjectView.settings.defaults.load")) { copyFromDefaults() }
                     .enabledIf(differsFromDefaultsPredicate)
             }.rowComment(message("foldableProjectView.settings.defaults.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+        }
+        group(message("foldableProjectView.settings.support")) {
+            row {
+                comment(message("foldableProjectView.settings.support.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
         }
     }
 

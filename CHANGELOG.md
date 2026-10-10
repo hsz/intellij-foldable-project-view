@@ -24,9 +24,11 @@
 - The global `Fold ignored files` option was replaced with the built-in `Ignored files` rule; the `Fold Ignored Files` action in the Project View options menu now toggles that rule, and existing settings are migrated automatically
 - The defaults for new projects are no longer overwritten every time the settings of any project are saved; they change only when stored explicitly
 - A trailing slash in a pattern is no longer ignored: `build/` now matches directories only, use `build` to match both files and directories
+- Settings page layout: the pattern field and the table column are called `Patterns` (a rule is a name plus patterns and a style), `Match directories` was renamed to `Also fold directories`, the options depending on `Enable folding` are indented, and the support note moved to the bottom of the page
 
 ### Fixed
 
+- The settings page is scrollable when it does not fit the Settings dialog
 - Files are folded in the scope-based Project View panes (`Project Files`, custom scopes) as well; directories cannot be folded there, as the platform passes files only ([#1](https://github.com/hsz/intellij-foldable-project-view/issues/1))
 
 ## [2.1.0] - 2026-10-10

@@ -89,15 +89,15 @@ class FoldableRulesEditor(
                     .bind(typeProperty)
             }.rowComment(message("foldableProjectView.settings.type.comment"), 40)
                 .enabledIf(usesPatternsPredicate)
-            row(message("foldableProjectView.settings.rules")) {
+            row(message("foldableProjectView.settings.patterns")) {
                 expandableTextField()
                     .align(Align.FILL)
-                    .comment(message("foldableProjectView.settings.rules.comment"), 40)
+                    .comment(message("foldableProjectView.settings.patterns.comment"), 40)
                     .bindText(ruleProperty, Rule::pattern)
                     .validationOnInput { field ->
                         GlobPatterns.invalidPatterns(field.text)
                             .takeIf { it.isNotEmpty() }
-                            ?.let { warning(message("foldableProjectView.settings.rules.invalid", it.joinToString(" "))) }
+                            ?.let { warning(message("foldableProjectView.settings.patterns.invalid", it.joinToString(" "))) }
                     }
             }.enabledIf(patternRulePredicate)
                 .visibleIf(notPatternsFileRulePredicate)

@@ -74,7 +74,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             patternField.text = "*.md [z-a].md"
             val warning = validator.validationInfo!!
             assertTrue(warning.warning)
-            assertEquals(message("foldableProjectView.settings.rules.invalid", "[z-a].md"), warning.message)
+            assertEquals(message("foldableProjectView.settings.patterns.invalid", "[z-a].md"), warning.message)
 
             patternField.text = "*.md"
             assertNull(validator.validationInfo)

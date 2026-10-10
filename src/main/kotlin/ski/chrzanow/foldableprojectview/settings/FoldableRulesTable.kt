@@ -63,7 +63,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     override fun shouldEditRowOnCreation() = false
 
-    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), RulesColumn())
+    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), PatternsColumn())
 
     override fun createElement() = Rule()
 
@@ -161,7 +161,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
      * Shows the rule patterns, or what the rule matches for the rules that do not list patterns directly.
      * Rules with invalid patterns are marked with a warning icon.
      */
-    private class RulesColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.rules")) {
+    private class PatternsColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.patterns")) {
 
         override fun valueOf(item: Rule?) = when (item?.type) {
             RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
@@ -184,7 +184,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
                 }
                 if (invalidPatterns.isNotEmpty()) {
                     icon = AllIcons.General.Warning
-                    toolTipText = message("foldableProjectView.settings.rules.invalid", invalidPatterns.joinToString(" "))
+                    toolTipText = message("foldableProjectView.settings.patterns.invalid", invalidPatterns.joinToString(" "))
                 }
             }
         }

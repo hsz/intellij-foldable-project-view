@@ -49,7 +49,7 @@ Available features:
 
 Open <kbd>Settings/Preferences</kbd> > <kbd>Tools</kbd> > <kbd>Foldable Project View</kbd> and define the folding rules.
 Each rule has a name, which is used as the group label in the Project View, and a list of space-separated
-gitignore-like glob patterns, e.g.:
+gitignore-like glob patterns in the <kbd>Patterns</kbd> field, e.g.:
 
 ```
 README.md *.yml !docker-compose.yml gradle* .github/ "My Notes.md"
@@ -60,7 +60,7 @@ Patterns are matched against paths relative to the module content root:
 - `*` matches any characters except `/`, `?` matches a single character, `**` matches any number of directories,
   `[abc]`/`[a-z]`/`[!abc]` are character classes, and `\` escapes the next character,
 - patterns without a slash match on any level, a leading slash anchors the pattern to the root (`/README.md`),
-- a trailing slash matches directories only (`build/`), if <kbd>Match directories</kbd> is enabled,
+- a trailing slash matches directories only (`build/`), if <kbd>Also fold directories</kbd> is enabled,
 - a leading `!` negates the pattern: `*.yml !docker-compose.yml` matches all YAML files except `docker-compose.yml`;
   as in gitignore, the last matching pattern decides,
 - names containing spaces are wrapped in double quotes (`"My Notes.md"`) or have the spaces escaped (`My\ Notes.md`).
@@ -83,7 +83,7 @@ to the content of all directories – anchored patterns like `/README.md` still 
 files are folded in the module roots only.
 
 Folding works in the <kbd>Project</kbd> pane as well as in the scope-based panes (<kbd>Project Files</kbd>, custom scopes).
-The scope-based panes pass only files to the plugin, so directories are not folded there, even with <kbd>Match directories</kbd> enabled.
+The scope-based panes pass only files to the plugin, so directories are not folded there, even with <kbd>Also fold directories</kbd> enabled.
 
 ### Patterns from ignore-like files
 
