@@ -157,7 +157,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .align(Align.FILL)
                     .resizableColumn()
 
-                cell(rulesEditor.createPanel())
+                cell(rulesEditor.createPanel().apply { registerValidators(disposable!!) })
                     .applyIfEnabled()
 
                 with(rulesTable.tableView) {

@@ -12,12 +12,17 @@
 - The `Ignored files` group is now a built-in rule listed in the rules table: it can be renamed, colored, reordered to change its precedence, hidden, or disabled, but not removed
 - `Use as Defaults for New Projects` and `Copy from Defaults` buttons in the settings to store the current settings as the defaults for new projects, or to apply the defaults to the current project ([#12](https://github.com/hsz/intellij-foldable-project-view/issues/12), [#68](https://github.com/hsz/intellij-foldable-project-view/issues/68))
 - The settings page is available in the settings for new projects (`New Projects Setup`), where it edits the defaults directly
+- Negated patterns (`*.yml !docker-compose.yml`) to exclude elements from a rule; as in gitignore, the last matching pattern decides
+- Patterns ending with a slash (`build/`) match directories only
+- Patterns with spaces can be wrapped in double quotes (`"My Notes.md"`) or escaped with a backslash (`My\ Notes.md`)
+- Invalid patterns are reported with a warning in the rule editor and in the rules table instead of being silently ignored
 
 ### Changed
 
 - The global `Hide all groups` option was replaced with the per-rule `Hide` action; existing settings are migrated automatically
 - The global `Fold ignored files` option was replaced with the built-in `Ignored files` rule; the `Fold Ignored Files` action in the Project View options menu now toggles that rule, and existing settings are migrated automatically
 - The defaults for new projects are no longer overwritten every time the settings of any project are saved; they change only when stored explicitly
+- A trailing slash in a pattern is no longer ignored: `build/` now matches directories only, use `build` to match both files and directories
 
 ## [2.1.0] - 2026-10-10
 

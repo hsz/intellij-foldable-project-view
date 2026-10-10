@@ -23,6 +23,7 @@
           <li>Hide empty groups</li>
           <li>Hide matched elements instead of grouping them, per rule</li>
           <li>Case-insensitive matching</li>
+          <li>Gitignore-like patterns with negation (<code>!pattern</code>), directory-only matching (<code>dir/</code>), and quoted names with spaces</li>
           <li>Search scopes based on the folding rules</li>
           <li>Live Project View preview</li>
           <li>Defaults for new projects, synchronized by Settings Sync</li>

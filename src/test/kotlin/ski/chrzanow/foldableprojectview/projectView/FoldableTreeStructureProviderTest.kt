@@ -104,6 +104,25 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
         assertEquals(listOf("CHANGELOG.md"), groups[1].children.names())
     }
 
+    fun `test negated pattern keeps the excluded files out of the group`() {
+        settings.rules.add(Rule("Docs", "*.md !CHANGELOG.md"))
+
+        val result = modify()
+        val group = result.groups().single()
+
+        assertEquals(listOf("CHANGELOG.md", "Docs", "build.gradle.kts", "docs", "src"), result.names())
+        assertEquals(listOf("README.md"), group.children.names())
+    }
+
+    fun `test pattern with trailing slash folds directories only`() {
+        settings.matchDirectories = true
+        settings.rules.add(Rule("Docs", "docs/ README.md/"))
+
+        val group = modify().groups().single()
+
+        assertEquals(listOf("docs"), group.children.names())
+    }
+
     fun `test directories are folded only when match directories is enabled`() {
         settings.rules.add(Rule("Sources", "src docs"))
 

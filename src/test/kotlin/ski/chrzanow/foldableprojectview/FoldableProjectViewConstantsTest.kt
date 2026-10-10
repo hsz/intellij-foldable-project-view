@@ -10,10 +10,10 @@ class FoldableProjectViewConstantsTest {
 
     @Test
     fun `default rule pattern is a valid glob`() {
-        val regex = GlobPattern.compile(FoldableProjectViewConstants.DEFAULT_RULE_PATTERN)
+        val pattern = GlobPattern.compile(FoldableProjectViewConstants.DEFAULT_RULE_PATTERN)
 
-        assertNotNull(regex)
-        assertTrue(regex!!.matches("README.md"))
+        assertNotNull(pattern)
+        assertTrue(pattern!!.matches("README.md"))
     }
 
     @Test

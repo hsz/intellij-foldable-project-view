@@ -14,6 +14,7 @@ import ski.chrzanow.foldableprojectview.bindColor
 import ski.chrzanow.foldableprojectview.bindColorControl
 import ski.chrzanow.foldableprojectview.bindSelectedItem
 import ski.chrzanow.foldableprojectview.bindText
+import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 
 class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
 
@@ -59,6 +60,11 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .align(Align.FILL)
                     .comment(message("foldableProjectView.settings.rules.comment"), 40)
                     .bindText(ruleProperty, Rule::pattern)
+                    .validationOnInput { field ->
+                        GlobPatterns.invalidPatterns(field.text)
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { warning(message("foldableProjectView.settings.rules.invalid", it.joinToString(" "))) }
+                    }
             }.enabledIf(patternRulePredicate)
             row(message("foldableProjectView.settings.action")) {
                 segmentedButton(RuleAction.entries) { text = it.text }

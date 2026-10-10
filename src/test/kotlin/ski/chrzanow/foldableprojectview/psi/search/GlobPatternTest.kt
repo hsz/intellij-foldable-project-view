@@ -1,5 +1,6 @@
 package ski.chrzanow.foldableprojectview.psi.search
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -7,14 +8,16 @@ import org.junit.Test
 
 class GlobPatternTest {
 
-    private fun String.matches(path: String, caseSensitive: Boolean = true) =
-        GlobPattern.compile(this, caseSensitive)!!.matches(path)
+    private fun String.matches(path: String, caseSensitive: Boolean = true, isDirectory: Boolean = false) =
+        GlobPattern.compile(this, caseSensitive)!!.matches(path, isDirectory)
 
     @Test
     fun `blank pattern is not compiled`() {
         assertNull(GlobPattern.compile(""))
         assertNull(GlobPattern.compile("   "))
         assertNull(GlobPattern.compile("/"))
+        assertNull(GlobPattern.compile("!"))
+        assertNull(GlobPattern.compile("!/"))
     }
 
     @Test
@@ -30,7 +33,7 @@ class GlobPatternTest {
     fun `pattern without slash matches on any level`() {
         assertTrue("*.md".matches("docs/GUIDE.md"))
         assertTrue("README.md".matches("a/b/README.md"))
-        assertTrue("build/".matches("module/build"))
+        assertTrue("build/".matches("module/build", isDirectory = true))
     }
 
     @Test
@@ -77,9 +80,70 @@ class GlobPatternTest {
     }
 
     @Test
-    fun `trailing slash is optional`() {
-        assertTrue("docs/".matches("docs"))
+    fun `trailing slash in the path is optional`() {
         assertTrue("docs".matches("docs/"))
+        assertTrue("docs".matches("docs/", isDirectory = true))
+    }
+
+    @Test
+    fun `trailing slash matches directories only`() {
+        val pattern = GlobPattern.compile("build/")!!
+
+        assertTrue(pattern.directoryOnly)
+        assertTrue(pattern.matches("build", isDirectory = true))
+        assertFalse(pattern.matches("build", isDirectory = false))
+        assertTrue("/build/".matches("build", isDirectory = true))
+        assertFalse("/build/".matches("module/build", isDirectory = true))
+    }
+
+    @Test
+    fun `pattern without trailing slash matches files and directories`() {
+        val pattern = GlobPattern.compile("build")!!
+
+        assertFalse(pattern.directoryOnly)
+        assertTrue(pattern.matches("build", isDirectory = true))
+        assertTrue(pattern.matches("build", isDirectory = false))
+    }
+
+    @Test
+    fun `escaped trailing slash is matched literally`() {
+        val pattern = GlobPattern.compile("docs\\/")!!
+
+        assertFalse(pattern.directoryOnly)
+        assertTrue(pattern.matches("docs/"))
+    }
+
+    @Test
+    fun `leading exclamation mark negates the pattern`() {
+        val pattern = GlobPattern.compile("!docker-compose.yml")!!
+
+        assertTrue(pattern.negated)
+        assertTrue(pattern.matches("docker-compose.yml"))
+        assertEquals("!docker-compose.yml", pattern.source)
+        assertTrue(GlobPattern.compile("!/README.md")!!.let { it.negated && it.matches("README.md") && !it.matches("docs/README.md") })
+        assertTrue(GlobPattern.compile("!build/")!!.let { it.negated && it.directoryOnly })
+    }
+
+    @Test
+    fun `escaped exclamation mark is matched literally`() {
+        val pattern = GlobPattern.compile("\\!important.md")!!
+
+        assertFalse(pattern.negated)
+        assertTrue(pattern.matches("!important.md"))
+    }
+
+    @Test
+    fun `escaped space is matched literally`() {
+        assertTrue("My\\ Notes.md".matches("My Notes.md"))
+        assertTrue("trailing\\ ".matches("trailing "))
+        assertFalse("trailing\\ ".matches("trailing"))
+    }
+
+    @Test
+    fun `isValid reports whether the pattern compiles`() {
+        assertTrue(GlobPattern.isValid("*.md"))
+        assertFalse(GlobPattern.isValid("[z-a].md"))
+        assertFalse(GlobPattern.isValid(""))
     }
 
     @Test

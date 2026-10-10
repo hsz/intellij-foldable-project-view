@@ -13,26 +13,23 @@ import ski.chrzanow.foldableprojectview.settings.Rule
 /**
  * Search scope that contains files matching the rule's glob patterns.
  *
- * Patterns are space-separated, gitignore-like globs (`README.md *.yml gradle*`) matched
- * against the file path relative to its content root, see [GlobPattern].
+ * Patterns are space-separated, gitignore-like globs (`README.md *.yml gradle* !CHANGELOG.md`) matched
+ * against the file path relative to its content root, see [GlobPatterns].
  */
 class FoldableProjectSearchScope(project: Project, state: FoldableProjectState, val rule: Rule) : GlobalSearchScope(project) {
 
     private val fileIndex = ProjectFileIndex.getInstance(project)
-    private val patterns = rule.pattern
-        .split(WHITESPACE)
-        .filter(String::isNotBlank)
-        .mapNotNull { GlobPattern.compile(it, state.caseSensitive) }
+    private val patterns = GlobPatterns.parse(rule.pattern, state.caseSensitive)
 
     override fun contains(file: VirtualFile): Boolean {
-        if (patterns.isEmpty()) {
+        if (patterns.isEmpty) {
             return false
         }
 
         val root = fileIndex.getContentRootForFile(file, false) ?: project?.guessProjectDir() ?: return false
         val path = VfsUtilCore.getRelativePath(file, root) ?: return false
 
-        return patterns.any { it.matches(path) }
+        return patterns.matches(path, file.isDirectory)
     }
 
     override fun isSearchInModuleContent(aModule: Module) = true
@@ -42,8 +39,4 @@ class FoldableProjectSearchScope(project: Project, state: FoldableProjectState, 
     override fun getDisplayName() = rule.name
 
     override fun toString() = "${rule.name}: ${rule.pattern}"
-
-    companion object {
-        private val WHITESPACE = Regex("[\\s,]+")
-    }
 }

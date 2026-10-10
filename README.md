@@ -25,6 +25,7 @@ Available features:
 - Hide empty groups
 - Hide matched elements instead of grouping them, per rule
 - Case-insensitive matching
+- Gitignore-like patterns with negation (`!pattern`), directory-only matching (`dir/`), and quoted names with spaces
 - Search scopes based on the folding rules
 - Live Project View preview
 - Defaults for new projects, synchronized by Settings Sync
@@ -50,12 +51,22 @@ Each rule has a name, which is used as the group label in the Project View, and 
 gitignore-like glob patterns, e.g.:
 
 ```
-README.md *.yml gradle* .github
+README.md *.yml !docker-compose.yml gradle* .github/ "My Notes.md"
 ```
 
-Patterns are matched against paths relative to the module content root. Patterns without a slash match on any level,
-and a leading slash anchors the pattern to the root (`/README.md`). Rules are applied in order – the first matching rule
-takes precedence. Folding rules are also available as search scopes (e.g., in <kbd>Find in Files</kbd>).
+Patterns are matched against paths relative to the module content root:
+
+- `*` matches any characters except `/`, `?` matches a single character, `**` matches any number of directories,
+  `[abc]`/`[a-z]`/`[!abc]` are character classes, and `\` escapes the next character,
+- patterns without a slash match on any level, a leading slash anchors the pattern to the root (`/README.md`),
+- a trailing slash matches directories only (`build/`), if <kbd>Match directories</kbd> is enabled,
+- a leading `!` negates the pattern: `*.yml !docker-compose.yml` matches all YAML files except `docker-compose.yml`;
+  as in gitignore, the last matching pattern decides,
+- names containing spaces are wrapped in double quotes (`"My Notes.md"`) or have the spaces escaped (`My\ Notes.md`).
+
+Invalid patterns (e.g., `[z-a]`) are skipped; the settings page reports them with a warning next to the pattern field
+and in the rules table. Rules are applied in order – the first matching rule takes precedence. Folding rules are also
+available as search scopes (e.g., in <kbd>Find in Files</kbd>).
 
 Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
 entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>

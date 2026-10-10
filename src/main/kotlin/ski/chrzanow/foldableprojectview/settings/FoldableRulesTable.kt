@@ -11,6 +11,7 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUMN_TEXT
+import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import java.awt.Component
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
@@ -158,6 +159,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     /**
      * Shows the rule patterns, or what the rule matches for the rules that do not use patterns.
+     * Rules with invalid patterns are marked with a warning icon.
      */
     private class RulesColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.rules")) {
 
@@ -174,6 +176,15 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
                     else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                 }
                 append(value?.toString().orEmpty(), attributes)
+
+                val invalidPatterns = when (item?.type) {
+                    RuleType.PATTERN -> GlobPatterns.invalidPatterns(item.pattern)
+                    else -> emptyList()
+                }
+                if (invalidPatterns.isNotEmpty()) {
+                    icon = AllIcons.General.Warning
+                    toolTipText = message("foldableProjectView.settings.rules.invalid", invalidPatterns.joinToString(" "))
+                }
             }
         }
     }

@@ -65,6 +65,41 @@ class FoldableProjectSearchScopeTest : BasePlatformTestCase() {
         assertTrue(scope("README.*").contains(readme))
     }
 
+    fun `test negated pattern excludes files`() {
+        val ci = file("ci.yml")
+        val compose = file("docker-compose.yml")
+
+        val scope = scope("*.yml !docker-compose.yml")
+
+        assertTrue(scope.contains(ci))
+        assertFalse(scope.contains(compose))
+    }
+
+    fun `test pattern with trailing slash matches directories only`() {
+        val directory = file("build/output.txt").parent
+        val buildFile = file("scripts/build")
+
+        assertTrue(scope("build/").contains(directory))
+        assertFalse(scope("build/").contains(buildFile))
+        assertTrue(scope("build").contains(buildFile))
+    }
+
+    fun `test quoted pattern matches names with spaces`() {
+        val notes = file("My Notes.md")
+        val readme = file("README.md")
+
+        assertTrue(scope("\"My Notes.md\"").contains(notes))
+        assertTrue(scope("My\\ Notes.md").contains(notes))
+        assertFalse(scope("\"My Notes.md\"").contains(readme))
+    }
+
+    fun `test invalid pattern is skipped`() {
+        val readme = file("README.md")
+
+        assertTrue(scope("[z-a].md *.md").contains(readme))
+        assertFalse(scope("[z-a].md").contains(readme))
+    }
+
     fun `test blank pattern matches nothing`() {
         val readme = file("README.md")
 
