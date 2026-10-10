@@ -11,7 +11,9 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.SimpleTextAttributes.GRAYED_ATTRIBUTES
 import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.Rule
+import ski.chrzanow.foldableprojectview.settings.RuleType
 
 /**
  * Project View node that groups the [children] matched by the [rule].
@@ -25,7 +27,10 @@ class FoldableProjectViewNode(
 
     override fun update(presentation: PresentationData) {
         presentation.apply {
-            val tooltip = rule.pattern.ifBlank { null }
+            val tooltip = when (rule.type) {
+                RuleType.PATTERN -> rule.pattern.ifBlank { null }
+                RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
+            }
             addText(ColoredFragment(rule.name, tooltip, SimpleTextAttributes(STYLE_PLAIN, rule.foreground)))
             addText(ColoredFragment(" ${children.size}", tooltip, GRAYED_ATTRIBUTES))
             setIcon(CollapseComponent)

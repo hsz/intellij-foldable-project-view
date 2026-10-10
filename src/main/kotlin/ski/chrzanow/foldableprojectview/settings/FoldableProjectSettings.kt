@@ -35,8 +35,11 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("CASE_SENSITIVE")
     override var caseSensitive by property(true)
 
+    /**
+     * Replaced by the built-in [RuleType.IGNORED_FILES] rule; kept only to migrate the settings stored by the previous versions.
+     */
     @get:OptionTag("HIDE_IGNORED_FILES")
-    override var foldIgnoredFiles by property(true)
+    var legacyFoldIgnoredFiles by property(true)
 
     @get:OptionTag("RULES")
     override var rules by list<Rule>()
@@ -49,22 +52,43 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     }
 
     override fun noStateLoaded() {
-        service<FoldableProjectDefaults>().state?.let {
-            copyFrom(it)
-            migrate()
-        }
+        service<FoldableProjectDefaults>().state?.let(::copyFrom)
+        migrate()
     }
 
     /**
-     * Converts the legacy `Hide all groups` option into the [RuleAction.HIDE] action of every rule.
+     * Brings the loaded state up to date with the current model:
+     * - adds the built-in ignored files rule if missing, converting the legacy `Fold ignored files` option into its [Rule.enabled] flag,
+     * - converts the legacy `Hide all groups` option into the [RuleAction.HIDE] action of every rule.
      */
     private fun migrate() {
+        if (ignoredFilesRule == null) {
+            rules.add(Rule.ignoredFiles(enabled = legacyFoldIgnoredFiles))
+        }
+        legacyFoldIgnoredFiles = true
+
         if (hideAllGroups) {
             rules.replaceAll { it.copy(action = RuleAction.HIDE) }
             hideAllGroups = false
         }
     }
 }
+
+/**
+ * Whether the built-in [RuleType.IGNORED_FILES] rule is enabled. Changing it adds the rule if it is missing.
+ */
+var FoldableProjectSettings.foldIgnoredFiles: Boolean
+    get() = ignoredFilesRule?.enabled == true
+    set(value) {
+        val index = rules.indexOfFirst { it.type == RuleType.IGNORED_FILES }
+        if (index < 0) {
+            rules.add(Rule.ignoredFiles(enabled = value))
+        } else {
+            // Replace the rule instead of mutating it in place, so the list-based modification tracking notices the change.
+            val rule = rules.removeAt(index)
+            rules.add(index, rule.copy(enabled = value))
+        }
+    }
 
 /**
  * Applies [block] to the settings and notifies [FoldableProjectSettingsListener]s of the [project] about the change.

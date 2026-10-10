@@ -10,6 +10,7 @@ import com.intellij.openapi.vcs.FileStatusListener
 import com.intellij.openapi.vcs.FileStatusManager
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettingsListener
+import ski.chrzanow.foldableprojectview.settings.foldIgnoredFiles
 
 /**
  * Refreshes the Project View whenever the plugin settings or file statuses (e.g., ignored files) change.

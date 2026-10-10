@@ -3,6 +3,7 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.Converter
 import com.intellij.util.xmlb.annotations.OptionTag
+import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
@@ -14,10 +15,30 @@ interface FoldableProjectState {
     val foldingEnabled: Boolean
     val matchDirectories: Boolean
     val foldNestedDirectories: Boolean
-    val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
     val caseSensitive: Boolean
     val rules: MutableList<Rule>
+}
+
+/**
+ * The built-in rule folding the VCS-ignored files, see [RuleType.IGNORED_FILES].
+ */
+val FoldableProjectState.ignoredFilesRule: Rule?
+    get() = rules.firstOrNull { it.type == RuleType.IGNORED_FILES }
+
+/**
+ * What the [Rule] matches.
+ */
+enum class RuleType {
+
+    /** Elements matching the glob [Rule.pattern]. */
+    PATTERN,
+
+    /**
+     * Elements ignored by the VCS. There is a single built-in rule of this type, which cannot be removed
+     * but can be disabled, renamed, colored, reordered, and switched to the [RuleAction.HIDE] action.
+     */
+    IGNORED_FILES,
 }
 
 /**
@@ -44,9 +65,32 @@ data class Rule(
     var foreground: Color? = null,
 
     var action: RuleAction = RuleAction.GROUP,
+
+    var type: RuleType = RuleType.PATTERN,
+
+    var enabled: Boolean = true,
 ) {
 
+    /**
+     * Whether the rule is enabled and has anything to match.
+     */
+    val isActive
+        get() = enabled && (type == RuleType.IGNORED_FILES || pattern.isNotBlank())
+
     fun getScope(project: Project, state: FoldableProjectState) = FoldableProjectSearchScope(project, state, this)
+
+    companion object {
+
+        /**
+         * Creates the built-in rule folding the VCS-ignored files.
+         */
+        fun ignoredFiles(enabled: Boolean = true) = Rule(
+            name = message("foldableProjectView.ignoredFiles"),
+            pattern = "",
+            type = RuleType.IGNORED_FILES,
+            enabled = enabled,
+        )
+    }
 }
 
 private class ColorConverter : Converter<Color>() {

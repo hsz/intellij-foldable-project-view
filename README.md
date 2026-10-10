@@ -20,7 +20,8 @@ Available features:
 - Enable/disable folding via Preferences or Project View options menu
 - Optionally fold directories
 - Optionally fold in nested directories
-- Fold VCS-ignored files
+- Built-in `Ignored files` rule folding the VCS-ignored files – rename, color, reorder, hide, or disable it like any other rule
+- Enable or disable rules without removing them
 - Hide empty groups
 - Hide matched elements instead of grouping them, per rule
 - Case-insensitive matching
@@ -57,7 +58,12 @@ takes precedence. Folding rules are also available as search scopes (e.g., in <k
 
 Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
 entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
-or the rule's search scope.
+or the rule's search scope. Rules can be disabled with the checkbox in the first column of the table – disabled rules
+are kept, but neither applied nor exposed as search scopes.
+
+The built-in `Ignored files` rule folds the files and folders ignored by the VCS. It cannot be removed, but it can be
+disabled (also with the <kbd>Fold Ignored Files</kbd> toggle in the Project View options menu), renamed, colored, moved
+to change its precedence, or switched to the `Hide` action.
 
 By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored

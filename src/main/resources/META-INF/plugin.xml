@@ -18,7 +18,8 @@
           <li>Enable/disable folding via Preferences or Project View options menu</li>
           <li>Optionally fold directories</li>
           <li>Optionally fold in nested directories</li>
-          <li>Fold VCS-ignored files</li>
+          <li>Built-in <code>Ignored files</code> rule folding the VCS-ignored files – rename, color, reorder, hide, or disable it like any other rule</li>
+          <li>Enable or disable rules without removing them</li>
           <li>Hide empty groups</li>
           <li>Hide matched elements instead of grouping them, per rule</li>
           <li>Case-insensitive matching</li>

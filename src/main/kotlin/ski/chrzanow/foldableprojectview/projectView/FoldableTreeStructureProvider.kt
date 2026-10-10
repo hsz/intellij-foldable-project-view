@@ -20,16 +20,17 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.changes.ChangeListManager
 import com.intellij.openapi.vcs.changes.VcsIgnoreManager
-import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
+import ski.chrzanow.foldableprojectview.settings.RuleType
 
 /**
  * Folds the root elements of the project modules into the [FoldableProjectViewNode] groups
  * according to the configured [Rule]s, or removes them from the Project View for the rules with the [RuleAction.HIDE] action.
+ * The rules are applied in order, so the first matching rule takes precedence, including the built-in [RuleType.IGNORED_FILES] rule.
  * When [FoldableProjectState.foldNestedDirectories] is enabled, the rules are applied to the content of all directories.
  */
 class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider, DumbAware {
@@ -38,11 +39,12 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
     /**
      * Scopes compiled for the given rules snapshot. [Rule]s are mutable, so the copies are stored to detect in-place edits.
+     * The scope is `null` for the rules that do not match by [Rule.pattern], see [RuleType].
      */
     private data class CompiledScopes(
         val rules: List<Rule>,
         val caseSensitive: Boolean,
-        val scopes: List<FoldableProjectSearchScope>,
+        val scopes: List<FoldableProjectSearchScope?>,
     )
 
     @Volatile
@@ -84,14 +86,18 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             }
         }
 
-        val rules = state.rules.filter { it.pattern.isNotBlank() }
+        val rules = state.rules.filter { it.isActive }
         rules.zip(getScopes(state, rules)).forEach { (rule, scope) ->
-            fold(rule) { node -> (node as? ProjectViewNode<*>)?.virtualFile?.let(scope::contains) ?: false }
-        }
+            when (rule.type) {
+                RuleType.PATTERN -> fold(rule) { node ->
+                    (node as? ProjectViewNode<*>)?.virtualFile?.let { scope?.contains(it) } ?: false
+                }
 
-        // VCS ignore checks are relatively expensive, so the ignored files are folded in the module roots only.
-        if (isRoot && state.foldIgnoredFiles) {
-            fold(Rule(message("foldableProjectView.ignoredFiles"), "")) { node -> node.isIgnored() }
+                // VCS ignore checks are relatively expensive, so the ignored files are folded in the module roots only.
+                RuleType.IGNORED_FILES -> if (isRoot) {
+                    fold(rule) { node -> node.isIgnored() }
+                }
+            }
         }
 
         return remaining + groups
@@ -101,14 +107,14 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
      * Returns the scopes of the given [rules], reusing the previously compiled ones if neither the rules
      * nor the case sensitivity has changed since the last call.
      */
-    private fun getScopes(state: FoldableProjectState, rules: List<Rule>): List<FoldableProjectSearchScope> {
+    private fun getScopes(state: FoldableProjectState, rules: List<Rule>): List<FoldableProjectSearchScope?> {
         val snapshot = rules.map(Rule::copy)
         compiledScopes
             ?.takeIf { it.rules == snapshot && it.caseSensitive == state.caseSensitive }
             ?.let { return it.scopes }
 
         return rules
-            .map { it.getScope(project, state) }
+            .map { rule -> rule.takeIf { it.type == RuleType.PATTERN }?.getScope(project, state) }
             .also { compiledScopes = CompiledScopes(snapshot, state.caseSensitive, it) }
     }
 

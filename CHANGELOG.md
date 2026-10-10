@@ -8,10 +8,13 @@
 
 - `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
 - Per-rule `Action` to choose whether the matched elements are grouped or hidden from the Project View
+- Per-rule `Enabled` checkbox to switch a rule off without removing it
+- The `Ignored files` group is now a built-in rule listed in the rules table: it can be renamed, colored, reordered to change its precedence, hidden, or disabled, but not removed
 
 ### Changed
 
 - The global `Hide all groups` option was replaced with the per-rule `Hide` action; existing settings are migrated automatically
+- The global `Fold ignored files` option was replaced with the built-in `Ignored files` rule; the `Fold Ignored Files` action in the Project View options menu now toggles that rule, and existing settings are migrated automatically
 
 ## [2.1.0] - 2026-10-10
 

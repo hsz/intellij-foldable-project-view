@@ -30,13 +30,20 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
     /**
      * Colors apply to the folding group only, so they are relevant for the [RuleAction.GROUP] action only.
      */
-    private val groupActionPredicate = object : ComponentPredicate() {
+    private val groupActionPredicate = rulePredicate { it.action == RuleAction.GROUP }
 
-        override fun invoke() = ruleProperty.get()?.action == RuleAction.GROUP
+    /**
+     * Patterns are editable for the [RuleType.PATTERN] rules only; the built-in ignored files rule has none.
+     */
+    private val patternRulePredicate = rulePredicate { it.type == RuleType.PATTERN }
+
+    private fun rulePredicate(predicate: (Rule) -> Boolean) = object : ComponentPredicate() {
+
+        override fun invoke() = ruleProperty.get()?.let(predicate) == true
 
         override fun addListener(listener: (Boolean) -> Unit) =
             ruleProperty.afterChange {
-                listener(it?.action == RuleAction.GROUP)
+                listener(it?.let(predicate) == true)
             }
     }
 
@@ -52,7 +59,7 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .align(Align.FILL)
                     .comment(message("foldableProjectView.settings.rules.comment"), 40)
                     .bindText(ruleProperty, Rule::pattern)
-            }
+            }.enabledIf(patternRulePredicate)
             row(message("foldableProjectView.settings.action")) {
                 segmentedButton(RuleAction.entries) { text = it.text }
                     .bindSelectedItem(ruleProperty, Rule::action, RuleAction.GROUP)

@@ -6,6 +6,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
+import ski.chrzanow.foldableprojectview.settings.foldIgnoredFiles
 import ski.chrzanow.foldableprojectview.settings.update
 import java.util.function.Function
 import kotlin.reflect.KMutableProperty1
@@ -45,4 +46,7 @@ abstract class FoldableToggleOptionAction(property: KMutableProperty1<FoldablePr
 
 class FoldRootFilesAction : FoldableToggleOptionAction(FoldableProjectSettings::foldingEnabled)
 
+/**
+ * Toggles the built-in `Ignored files` rule, see [foldIgnoredFiles].
+ */
 class FoldIgnoredFilesAction : FoldableToggleOptionAction(FoldableProjectSettings::foldIgnoredFiles)

@@ -5,6 +5,10 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
+import com.intellij.ui.BooleanTableCellEditor
+import com.intellij.ui.BooleanTableCellRenderer
+import com.intellij.ui.ColoredTableCellRenderer
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
@@ -36,7 +40,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         tableView.apply {
             columnSelectionAllowed = false
             tableHeader.reorderingAllowed = false
-            listOf(0, 1).forEach { index ->
+            listOf(0, 1, 2).forEach { index ->
                 columnModel.getColumn(index).apply {
                     maxWidth = JBUI.scale(24)
                     minWidth = JBUI.scale(24)
@@ -63,7 +67,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     override fun shouldEditRowOnCreation() = false
 
-    override fun createListModel() = ListTableModel<Rule>(ColorsColumn(), ActionColumn(), NameColumn(), RulesColumn())
+    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), RulesColumn())
 
     override fun createElement() = Rule()
 
@@ -74,15 +78,44 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         }
     }
 
-    override fun canDeleteElement(selection: Rule) = true
+    /**
+     * The built-in ignored files rule is pinned: it can be disabled, but not removed.
+     */
+    override fun canDeleteElement(selection: Rule) = selection.type == RuleType.PATTERN
 
     override fun cloneElement(variable: Rule) = variable.copy()
 
-    override fun isEmpty(element: Rule) = element.pattern.isBlank()
+    override fun isEmpty(element: Rule) = element.type == RuleType.PATTERN && element.pattern.isBlank()
+
+    /**
+     * Checkbox that enables or disables the rule without removing it.
+     */
+    private class EnabledColumn : ColumnInfo<Rule, Boolean>(message("foldableProjectView.settings.enabled")) {
+
+        override fun getName() = ""
+
+        override fun getTooltipText() = message("foldableProjectView.settings.enabled.tooltip")
+
+        override fun getColumnClass() = Boolean::class.java
+
+        override fun valueOf(item: Rule?) = item?.enabled
+
+        override fun isCellEditable(item: Rule?) = true
+
+        override fun setValue(item: Rule?, value: Boolean?) {
+            item?.enabled = value ?: true
+        }
+
+        override fun getRenderer(item: Rule?) = BooleanTableCellRenderer()
+
+        override fun getEditor(item: Rule?) = BooleanTableCellEditor()
+    }
 
     private class ColorsColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.color")) {
 
         override fun getName() = ""
+
+        override fun getTooltipText() = message("foldableProjectView.settings.color.tooltip")
 
         override fun valueOf(item: Rule?) = COLOR_COLUMN_TEXT
 
@@ -106,6 +139,8 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
         override fun getName() = ""
 
+        override fun getTooltipText() = message("foldableProjectView.settings.action.tooltip")
+
         override fun valueOf(item: Rule?) = item?.action
 
         override fun getRenderer(item: Rule?) = object : DefaultTableCellRenderer() {
@@ -113,7 +148,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
             override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
                 super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
                 val hidden = value == RuleAction.HIDE
-                horizontalAlignment = SwingConstants.CENTER
+                horizontalAlignment = CENTER
                 icon = AllIcons.Actions.ToggleVisibility.takeIf { hidden }
                 toolTipText = message("foldableProjectView.settings.action.hide.tooltip").takeIf { hidden }
                 return this
@@ -126,8 +161,25 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         override fun valueOf(item: Rule?) = item?.name
     }
 
+    /**
+     * Shows the rule patterns, or what the rule matches for the rules that do not use patterns.
+     */
     private class RulesColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.rules")) {
 
-        override fun valueOf(item: Rule?) = item?.pattern
+        override fun valueOf(item: Rule?) = when (item?.type) {
+            RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
+            else -> item?.pattern
+        }
+
+        override fun getRenderer(item: Rule?) = object : ColoredTableCellRenderer() {
+
+            override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
+                val attributes = when (item?.type) {
+                    RuleType.IGNORED_FILES -> SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES
+                    else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                }
+                append(value?.toString().orEmpty(), attributes)
+            }
+        }
     }
 }

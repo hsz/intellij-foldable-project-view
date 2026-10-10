@@ -12,6 +12,9 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
+import ski.chrzanow.foldableprojectview.settings.RuleType
+import ski.chrzanow.foldableprojectview.settings.foldIgnoredFiles
+import java.awt.Color
 
 class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
@@ -20,9 +23,9 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
+        // A fresh state has no rules at all, including the built-in ignored files rule.
         settings = project.service<FoldableProjectSettings>().apply {
             copyFrom(FoldableProjectSettings())
-            foldIgnoredFiles = false
         }
         provider = FoldableTreeStructureProvider(project)
 
@@ -58,6 +61,20 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
     private fun Collection<AbstractTreeNode<*>>.names() = map { it.nodeName }.sorted()
 
     private fun Collection<AbstractTreeNode<*>>.groups() = filterIsInstance<FoldableProjectViewNode>()
+
+    /**
+     * Root children with the `build.gradle.kts` file reported as ignored by the VCS.
+     */
+    private val childrenWithIgnoredGradle
+        get() = rootNode.children.map { node ->
+            when (node is PsiFileNode && node.nodeName == "build.gradle.kts") {
+                true -> object : PsiFileNode(project, node.value, ViewSettings.DEFAULT) {
+                    override fun getFileStatus() = FileStatus.IGNORED
+                }
+
+                false -> node
+            }
+        }
 
     fun `test root children are not modified without rules`() {
         val children = rootNode.children
@@ -210,7 +227,7 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
     fun `test ignored files are folded in module roots only`() {
         settings.foldNestedDirectories = true
-        settings.foldIgnoredFiles = true
+        settings.rules.add(Rule.ignoredFiles())
 
         val docs = docsNode
         val children = docs.children.map { node ->
@@ -240,24 +257,95 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
     }
 
     fun `test ignored files are folded into a dedicated group`() {
-        settings.foldIgnoredFiles = true
+        settings.rules.add(Rule.ignoredFiles())
 
-        val children = rootNode.children.map { node ->
-            when (node is PsiFileNode && node.nodeName == "build.gradle.kts") {
-                true -> object : PsiFileNode(project, node.value, ViewSettings.DEFAULT) {
-                    override fun getFileStatus() = FileStatus.IGNORED
-                }
-
-                false -> node
-            }
-        }
-
-        val result = modify(children = children)
+        val result = modify(children = childrenWithIgnoredGradle)
         val group = result.groups().single()
 
         assertEquals("Ignored files", group.name)
+        assertEquals(RuleType.IGNORED_FILES, group.value.type)
         assertEquals(listOf("build.gradle.kts"), group.children.names())
         assertEquals(listOf("CHANGELOG.md", "Ignored files", "README.md", "docs", "src"), result.names())
+    }
+
+    fun `test ignored files are not folded without the ignored files rule`() {
+        settings.rules.add(Rule("Docs", "*.md"))
+
+        val result = modify(children = childrenWithIgnoredGradle)
+
+        assertEquals(listOf("Docs"), result.groups().map { it.name })
+        assertEquals(listOf("Docs", "build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test disabled ignored files rule is not applied`() {
+        settings.rules.add(Rule.ignoredFiles(enabled = false))
+        settings.hideEmptyGroups = false
+
+        val result = modify(children = childrenWithIgnoredGradle)
+
+        assertEmpty(result.groups())
+        assertEquals(listOf("CHANGELOG.md", "README.md", "build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test disabled pattern rule is not applied`() {
+        settings.rules.add(Rule("Docs", "*.md", enabled = false))
+        settings.rules.add(Rule("Gradle", "*.kts"))
+        settings.hideEmptyGroups = false
+
+        val result = modify()
+
+        assertEquals(listOf("Gradle"), result.groups().map { it.name })
+        assertEquals(listOf("CHANGELOG.md", "Gradle", "README.md", "docs", "src"), result.names())
+    }
+
+    fun `test ignored files rule can be renamed and colored`() {
+        settings.rules.add(Rule.ignoredFiles().copy(name = "Noise", foreground = Color.RED))
+
+        val group = modify(children = childrenWithIgnoredGradle).groups().single()
+
+        assertEquals("Noise", group.name)
+        assertEquals(Color.RED, group.value.foreground)
+        assertEquals(listOf("build.gradle.kts"), group.children.names())
+    }
+
+    fun `test ignored files rule with hide action removes ignored elements`() {
+        settings.rules.add(Rule.ignoredFiles().copy(action = RuleAction.HIDE))
+
+        val result = modify(children = childrenWithIgnoredGradle)
+
+        assertEmpty(result.groups())
+        assertEquals(listOf("CHANGELOG.md", "README.md", "docs", "src"), result.names())
+    }
+
+    fun `test ignored files rule takes precedence according to its position`() {
+        // Ignored first: the ignored gradle file is not reachable for the following pattern rule.
+        settings.rules.add(Rule.ignoredFiles())
+        settings.rules.add(Rule("Gradle", "*.kts"))
+        settings.hideEmptyGroups = false
+
+        var groups = modify(children = childrenWithIgnoredGradle).groups()
+        assertEquals(listOf("Ignored files", "Gradle"), groups.map { it.name })
+        assertEquals(listOf("build.gradle.kts"), groups[0].children.names())
+        assertEmpty(groups[1].children)
+
+        // Ignored last: the pattern rule wins over the ignored files rule.
+        settings.rules.reverse()
+
+        groups = modify(children = childrenWithIgnoredGradle).groups()
+        assertEquals(listOf("Gradle", "Ignored files"), groups.map { it.name })
+        assertEquals(listOf("build.gradle.kts"), groups[0].children.names())
+        assertEmpty(groups[1].children)
+    }
+
+    fun `test ignored files rule toggled in place is applied`() {
+        settings.rules.add(Rule.ignoredFiles())
+        assertEquals(listOf("Ignored files"), modify(children = childrenWithIgnoredGradle).groups().map { it.name })
+
+        settings.foldIgnoredFiles = false
+        assertEmpty(modify(children = childrenWithIgnoredGradle).groups())
+
+        settings.foldIgnoredFiles = true
+        assertEquals(listOf("Ignored files"), modify(children = childrenWithIgnoredGradle).groups().map { it.name })
     }
 
     fun `test group contains matched files`() {

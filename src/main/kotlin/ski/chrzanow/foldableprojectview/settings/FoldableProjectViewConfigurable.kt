@@ -82,13 +82,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             }
 
             row {
-                checkBox(message("foldableProjectView.settings.foldIgnoredFiles"))
-                    .bindSelected(settingsProperty, FoldableProjectSettings::foldIgnoredFiles)
-                    .comment(message("foldableProjectView.settings.foldIgnoredFiles.comment"), MAX_LINE_LENGTH_WORD_WRAP)
-                    .applyToComponent { setMnemonic('i') }
-            }
-
-            row {
                 checkBox(message("foldableProjectView.settings.hideEmptyGroups"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::hideEmptyGroups)
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), MAX_LINE_LENGTH_WORD_WRAP)

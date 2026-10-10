@@ -46,4 +46,14 @@ class FoldableProjectScopesProviderTest : BasePlatformTestCase() {
         assertEquals(listOf("Docs", "Gradle"), scopes.map { it.displayName })
         assertTrue(scopes.all { it is FoldableProjectSearchScope })
     }
+
+    fun `test disabled rules and the ignored files rule produce no scopes`() {
+        settings.rules.add(Rule.ignoredFiles())
+        settings.rules.add(Rule("Docs", "*.md", enabled = false))
+        settings.rules.add(Rule("Gradle", "gradle*"))
+
+        val scopes = provider.getSearchScopes(project, DataContext.EMPTY_CONTEXT)
+
+        assertEquals(listOf("Gradle"), scopes.map { it.displayName })
+    }
 }
