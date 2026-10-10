@@ -8,8 +8,11 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 /**
- * Application-level copy of the last saved settings. Being roamable, it is synchronized by the IDE Settings Sync
- * and used to initialize the settings of projects that have no settings stored yet.
+ * Application-level settings used to initialize the settings of projects that have no settings stored yet.
+ * Being roamable, they are synchronized by the IDE Settings Sync.
+ *
+ * The defaults are changed explicitly only – with the `Use as Defaults for New Projects` button of the project settings,
+ * or by editing them in the settings for new projects.
  */
 @Service(Service.Level.APP)
 @State(
@@ -21,15 +24,21 @@ class FoldableProjectDefaults : PersistentStateComponent<FoldableProjectSettings
 
     private var state: FoldableProjectSettings? = null
 
-    val isStored get() = state != null
-
     override fun getState() = state
 
     override fun loadState(state: FoldableProjectSettings) {
         this.state = state
     }
 
+    /**
+     * Stores a copy of [settings] as the defaults for new projects.
+     */
     fun store(settings: FoldableProjectSettings) {
         state = FoldableProjectSettings().also { it.copyFrom(settings) }
     }
+
+    /**
+     * Creates the settings a project without stored settings starts with.
+     */
+    fun createSettings() = FoldableProjectSettings().apply { loadDefaults() }
 }

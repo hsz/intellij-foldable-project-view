@@ -171,6 +171,71 @@ class FoldableProjectSettingsStateTest : BasePlatformTestCase() {
         }
     }
 
+    fun `test loadDefaults replaces the settings with the stored defaults`() {
+        val defaults = FoldableProjectSettings().apply {
+            caseSensitive = false
+            rules.add(Rule("Docs", "*.md"))
+        }
+
+        withDefaults(defaults) {
+            val settings = FoldableProjectSettings().apply {
+                foldingEnabled = false
+                rules.add(Rule("Gradle", "gradle*"))
+                rules.add(Rule.ignoredFiles(enabled = false))
+            }
+
+            settings.loadDefaults()
+
+            assertTrue(settings.foldingEnabled)
+            assertFalse(settings.caseSensitive)
+            assertEquals(listOf(Rule("Docs", "*.md"), Rule.ignoredFiles()), settings.rules)
+        }
+    }
+
+    fun `test loadDefaults resets the settings to the built-in defaults when the stored defaults are empty`() = withDefaults(FoldableProjectSettings()) {
+        val settings = FoldableProjectSettings().apply {
+            foldingEnabled = false
+            matchDirectories = false
+            rules.add(Rule("Gradle", "gradle*"))
+            rules.add(Rule.ignoredFiles(enabled = false))
+        }
+
+        settings.loadDefaults()
+
+        assertEquals(FoldableProjectSettings().apply { rules.add(Rule.ignoredFiles()) }, settings)
+    }
+
+    fun `test createSettings returns a migrated copy of the defaults`() {
+        val defaults = FoldableProjectSettings().apply {
+            hideAllGroups = true
+            rules.add(Rule("Docs", "*.md"))
+        }
+
+        withDefaults(defaults) {
+            val service = service<FoldableProjectDefaults>()
+            val settings = service.createSettings()
+
+            assertNotSame(service.state, settings)
+            assertFalse(settings.hideAllGroups)
+            assertEquals(listOf(Rule("Docs", "*.md", action = RuleAction.HIDE), Rule.ignoredFiles().copy(action = RuleAction.HIDE)), settings.rules)
+            assertEquals("the stored defaults must not be migrated in place", listOf(Rule("Docs", "*.md")), service.state!!.rules)
+        }
+    }
+
+    fun `test store keeps a copy of the settings`() = withDefaults(FoldableProjectSettings()) {
+        val service = service<FoldableProjectDefaults>()
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md"))
+        }
+
+        service.store(settings)
+        settings.rules.add(Rule("Gradle", "gradle*"))
+
+        assertNotSame(settings, service.state)
+        assertEquals(listOf(Rule("Docs", "*.md")), service.state!!.rules)
+        assertEquals(listOf(Rule("Docs", "*.md"), Rule.ignoredFiles()), service.createSettings().rules)
+    }
+
     fun `test project service is available and shared`() {
         assertSame(project.service<FoldableProjectSettings>(), project.service<FoldableProjectSettings>())
     }
@@ -191,6 +256,31 @@ class FoldableProjectSettingsStateTest : BasePlatformTestCase() {
             assertSame(settings, received.single())
         } finally {
             settings.hideEmptyGroups = original
+        }
+    }
+
+    fun `test update does not change the defaults for new projects`() {
+        val defaults = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md"))
+        }
+
+        withDefaults(defaults) {
+            val settings = project.service<FoldableProjectSettings>()
+            val original = settings.hideEmptyGroups
+
+            try {
+                settings.update(project) {
+                    hideEmptyGroups = !original
+                    rules.add(Rule("Gradle", "gradle*"))
+                }
+
+                val stored = service<FoldableProjectDefaults>().state!!
+                assertTrue(stored.hideEmptyGroups)
+                assertEquals(listOf(Rule("Docs", "*.md")), stored.rules)
+            } finally {
+                settings.hideEmptyGroups = original
+                settings.rules.removeIf { it.name == "Gradle" }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package ski.chrzanow.foldableprojectview
 
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
+import com.intellij.openapi.observable.properties.ObservableProperty
 import com.intellij.openapi.observable.util.bind
 import com.intellij.openapi.observable.util.lockOrSkip
 import com.intellij.openapi.observable.util.transform
@@ -90,4 +91,12 @@ fun <T : FoldableProjectState> ObservableMutableProperty<T>.createPredicate(prop
         override fun invoke() = observableProperty.get()
 
         override fun addListener(listener: (Boolean) -> Unit) = observableProperty.afterChange(listener)
+    }
+
+fun <T> ObservableProperty<T>.createPredicate(predicate: (T) -> Boolean) =
+    object : ComponentPredicate() {
+
+        override fun invoke() = predicate(get())
+
+        override fun addListener(listener: (Boolean) -> Unit) = afterChange { listener(predicate(it)) }
     }

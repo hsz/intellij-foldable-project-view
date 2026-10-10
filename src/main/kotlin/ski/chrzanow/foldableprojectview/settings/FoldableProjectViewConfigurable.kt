@@ -31,11 +31,21 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         const val ID = "FoldableProjectViewConfigurable"
     }
 
-    private val settings = project.service<FoldableProjectSettings>()
+    private val defaults = service<FoldableProjectDefaults>()
+
+    /**
+     * Settings edited by this page: the settings of the [project], or the defaults for new projects
+     * when the page is opened for the default project (e.g., in the "New Projects Setup" settings).
+     */
+    private val settings = when {
+        project.isDefault -> defaults.createSettings()
+        else -> project.service<FoldableProjectSettings>()
+    }
 
     private val propertyGraph = PropertyGraph()
     private val settingsProperty = propertyGraph.lazyProperty { FoldableProjectSettings().apply { copyFrom(settings) } }
     private val foldingEnabledPredicate = settingsProperty.createPredicate(FoldableProjectSettings::foldingEnabled)
+    private val differsFromDefaultsPredicate = settingsProperty.createPredicate { it != defaults.createSettings() }
 
     private val ruleProperty = propertyGraph
         .lazyProperty<Rule?> { null }
@@ -132,6 +142,11 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         row {
             comment(message("foldableProjectView.settings.support.comment"), MAX_LINE_LENGTH_WORD_WRAP)
         }
+        if (project.isDefault) {
+            row {
+                comment(message("foldableProjectView.settings.defaults.description"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
+        }
         row {
             cell(createSettingsWithPreview())
                 .align(Align.FILL)
@@ -152,14 +167,49 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 }
             }
         }
+        if (!project.isDefault) {
+            row {
+                button(message("foldableProjectView.settings.defaults.store")) { storeAsDefaults() }
+                    .enabledIf(differsFromDefaultsPredicate)
+                button(message("foldableProjectView.settings.defaults.load")) { copyFromDefaults() }
+                    .enabledIf(differsFromDefaultsPredicate)
+            }.rowComment(message("foldableProjectView.settings.defaults.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+        }
     }
 
     override fun isModified() = settingsProperty.get() != settings
 
     override fun apply() {
-        settings.update(project) {
-            copyFrom(settingsProperty.get())
+        when {
+            project.isDefault -> {
+                settings.copyFrom(settingsProperty.get())
+                defaults.store(settings)
+            }
+
+            else -> settings.update(project) {
+                copyFrom(settingsProperty.get())
+            }
         }
+        invalidateTable()
+    }
+
+    /**
+     * Stores the currently edited settings as the defaults for new projects.
+     */
+    private fun storeAsDefaults() {
+        defaults.store(settingsProperty.get())
+
+        // Re-emit the settings so the defaults buttons pick up the new defaults.
+        settingsProperty.set(settingsProperty.get())
+    }
+
+    /**
+     * Replaces the currently edited settings with the defaults for new projects.
+     */
+    private fun copyFromDefaults() {
+        settingsProperty.set(settingsProperty.get().apply {
+            loadDefaults()
+        })
         invalidateTable()
     }
 

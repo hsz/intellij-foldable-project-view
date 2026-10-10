@@ -27,6 +27,7 @@ Available features:
 - Case-insensitive matching
 - Search scopes based on the folding rules
 - Live Project View preview
+- Defaults for new projects, synchronized by Settings Sync
 
 ## Demo
 
@@ -68,6 +69,16 @@ to change its precedence, or switched to the `Hide` action.
 By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored
 files are folded in the module roots only.
+
+### Defaults for new projects
+
+Settings are stored per project in `.idea/FoldableProjectView.xml`. Projects without stored settings start with the
+defaults, which are kept at the IDE level and synchronized by Settings Sync. The defaults change only when you ask for it:
+
+- <kbd>Use as Defaults for New Projects</kbd> in the project settings stores the current settings as the defaults,
+- <kbd>Copy from Defaults</kbd> replaces the settings of the current project with the defaults,
+- the same page under the settings for new projects (<kbd>File</kbd> > <kbd>New Projects Setup</kbd> >
+  <kbd>Settings for New Projects…</kbd>) edits the defaults directly.
 
 ## Development
 

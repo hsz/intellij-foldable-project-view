@@ -25,6 +25,7 @@
           <li>Case-insensitive matching</li>
           <li>Search scopes based on the folding rules</li>
           <li>Live Project View preview</li>
+          <li>Defaults for new projects, synchronized by Settings Sync</li>
         </ul>
         <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />
         ]]></description>
@@ -39,8 +40,7 @@
                 key="foldableProjectView.name"
                 bundle="messages.FoldableProjectViewBundle"
                 id="FoldableProjectViewConfigurable"
-                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"
-                nonDefaultProject="true"/>
+                instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
         <searchScopesProvider
                 implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>

@@ -51,8 +51,13 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
         migrate()
     }
 
-    override fun noStateLoaded() {
-        service<FoldableProjectDefaults>().state?.let(::copyFrom)
+    override fun noStateLoaded() = loadDefaults()
+
+    /**
+     * Replaces the current settings with the defaults for new projects, see [FoldableProjectDefaults].
+     */
+    fun loadDefaults() {
+        copyFrom(service<FoldableProjectDefaults>().state ?: FoldableProjectSettings())
         migrate()
     }
 
@@ -92,10 +97,10 @@ var FoldableProjectSettings.foldIgnoredFiles: Boolean
 
 /**
  * Applies [block] to the settings and notifies [FoldableProjectSettingsListener]s of the [project] about the change.
+ * The defaults for new projects are not affected, see [FoldableProjectDefaults.store].
  */
 fun FoldableProjectSettings.update(project: Project, block: FoldableProjectSettings.() -> Unit) {
     block()
-    service<FoldableProjectDefaults>().store(this)
     project.messageBus
         .syncPublisher(FoldableProjectSettingsListener.TOPIC)
         .settingsChanged(this)
