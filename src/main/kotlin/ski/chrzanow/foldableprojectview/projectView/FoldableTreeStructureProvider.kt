@@ -18,6 +18,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
+import com.intellij.openapi.vcs.changes.ChangeListManager
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
@@ -72,7 +73,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             }
 
         if (state.foldIgnoredFiles) {
-            fold(Rule(message("foldableProjectView.ignoredFiles"), "")) { node -> node.fileStatus == FileStatus.IGNORED }
+            fold(Rule(message("foldableProjectView.ignoredFiles"), "")) { node -> node.isIgnored() }
         }
 
         return remaining + groups
@@ -110,6 +111,17 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         is PsiFileNode -> true
         is ProjectViewNode<*> -> virtualFile?.let { !it.isDirectory || state.matchDirectories } ?: false
         else -> false
+    }
+
+    private fun AbstractTreeNode<*>.isIgnored(): Boolean {
+        if (this !is ProjectViewNode<*>) {
+            return false
+        }
+        if (fileStatus == FileStatus.IGNORED) {
+            return true
+        }
+        val file = virtualFile ?: return false
+        return ChangeListManager.getInstance(project).isIgnoredFile(file)
     }
 
     private val AbstractTreeNode<*>.virtualFile
