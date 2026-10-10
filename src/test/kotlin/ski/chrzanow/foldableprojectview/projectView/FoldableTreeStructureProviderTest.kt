@@ -11,6 +11,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.Rule
+import ski.chrzanow.foldableprojectview.settings.RuleAction
 
 class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
@@ -106,14 +107,53 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
         assertEquals(listOf("Nothing"), modify().groups().map { it.name })
     }
 
-    fun `test hide all groups removes matched elements and groups`() {
-        settings.rules.add(Rule("Docs", "*.md"))
-        settings.hideAllGroups = true
+    fun `test hide action removes matched elements without a group`() {
+        settings.rules.add(Rule("Docs", "*.md", action = RuleAction.HIDE))
 
         val result = modify()
 
         assertEmpty(result.groups())
         assertEquals(listOf("build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test hide action does not show an empty group`() {
+        settings.rules.add(Rule("Nothing", "*.nothing", action = RuleAction.HIDE))
+        settings.hideEmptyGroups = false
+
+        assertEmpty(modify().groups())
+    }
+
+    fun `test hide and group actions are applied per rule`() {
+        settings.rules.add(Rule("Readme", "README.md", action = RuleAction.HIDE))
+        settings.rules.add(Rule("Docs", "*.md"))
+
+        val result = modify()
+        val group = result.groups().single()
+
+        assertEquals("Docs", group.name)
+        assertEquals(listOf("CHANGELOG.md"), group.children.names())
+        assertEquals(listOf("Docs", "build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test hide action is applied in nested directories`() {
+        settings.rules.add(Rule("Docs", "*.md", action = RuleAction.HIDE))
+        settings.foldNestedDirectories = true
+
+        val result = modify(parent = docsNode)
+
+        assertEmpty(result.groups())
+        assertEmpty(result)
+    }
+
+    fun `test action changed in place is applied`() {
+        val rule = Rule("Docs", "*.md")
+        settings.rules.add(rule)
+
+        assertEquals(listOf("Docs"), modify().groups().map { it.name })
+
+        rule.action = RuleAction.HIDE
+        assertEmpty(modify().groups())
+        assertEquals(listOf("build.gradle.kts", "docs", "src"), modify().names())
     }
 
     fun `test folding disabled returns children untouched`() {

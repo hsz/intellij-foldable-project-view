@@ -26,8 +26,11 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("HIDE_EMPTY_GROUPS")
     override var hideEmptyGroups by property(true)
 
+    /**
+     * Replaced by the per-rule [Rule.action]; kept only to migrate the settings stored by the previous versions.
+     */
     @get:OptionTag("HIDE_ALL_GROUPS")
-    override var hideAllGroups by property(false)
+    var hideAllGroups by property(false)
 
     @get:OptionTag("CASE_SENSITIVE")
     override var caseSensitive by property(true)
@@ -40,10 +43,26 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
 
     override fun getState() = this
 
-    override fun loadState(state: FoldableProjectSettings) = copyFrom(state)
+    override fun loadState(state: FoldableProjectSettings) {
+        copyFrom(state)
+        migrate()
+    }
 
     override fun noStateLoaded() {
-        service<FoldableProjectDefaults>().state?.let(::copyFrom)
+        service<FoldableProjectDefaults>().state?.let {
+            copyFrom(it)
+            migrate()
+        }
+    }
+
+    /**
+     * Converts the legacy `Hide all groups` option into the [RuleAction.HIDE] action of every rule.
+     */
+    private fun migrate() {
+        if (hideAllGroups) {
+            rules.replaceAll { it.copy(action = RuleAction.HIDE) }
+            hideAllGroups = false
+        }
     }
 }
 

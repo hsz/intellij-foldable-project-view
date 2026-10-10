@@ -25,10 +25,11 @@ import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 import ski.chrzanow.foldableprojectview.settings.Rule
+import ski.chrzanow.foldableprojectview.settings.RuleAction
 
 /**
  * Folds the root elements of the project modules into the [FoldableProjectViewNode] groups
- * according to the configured [Rule]s.
+ * according to the configured [Rule]s, or removes them from the Project View for the rules with the [RuleAction.HIDE] action.
  * When [FoldableProjectState.foldNestedDirectories] is enabled, the rules are applied to the content of all directories.
  */
 class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider, DumbAware {
@@ -75,7 +76,10 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             val matched = remaining.filter { it.isFoldable(state) && predicate(it) }
             remaining -= matched
 
-            if (!state.hideAllGroups && (matched.isNotEmpty() || (isRoot && !state.hideEmptyGroups))) {
+            if (rule.action == RuleAction.HIDE) {
+                return
+            }
+            if (matched.isNotEmpty() || (isRoot && !state.hideEmptyGroups)) {
                 groups += FoldableProjectViewNode(project, viewSettings, rule, matched)
             }
         }

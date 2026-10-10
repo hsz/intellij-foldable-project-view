@@ -8,13 +8,10 @@ import com.intellij.openapi.options.BoundSearchableConfigurable
 import com.intellij.openapi.options.Configurable.NoScroll
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.ContextHelpLabel
 import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
-import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.layout.not
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.bindSelected
@@ -39,7 +36,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     private val propertyGraph = PropertyGraph()
     private val settingsProperty = propertyGraph.lazyProperty { FoldableProjectSettings().apply { copyFrom(settings) } }
     private val foldingEnabledPredicate = settingsProperty.createPredicate(FoldableProjectSettings::foldingEnabled)
-    private val hideAllGroupsPredicate = settingsProperty.createPredicate(FoldableProjectSettings::hideAllGroups)
 
     private val ruleProperty = propertyGraph
         .lazyProperty<Rule?> { null }
@@ -93,26 +89,10 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             }
 
             row {
-                checkBox(message("foldableProjectView.settings.hideAllGroups"))
-                    .bindSelected(settingsProperty, FoldableProjectSettings::hideAllGroups)
-                    .comment(message("foldableProjectView.settings.hideAllGroups.comment"), MAX_LINE_LENGTH_WORD_WRAP)
-                    .gap(RightGap.SMALL)
-                    .applyToComponent { setMnemonic('a') }
-
-                ContextHelpLabel
-                    .create(
-                        message("foldableProjectView.settings.hideAllGroups.help"),
-                        message("foldableProjectView.settings.hideAllGroups.help.description"),
-                    )
-                    .let(::cell)
-            }
-
-            row {
                 checkBox(message("foldableProjectView.settings.hideEmptyGroups"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::hideEmptyGroups)
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('h') }
-                    .enabledIf(hideAllGroupsPredicate.not())
             }
         }.enabledIf(foldingEnabledPredicate)
     }

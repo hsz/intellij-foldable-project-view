@@ -1,6 +1,7 @@
 package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.execution.util.ListTableWithButtons
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
@@ -13,6 +14,7 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUM
 import java.awt.Component
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
+import javax.swing.SwingConstants
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
 
@@ -34,9 +36,11 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         tableView.apply {
             columnSelectionAllowed = false
             tableHeader.reorderingAllowed = false
-            columnModel.getColumn(0).apply {
-                maxWidth = JBUI.scale(24)
-                minWidth = JBUI.scale(24)
+            listOf(0, 1).forEach { index ->
+                columnModel.getColumn(index).apply {
+                    maxWidth = JBUI.scale(24)
+                    minWidth = JBUI.scale(24)
+                }
             }
             model.addTableModelListener {
                 rulesProperty.set(elements)
@@ -59,7 +63,7 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     override fun shouldEditRowOnCreation() = false
 
-    override fun createListModel() = ListTableModel<Rule>(ColorsColumn(), NameColumn(), RulesColumn())
+    override fun createListModel() = ListTableModel<Rule>(ColorsColumn(), ActionColumn(), NameColumn(), RulesColumn())
 
     override fun createElement() = Rule()
 
@@ -91,6 +95,28 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
                         foreground = item?.foreground
                         background = item?.background
                     }
+            }
+        }
+    }
+
+    /**
+     * Marks the rules whose matched elements are hidden instead of being grouped.
+     */
+    private class ActionColumn : ColumnInfo<Rule, RuleAction>(message("foldableProjectView.settings.action")) {
+
+        override fun getName() = ""
+
+        override fun valueOf(item: Rule?) = item?.action
+
+        override fun getRenderer(item: Rule?) = object : DefaultTableCellRenderer() {
+
+            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
+                val hidden = value == RuleAction.HIDE
+                horizontalAlignment = SwingConstants.CENTER
+                icon = AllIcons.Actions.ToggleVisibility.takeIf { hidden }
+                toolTipText = message("foldableProjectView.settings.action.hide.tooltip").takeIf { hidden }
+                return this
             }
         }
     }

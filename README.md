@@ -22,7 +22,7 @@ Available features:
 - Optionally fold in nested directories
 - Fold VCS-ignored files
 - Hide empty groups
-- Hide all groups
+- Hide matched elements instead of grouping them, per rule
 - Case-insensitive matching
 - Search scopes based on the folding rules
 - Live Project View preview
@@ -54,6 +54,10 @@ README.md *.yml gradle* .github
 Patterns are matched against paths relative to the module content root. Patterns without a slash match on any level,
 and a leading slash anchors the pattern to the root (`/README.md`). Rules are applied in order – the first matching rule
 takes precedence. Folding rules are also available as search scopes (e.g., in <kbd>Find in Files</kbd>).
+
+Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
+entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
+or the rule's search scope.
 
 By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored

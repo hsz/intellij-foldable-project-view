@@ -16,9 +16,20 @@ interface FoldableProjectState {
     val foldNestedDirectories: Boolean
     val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
-    val hideAllGroups: Boolean
     val caseSensitive: Boolean
     val rules: MutableList<Rule>
+}
+
+/**
+ * What happens to the elements matched by a [Rule] in the Project View.
+ */
+enum class RuleAction {
+
+    /** Move the matched elements into a folding group. */
+    GROUP,
+
+    /** Remove the matched elements from the Project View. */
+    HIDE,
 }
 
 data class Rule(
@@ -31,6 +42,8 @@ data class Rule(
 
     @get:OptionTag(converter = ColorConverter::class)
     var foreground: Color? = null,
+
+    var action: RuleAction = RuleAction.GROUP,
 ) {
 
     fun getScope(project: Project, state: FoldableProjectState) = FoldableProjectSearchScope(project, state, this)

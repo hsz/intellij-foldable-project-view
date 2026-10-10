@@ -7,6 +7,7 @@ import com.intellij.openapi.observable.util.transform
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.dsl.builder.Cell
+import com.intellij.ui.dsl.builder.SegmentedButton
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.layout.ComponentPredicate
@@ -69,6 +70,14 @@ fun <T : JTextComponent> Cell<T>.bindText(graphProperty: ObservableMutableProper
     bindText(with(graphProperty) {
         transform(
             { it?.let(property::get).orEmpty() },
+            { value -> get()?.apply { property.set(this, value) } },
+        )
+    })
+
+fun <T : Any> SegmentedButton<T>.bindSelectedItem(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, T>, defaultValue: T) =
+    bind(with(graphProperty) {
+        transform(
+            { it?.let(property::get) ?: defaultValue },
             { value -> get()?.apply { property.set(this, value) } },
         )
     })

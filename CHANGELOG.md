@@ -7,6 +7,11 @@
 ### Added
 
 - `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
+- Per-rule `Action` to choose whether the matched elements are grouped or hidden from the Project View
+
+### Changed
+
+- The global `Hide all groups` option was replaced with the per-rule `Hide` action; existing settings are migrated automatically
 
 ## [2.1.0] - 2026-10-10
 

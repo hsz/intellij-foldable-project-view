@@ -20,7 +20,7 @@
           <li>Optionally fold in nested directories</li>
           <li>Fold VCS-ignored files</li>
           <li>Hide empty groups</li>
-          <li>Hide all groups</li>
+          <li>Hide matched elements instead of grouping them, per rule</li>
           <li>Case-insensitive matching</li>
           <li>Search scopes based on the folding rules</li>
           <li>Live Project View preview</li>

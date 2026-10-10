@@ -12,6 +12,7 @@ import com.intellij.ui.layout.ComponentPredicate
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.bindColor
 import ski.chrzanow.foldableprojectview.bindColorControl
+import ski.chrzanow.foldableprojectview.bindSelectedItem
 import ski.chrzanow.foldableprojectview.bindText
 
 class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
@@ -23,6 +24,19 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
         override fun addListener(listener: (Boolean) -> Unit) =
             ruleProperty.afterChange {
                 listener(it != null)
+            }
+    }
+
+    /**
+     * Colors apply to the folding group only, so they are relevant for the [RuleAction.GROUP] action only.
+     */
+    private val groupActionPredicate = object : ComponentPredicate() {
+
+        override fun invoke() = ruleProperty.get()?.action == RuleAction.GROUP
+
+        override fun addListener(listener: (Boolean) -> Unit) =
+            ruleProperty.afterChange {
+                listener(it?.action == RuleAction.GROUP)
             }
     }
 
@@ -39,6 +53,10 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .comment(message("foldableProjectView.settings.rules.comment"), 40)
                     .bindText(ruleProperty, Rule::pattern)
             }
+            row(message("foldableProjectView.settings.action")) {
+                segmentedButton(RuleAction.entries) { text = it.text }
+                    .bindSelectedItem(ruleProperty, Rule::action, RuleAction.GROUP)
+            }.rowComment(message("foldableProjectView.settings.action.comment"), 40)
             row {
                 val foregroundCheckBox = checkBox(message("foldableProjectView.settings.foreground"))
                     .bindColorControl(ruleProperty, Rule::foreground, JBColor.foreground().brighter())
@@ -47,7 +65,7 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .align(Align.FILL)
                     .enabledIf(foregroundCheckBox.selected)
                     .bindColor(ruleProperty, Rule::foreground)
-            }
+            }.enabledIf(groupActionPredicate)
             row {
                 val backgroundCheckBox = checkBox(message("foldableProjectView.settings.background"))
                     .bindColorControl(ruleProperty, Rule::background, JBColor.background().darker())
@@ -56,7 +74,13 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .align(Align.FILL)
                     .enabledIf(backgroundCheckBox.selected)
                     .bindColor(ruleProperty, Rule::background)
-            }
+            }.enabledIf(groupActionPredicate)
         }.enabledIf(selectedRowPredicate)
     }
+
+    private val RuleAction.text
+        get() = when (this) {
+            RuleAction.GROUP -> message("foldableProjectView.settings.action.group")
+            RuleAction.HIDE -> message("foldableProjectView.settings.action.hide")
+        }
 }

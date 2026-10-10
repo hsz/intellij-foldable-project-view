@@ -18,6 +18,7 @@ class RuleTest {
         assertEquals(DEFAULT_RULE_PATTERN, rule.pattern)
         assertNull(rule.background)
         assertNull(rule.foreground)
+        assertEquals(RuleAction.GROUP, rule.action)
     }
 
     @Test
@@ -25,6 +26,7 @@ class RuleTest {
         assertEquals(Rule("a", "*.kt", Color.RED), Rule("a", "*.kt", Color.RED))
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.md"))
         assertNotEquals(Rule("a", "*.kt", Color.RED), Rule("a", "*.kt", Color.BLUE))
+        assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", action = RuleAction.HIDE))
     }
 
     @Test
