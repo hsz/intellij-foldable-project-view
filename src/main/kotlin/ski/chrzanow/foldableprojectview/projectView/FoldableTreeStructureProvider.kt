@@ -19,6 +19,7 @@ import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.changes.ChangeListManager
+import com.intellij.openapi.vcs.changes.VcsIgnoreManager
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
@@ -121,7 +122,8 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             return true
         }
         val file = virtualFile ?: return false
-        return ChangeListManager.getInstance(project).isIgnoredFile(file)
+        return ChangeListManager.getInstance(project).isIgnoredFile(file) ||
+            VcsIgnoreManager.getInstance(project).isPotentiallyIgnoredFile(file)
     }
 
     private val AbstractTreeNode<*>.virtualFile

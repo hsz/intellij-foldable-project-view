@@ -41,6 +41,7 @@ Jakub
 - `Select Opened File` was delayed on large projects due to excessive pattern matching ([#93](https://github.com/hsz/intellij-foldable-project-view/issues/93))
 - `Select Opened File` did not highlight files located in folded groups or folded directories ([#15](https://github.com/hsz/intellij-foldable-project-view/issues/15))
 - `Fold Root Files` and `Fold Ignored Files` actions were shown on the Welcome screen, where no project is available ([#82](https://github.com/hsz/intellij-foldable-project-view/issues/82))
+- Folders matched by VCS ignore rules, like `.idea`, stopped folding after `.gitignore` was added to git ([#9](https://github.com/hsz/intellij-foldable-project-view/issues/9))
 
 ## [1.1.4] - 2022-11-13
 
