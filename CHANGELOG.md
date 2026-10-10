@@ -4,19 +4,10 @@
 
 ## [Unreleased]
 
-It has been a while since the last Foldable Project View release, right?
-A lot was on my plate during this time, trust me.
-
-However, I decided to reboot this project and start with the 2.0.0 release, which may work.
-Or not. 
-But we have to start with anything after this time!
-
-Please, report any issues or ideas via [GitHub Issues](https://github.com/hsz/intellij-foldable-project-view/issues).
-
-Thanks!
-Jakub
+## [2.1.0] - 2026-10-10
 
 ### Added
+
 - Support for multiple rules/groups in the Project View
 - Possibility for specifying the background/foreground of the rule
 - Folding rules are available as search scopes (e.g., in Find in Files)
@@ -25,12 +16,14 @@ Jakub
 - Support for IDE Settings Sync: the last saved settings are synchronized and used as defaults for projects without stored settings ([#41](https://github.com/hsz/intellij-foldable-project-view/issues/41))
 
 ### Changed
+
 - Use a separated storage file within the `.idea` directory: `FoldableProjectView.xml`
 - Patterns are matched against the path relative to the module content root, using gitignore-like glob syntax
 - Folding groups are sorted right after directories
 - Require IntelliJ Platform 2025.3+
 
 ### Fixed
+
 - Ignored files located outside of a module were not folded into the `Ignored files` group ([#11](https://github.com/hsz/intellij-foldable-project-view/issues/11))
 - Avoid Project View refresh on the wrong thread, which could freeze Rider ([#28](https://github.com/hsz/intellij-foldable-project-view/issues/28))
 - Folding was not applied to folders attached to a Rider solution ([#46](https://github.com/hsz/intellij-foldable-project-view/issues/46))
@@ -46,27 +39,32 @@ Jakub
 ## [1.1.4] - 2022-11-13
 
 ### Added
+
 - Support 231.* IDE releases
 
 ## [1.1.1]
 
 ### Fixed
+
 - Fixed incorrect `projectConfigurable` name
 
 ## [1.1.0]
 
 ### Added
+
 - Hide files or folders that are ignored or excluded (@Recks11)
 
 ## [1.0.2]
 
 ### Added
+
 - Dark/light icons
 - Support for 2021.3
 
 ## [1.0.0]
 
 ### Added
+
 - Fold matching root elements of the project modules in the Project View
 - Enable/disable folding via Preferences or Project View options menu
 - Optionally fold directories
@@ -76,7 +74,8 @@ Jakub
 - Live ProjectView preview
 - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
 
-[Unreleased]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/hsz/intellij-foldable-projectview/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.4...v2.1.0
 [1.1.4]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.1...v1.1.4
 [1.1.1]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.0.2...v1.1.0
