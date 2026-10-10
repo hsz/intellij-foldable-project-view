@@ -30,6 +30,8 @@
 
     <depends>com.intellij.modules.platform</depends>
 
+    <resource-bundle>messages.FoldableProjectView</resource-bundle>
+
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable
                 groupId="tools"
@@ -48,18 +50,14 @@
 
     <actions>
         <action id="ProjectView.FoldRootFiles"
-                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction"
-                text="Fold Root Files"
-                description="Action that lets you fold the files located in the root of your project">
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction">
             <add-to-group
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FoldIgnoredFiles"
                     anchor="before"/>
         </action>
         <action id="ProjectView.FoldIgnoredFiles"
-                class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction"
-                text="Fold Ignored Files"
-                description="Action that lets you fold the ignored files">
+                class="ski.chrzanow.foldableprojectview.actionSystem.FoldIgnoredFilesAction">
             <add-to-group
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FlattenPackages"
