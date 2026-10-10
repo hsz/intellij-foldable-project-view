@@ -20,7 +20,7 @@ Jakub
 - Support for multiple rules/groups in the Project View
 - Possibility for specifying the background/foreground of the rule
 - Folding rules are available as search scopes (e.g., in Find in Files)
-- Ignored files are folded into a dedicated `Ignored files` group
+- Ignored files (VCS ignore files like `.gitignore`) are folded into a dedicated `Ignored files` group ([#4](https://github.com/hsz/intellij-foldable-project-view/issues/4))
 - Folding groups show the number of folded elements
 - Support for IDE Settings Sync: the last saved settings are synchronized and used as defaults for projects without stored settings ([#41](https://github.com/hsz/intellij-foldable-project-view/issues/41))
 
