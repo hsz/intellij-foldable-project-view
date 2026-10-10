@@ -5,10 +5,10 @@ import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
-object FoldableProjectViewBundle : AbstractBundle("messages.FoldableProjectView") {
+object FoldableProjectViewBundle : AbstractBundle("messages.FoldableProjectViewBundle") {
 
     @NonNls
-    const val BUNDLE = "messages.FoldableProjectView"
+    const val BUNDLE = "messages.FoldableProjectViewBundle"
 
     @Suppress("SpreadOperator")
     @JvmStatic

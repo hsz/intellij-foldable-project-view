@@ -31,13 +31,13 @@
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.FoldableProjectView</resource-bundle>
+    <resource-bundle>messages.FoldableProjectViewBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable
                 groupId="tools"
                 key="foldableProjectView.name"
-                bundle="messages.FoldableProjectView"
+                bundle="messages.FoldableProjectViewBundle"
                 id="FoldableProjectViewConfigurable"
                 instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"
                 nonDefaultProject="true"/>

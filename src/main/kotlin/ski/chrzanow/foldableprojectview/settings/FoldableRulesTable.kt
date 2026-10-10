@@ -5,11 +5,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
-import com.intellij.ui.BooleanTableCellEditor
-import com.intellij.ui.BooleanTableCellRenderer
-import com.intellij.ui.ColoredTableCellRenderer
-import com.intellij.ui.SimpleTextAttributes
-import com.intellij.ui.ToolbarDecorator
+import com.intellij.ui.*
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
@@ -18,7 +14,6 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUM
 import java.awt.Component
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
-import javax.swing.SwingConstants
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
 
