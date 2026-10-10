@@ -44,7 +44,11 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         viewSettings: ViewSettings?,
     ): Collection<AbstractTreeNode<*>> {
         val state = stateProvider()
-        if (!state.foldingEnabled || parent !is ProjectViewNode<*> || !parent.isModuleRoot()) {
+        if (!state.foldingEnabled || parent !is ProjectViewNode<*>) {
+            return children
+        }
+        val isRoot = parent.isModuleRoot()
+        if (!isRoot && !parent.isDirectory()) {
             return children
         }
 
@@ -55,7 +59,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             val matched = remaining.filter { it.isFoldable(state) && predicate(it) }
             remaining -= matched
 
-            if (!state.hideAllGroups && (matched.isNotEmpty() || !state.hideEmptyGroups)) {
+            if (!state.hideAllGroups && (matched.isNotEmpty() || (isRoot && !state.hideEmptyGroups))) {
                 groups += FoldableProjectViewNode(project, viewSettings, rule, matched)
             }
         }
@@ -84,6 +88,8 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             pane.updateFromRoot(true)
         }
     }
+
+    private fun ProjectViewNode<*>.isDirectory() = this is PsiDirectoryNode || virtualFile?.isDirectory == true
 
     private fun ProjectViewNode<*>.isModuleRoot(): Boolean {
         if (this !is PsiDirectoryNode && virtualFile?.isDirectory != true) {
