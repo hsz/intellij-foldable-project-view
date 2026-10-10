@@ -50,7 +50,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             return children
         }
         val isRoot = parent.isModuleRoot()
-        if (!isRoot && !parent.isDirectory()) {
+        if (!isRoot) {
             return children
         }
 
@@ -102,8 +102,8 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         }
         // Custom scope views: the root directory is attached to a non-directory (scope/root) node.
         val parentNode = parent
-        if (parentNode == null || (parentNode is ProjectViewNode<*> && parentNode !is PsiDirectoryNode &&
-                parentNode.virtualFile?.isDirectory != true)
+        if (parentNode is ProjectViewNode<*> && parentNode !is PsiDirectoryNode &&
+            parentNode.virtualFile?.isDirectory != true
         ) {
             return true
         }
