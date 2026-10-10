@@ -77,11 +77,11 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
     /**
      * The built-in ignored files rule is pinned: it can be disabled, but not removed.
      */
-    override fun canDeleteElement(selection: Rule) = selection.type == RuleType.PATTERN
+    override fun canDeleteElement(selection: Rule) = selection.type != RuleType.IGNORED_FILES
 
     override fun cloneElement(variable: Rule) = variable.copy()
 
-    override fun isEmpty(element: Rule) = element.type == RuleType.PATTERN && element.pattern.isBlank()
+    override fun isEmpty(element: Rule) = element.type != RuleType.IGNORED_FILES && element.pattern.isBlank()
 
     /**
      * Checkbox that enables or disables the rule without removing it.
@@ -158,13 +158,14 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
     }
 
     /**
-     * Shows the rule patterns, or what the rule matches for the rules that do not use patterns.
+     * Shows the rule patterns, or what the rule matches for the rules that do not list patterns directly.
      * Rules with invalid patterns are marked with a warning icon.
      */
     private class RulesColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.rules")) {
 
         override fun valueOf(item: Rule?) = when (item?.type) {
             RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
+            RuleType.PATTERNS_FILE -> message("foldableProjectView.patternsFile.description", item.pattern)
             else -> item?.pattern
         }
 
@@ -172,8 +173,8 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
             override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
                 val attributes = when (item?.type) {
-                    RuleType.IGNORED_FILES -> SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES
-                    else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                    RuleType.PATTERN -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                    else -> SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES
                 }
                 append(value?.toString().orEmpty(), attributes)
 

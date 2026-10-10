@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.Rule
+import ski.chrzanow.foldableprojectview.settings.RuleType
 
 class FoldableProjectScopesProviderTest : BasePlatformTestCase() {
 
@@ -45,6 +46,19 @@ class FoldableProjectScopesProviderTest : BasePlatformTestCase() {
 
         assertEquals(listOf("Docs", "Gradle"), scopes.map { it.displayName })
         assertTrue(scopes.all { it is FoldableProjectSearchScope })
+    }
+
+    fun `test patterns file rule produces a scope reading the patterns from the file`() {
+        myFixture.addFileToProject(".foldignore", "*.md\n!CHANGELOG.md\n")
+        val readme = myFixture.addFileToProject("README.md", "").virtualFile
+        val changelog = myFixture.addFileToProject("CHANGELOG.md", "").virtualFile
+        settings.rules.add(Rule("Docs", ".foldignore", type = RuleType.PATTERNS_FILE))
+
+        val scope = provider.getSearchScopes(project, DataContext.EMPTY_CONTEXT).single() as FoldableProjectSearchScope
+
+        assertEquals("Docs", scope.displayName)
+        assertTrue(scope.contains(readme))
+        assertFalse(scope.contains(changelog))
     }
 
     fun `test disabled rules and the ignored files rule produce no scopes`() {

@@ -75,6 +75,23 @@ class FoldableProjectSettingsTest : LightPlatformTestCase() {
         assertEquals("Noise", restored.ignoredFilesRule!!.name)
     }
 
+    fun `test patterns file rule survives serialization`() {
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", ".foldignore .dockerignore", type = RuleType.PATTERNS_FILE, action = RuleAction.HIDE))
+            rules.add(Rule.ignoredFiles())
+        }
+
+        val element = serialize(settings)!!
+        val xml = JDOMUtil.write(element)
+        assertTrue(xml, xml.contains("PATTERNS_FILE"))
+
+        val restored = roundtrip(settings)
+
+        assertEquals(settings.rules, restored.rules)
+        assertEquals(RuleType.PATTERNS_FILE, restored.rules[0].type)
+        assertEquals(listOf(".foldignore", ".dockerignore"), restored.rules[0].patternsFilePaths)
+    }
+
     fun `test ignored files rule is stored once it is present`() {
         val restored = roundtrip(FoldableProjectSettings().apply { rules.add(Rule.ignoredFiles()) })
 

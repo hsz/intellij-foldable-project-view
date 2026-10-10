@@ -7,6 +7,7 @@ import com.intellij.openapi.ui.ComponentValidator
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.fields.ExpandableTextField
+import com.intellij.ui.table.TableView
 import com.intellij.util.ui.UIUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import javax.swing.JButton
@@ -41,29 +42,72 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
     private fun JComponent.checkBox(text: String) = UIUtil.findComponentsOfType(this, JBCheckBox::class.java).single { it.text == text }
 
-    fun `test invalid patterns are reported as a warning`() {
+    /**
+     * The pattern fields of the rule editor: the first one lists the patterns, the second one the patterns files.
+     */
+    private fun JComponent.patternFields() = UIUtil.findComponentsOfType(this, ExpandableTextField::class.java)
+
+    private fun JComponent.selectRule(index: Int) = UIUtil.findComponentsOfType(this, TableView::class.java).single().setRowSelectionInterval(index, index)
+
+    /**
+     * Runs [block] with the project rules replaced by [rules], restoring the original ones afterwards.
+     */
+    private fun withRules(vararg rules: Rule, block: () -> Unit) {
         val settings = project.service<FoldableProjectSettings>()
         val originalRules = settings.rules.toList()
 
         try {
             settings.rules.clear()
-            settings.rules.add(Rule("Docs", "*.md [z-a].md"))
-
-            withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
-                val patternField = UIUtil.findComponentsOfType(component, ExpandableTextField::class.java).single()
-                val validator = ComponentValidator.getInstance(patternField).get()
-
-                patternField.text = "*.md [z-a].md"
-                val warning = validator.validationInfo!!
-                assertTrue(warning.warning)
-                assertEquals(message("foldableProjectView.settings.rules.invalid", "[z-a].md"), warning.message)
-
-                patternField.text = "*.md"
-                assertNull(validator.validationInfo)
-            }
+            settings.rules.addAll(rules)
+            block()
         } finally {
             settings.rules.clear()
             settings.rules.addAll(originalRules)
+        }
+    }
+
+    fun `test invalid patterns are reported as a warning`() = withRules(Rule("Docs", "*.md [z-a].md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val patternField = component.patternFields()[0]
+            val validator = ComponentValidator.getInstance(patternField).get()
+
+            patternField.text = "*.md [z-a].md"
+            val warning = validator.validationInfo!!
+            assertTrue(warning.warning)
+            assertEquals(message("foldableProjectView.settings.rules.invalid", "[z-a].md"), warning.message)
+
+            patternField.text = "*.md"
+            assertNull(validator.validationInfo)
+        }
+    }
+
+    fun `test patterns file field is shown for the patterns file rules and reports missing files`() = withRules(
+        Rule("Docs", "*.md"),
+        Rule("Ignore", ".foldignore", type = RuleType.PATTERNS_FILE),
+    ) {
+        myFixture.addFileToProject(".foldignore", "*.md\n")
+
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val (patternField, filesField) = component.patternFields()
+
+            component.selectRule(0)
+            assertTrue(patternField.isVisible)
+            assertFalse(filesField.isVisible)
+
+            component.selectRule(1)
+            assertFalse(patternField.isVisible)
+            assertTrue(filesField.isVisible)
+            assertEquals(".foldignore", filesField.text)
+
+            val validator = ComponentValidator.getInstance(filesField).get()
+
+            filesField.text = ".foldignore .dockerignore"
+            val warning = validator.validationInfo!!
+            assertTrue(warning.warning)
+            assertEquals(message("foldableProjectView.settings.patternsFile.notFound", ".dockerignore"), warning.message)
+
+            filesField.text = ".foldignore"
+            assertNull(validator.validationInfo)
         }
     }
 

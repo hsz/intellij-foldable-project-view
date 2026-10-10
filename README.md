@@ -26,6 +26,7 @@ Available features:
 - Hide matched elements instead of grouping them, per rule
 - Case-insensitive matching
 - Gitignore-like patterns with negation (`!pattern`), directory-only matching (`dir/`), and quoted names with spaces
+- Rules reading their patterns from ignore-like files in the repository, like `.foldignore` or `.dockerignore`
 - Search scopes based on the folding rules
 - Live Project View preview
 - Defaults for new projects, synchronized by Settings Sync
@@ -80,6 +81,24 @@ to change its precedence, or switched to the `Hide` action.
 By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored
 files are folded in the module roots only.
+
+### Patterns from ignore-like files
+
+Instead of entering the patterns in the IDE, a rule can read them from files kept in the repository: switch the rule's
+<kbd>Source</kbd> to <kbd>File</kbd> and list the space-separated paths of the files, relative to the module content root,
+e.g. `.foldignore` or `.foldignore .dockerignore`. Every line of such a file is a single gitignore-like pattern with the
+syntax described above (spaces are a part of the pattern), blank lines and lines starting with `#` are skipped:
+
+```gitignore
+# Documentation
+*.md
+!CHANGELOG.md
+LICENSE*
+```
+
+The files are looked up in the content root of every module, so each module can have its own `.foldignore`. The Project
+View is refreshed whenever the files change, and the settings page warns about files that do not exist in any module root.
+This is the way to go when the folding rules should be versioned together with the project while `.idea/FoldableProjectView.xml` is not.
 
 ### Defaults for new projects
 

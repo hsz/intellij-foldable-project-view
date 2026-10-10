@@ -16,6 +16,7 @@
 - Patterns ending with a slash (`build/`) match directories only
 - Patterns with spaces can be wrapped in double quotes (`"My Notes.md"`) or escaped with a backslash (`My\ Notes.md`)
 - Invalid patterns are reported with a warning in the rule editor and in the rules table instead of being silently ignored
+- Rules can read their patterns from ignore-like files kept in the repository (`.foldignore`, `.dockerignore`, etc.), one gitignore-like pattern per line; the Project View is refreshed when the files change, and missing files are reported in the rule editor ([#4](https://github.com/hsz/intellij-foldable-project-view/issues/4), [#29](https://github.com/hsz/intellij-foldable-project-view/issues/29))
 
 ### Changed
 

@@ -39,7 +39,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
     /**
      * Scopes compiled for the given rules snapshot. [Rule]s are mutable, so the copies are stored to detect in-place edits.
-     * The scope is `null` for the rules that do not match by [Rule.pattern], see [RuleType].
+     * The scope is `null` for the rules that do not match by glob patterns, see [Rule.usesPatterns].
      */
     private data class CompiledScopes(
         val rules: List<Rule>,
@@ -89,7 +89,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         val rules = state.rules.filter { it.isActive }
         rules.zip(getScopes(state, rules)).forEach { (rule, scope) ->
             when (rule.type) {
-                RuleType.PATTERN -> fold(rule) { node ->
+                RuleType.PATTERN, RuleType.PATTERNS_FILE -> fold(rule) { node ->
                     (node as? ProjectViewNode<*>)?.virtualFile?.let { scope?.contains(it) } ?: false
                 }
 
@@ -114,7 +114,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
             ?.let { return it.scopes }
 
         return rules
-            .map { rule -> rule.takeIf { it.type == RuleType.PATTERN }?.getScope(project, state) }
+            .map { rule -> rule.takeIf(Rule::usesPatterns)?.getScope(project, state) }
             .also { compiledScopes = CompiledScopes(snapshot, state.caseSensitive, it) }
     }
 

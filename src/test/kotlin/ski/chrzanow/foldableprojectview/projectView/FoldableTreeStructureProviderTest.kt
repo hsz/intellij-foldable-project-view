@@ -62,6 +62,9 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
     private fun Collection<AbstractTreeNode<*>>.groups() = filterIsInstance<FoldableProjectViewNode>()
 
+    private fun patternsFileRule(name: String = "Docs", files: String = ".foldignore", action: RuleAction = RuleAction.GROUP) =
+        Rule(name, files, type = RuleType.PATTERNS_FILE, action = action)
+
     /**
      * Root children with the `build.gradle.kts` file reported as ignored by the VCS.
      */
@@ -365,6 +368,96 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
         settings.foldIgnoredFiles = true
         assertEquals(listOf("Ignored files"), modify(children = childrenWithIgnoredGradle).groups().map { it.name })
+    }
+
+    fun `test patterns file rule folds elements matching the patterns read from the file`() {
+        myFixture.addFileToProject(".foldignore", "# Documentation\n*.md\n\n!CHANGELOG.md\n")
+        settings.rules.add(patternsFileRule())
+
+        val result = modify()
+        val group = result.groups().single()
+
+        assertEquals("Docs", group.name)
+        assertEquals(RuleType.PATTERNS_FILE, group.value.type)
+        assertEquals(listOf("README.md"), group.children.names())
+        assertEquals(listOf(".foldignore", "CHANGELOG.md", "Docs", "build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test patterns file changes are applied`() {
+        val file = myFixture.addFileToProject(".foldignore", "*.md\n").virtualFile
+        settings.rules.add(patternsFileRule())
+
+        assertEquals(listOf("CHANGELOG.md", "README.md"), modify().groups().single().children.names())
+
+        myFixture.saveText(file, "*.kts\n")
+        assertEquals(listOf("build.gradle.kts"), modify().groups().single().children.names())
+
+        myFixture.saveText(file, "# nothing\n")
+        assertEmpty(modify().groups())
+    }
+
+    fun `test patterns from multiple files are combined in order`() {
+        myFixture.addFileToProject(".foldignore", "*.md\n")
+        myFixture.addFileToProject(".dockerignore", "!CHANGELOG.md\n")
+        settings.rules.add(patternsFileRule(files = ".foldignore .dockerignore"))
+
+        assertEquals(listOf("README.md"), modify().groups().single().children.names())
+
+        settings.rules[0].pattern = ".dockerignore .foldignore"
+        assertEquals(listOf("CHANGELOG.md", "README.md"), modify().groups().single().children.names())
+    }
+
+    fun `test missing patterns file matches nothing`() {
+        settings.rules.add(patternsFileRule(files = ".missing"))
+        settings.hideEmptyGroups = false
+
+        val group = modify().groups().single()
+
+        assertEquals("Docs", group.name)
+        assertEmpty(group.children)
+    }
+
+    fun `test patterns file rule can hide the matched elements`() {
+        myFixture.addFileToProject(".foldignore", "*.md\n")
+        settings.rules.add(patternsFileRule(action = RuleAction.HIDE))
+
+        val result = modify()
+
+        assertEmpty(result.groups())
+        assertEquals(listOf(".foldignore", "build.gradle.kts", "docs", "src"), result.names())
+    }
+
+    fun `test patterns file rule is applied in nested directories when enabled`() {
+        myFixture.addFileToProject(".foldignore", "*.md\n/README.md\n")
+        settings.rules.add(patternsFileRule())
+
+        assertEquals(listOf("GUIDE.md"), modify(parent = docsNode).names())
+
+        settings.foldNestedDirectories = true
+        assertEquals(listOf("GUIDE.md"), modify(parent = docsNode).groups().single().children.names())
+    }
+
+    fun `test patterns file rule honors case sensitivity`() {
+        myFixture.addFileToProject(".foldignore", "readme.MD\n")
+        settings.rules.add(patternsFileRule())
+        settings.hideEmptyGroups = false
+
+        assertEmpty(modify().groups().single().children)
+
+        settings.caseSensitive = false
+        assertEquals(listOf("README.md"), modify().groups().single().children.names())
+    }
+
+    fun `test patterns file rule and pattern rule are applied in order`() {
+        myFixture.addFileToProject(".foldignore", "*.md\n")
+        settings.rules.add(Rule("Readme", "README.md"))
+        settings.rules.add(patternsFileRule())
+
+        val groups = modify().groups()
+
+        assertEquals(listOf("Readme", "Docs"), groups.map { it.name })
+        assertEquals(listOf("README.md"), groups[0].children.names())
+        assertEquals(listOf("CHANGELOG.md"), groups[1].children.names())
     }
 
     fun `test group contains matched files`() {

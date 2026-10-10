@@ -2,7 +2,10 @@ package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.isNotNull
+import com.intellij.openapi.observable.util.transform
 import com.intellij.openapi.options.UiDslUnnamedConfigurable
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.Align
@@ -16,7 +19,14 @@ import ski.chrzanow.foldableprojectview.bindSelectedItem
 import ski.chrzanow.foldableprojectview.bindText
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 
-class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Rule?>) : UiDslUnnamedConfigurable.Simple() {
+/**
+ * Editor of the [Rule] selected in the rules table. The [project] is used to validate the patterns files paths,
+ * see [RuleType.PATTERNS_FILE]; it is `null` when the editor is used for the defaults of new projects.
+ */
+class FoldableRulesEditor(
+    private val ruleProperty: ObservableMutableProperty<Rule?>,
+    private val project: Project? = null,
+) : UiDslUnnamedConfigurable.Simple() {
 
     private val selectedRowPredicate = object : ComponentPredicate() {
 
@@ -38,6 +48,25 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
      */
     private val patternRulePredicate = rulePredicate { it.type == RuleType.PATTERN }
 
+    /**
+     * The [RuleType.PATTERNS_FILE] rules list the files with the patterns instead of the patterns themselves.
+     */
+    private val patternsFileRulePredicate = rulePredicate { it.type == RuleType.PATTERNS_FILE }
+    private val notPatternsFileRulePredicate = rulePredicate { it.type != RuleType.PATTERNS_FILE }
+
+    /**
+     * The source of the patterns can be switched for all the rules but the built-in ignored files rule.
+     */
+    private val usesPatternsPredicate = rulePredicate(Rule::usesPatterns)
+
+    /**
+     * The [RuleType] edited with the source switch: the built-in ignored files rule is shown as [RuleType.PATTERN].
+     */
+    private val typeProperty = ruleProperty.transform(
+        { it?.type?.takeIf { type -> type != RuleType.IGNORED_FILES } ?: RuleType.PATTERN },
+        { value -> ruleProperty.get()?.apply { type = value } },
+    )
+
     private fun rulePredicate(predicate: (Rule) -> Boolean) = object : ComponentPredicate() {
 
         override fun invoke() = ruleProperty.get()?.let(predicate) == true
@@ -55,6 +84,11 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                     .align(Align.FILL)
                     .bindText(ruleProperty, Rule::name)
             }
+            row(message("foldableProjectView.settings.type")) {
+                segmentedButton(listOf(RuleType.PATTERN, RuleType.PATTERNS_FILE)) { text = it.text }
+                    .bind(typeProperty)
+            }.rowComment(message("foldableProjectView.settings.type.comment"), 40)
+                .enabledIf(usesPatternsPredicate)
             row(message("foldableProjectView.settings.rules")) {
                 expandableTextField()
                     .align(Align.FILL)
@@ -66,6 +100,18 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
                             ?.let { warning(message("foldableProjectView.settings.rules.invalid", it.joinToString(" "))) }
                     }
             }.enabledIf(patternRulePredicate)
+                .visibleIf(notPatternsFileRulePredicate)
+            row(message("foldableProjectView.settings.patternsFile")) {
+                expandableTextField()
+                    .align(Align.FILL)
+                    .comment(message("foldableProjectView.settings.patternsFile.comment"), 40)
+                    .bindText(ruleProperty, Rule::pattern)
+                    .validationOnInput { field ->
+                        missingPatternsFiles(field.text)
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { warning(message("foldableProjectView.settings.patternsFile.notFound", it.joinToString(" "))) }
+                    }
+            }.visibleIf(patternsFileRulePredicate)
             row(message("foldableProjectView.settings.action")) {
                 segmentedButton(RuleAction.entries) { text = it.text }
                     .bindSelectedItem(ruleProperty, Rule::action, RuleAction.GROUP)
@@ -91,9 +137,26 @@ class FoldableRulesEditor(private val ruleProperty: ObservableMutableProperty<Ru
         }.enabledIf(selectedRowPredicate)
     }
 
+    /**
+     * Returns the patterns files listed in the [text] that exist in none of the project content roots.
+     * Nothing is reported without a [project].
+     */
+    private fun missingPatternsFiles(text: String): List<String> {
+        val roots = project?.let { ProjectRootManager.getInstance(it).contentRoots } ?: return emptyList()
+        return Rule.patternsFilePaths(text).filter { path ->
+            roots.none { root -> root.findFileByRelativePath(path) != null }
+        }
+    }
+
     private val RuleAction.text
         get() = when (this) {
             RuleAction.GROUP -> message("foldableProjectView.settings.action.group")
             RuleAction.HIDE -> message("foldableProjectView.settings.action.hide")
+        }
+
+    private val RuleType.text
+        get() = when (this) {
+            RuleType.PATTERNS_FILE -> message("foldableProjectView.settings.type.patternsFile")
+            else -> message("foldableProjectView.settings.type.pattern")
         }
 }

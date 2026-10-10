@@ -154,6 +154,8 @@ class GlobPattern private constructor(
  *
  * As in gitignore, the last matching pattern decides: a path matched by a negated pattern (`!docker-compose.yml`)
  * is excluded unless it is matched again by a later pattern. Invalid patterns are skipped, see [invalidPatterns].
+ *
+ * Patterns can also be read from the content of an ignore-like file, one pattern per line, see [parseLines].
  */
 class GlobPatterns private constructor(val patterns: List<GlobPattern>) {
 
@@ -169,6 +171,24 @@ class GlobPatterns private constructor(val patterns: List<GlobPattern>) {
         fun parse(text: String, caseSensitive: Boolean = true) = GlobPatterns(
             split(text).mapNotNull { GlobPattern.compile(it, caseSensitive) }
         )
+
+        /**
+         * Parses the content of an ignore-like file (`.gitignore`, `.dockerignore`, etc.): every line is a single pattern,
+         * blank lines and lines starting with `#` are skipped. Unlike in [parse], spaces and commas are a part of the pattern.
+         */
+        fun parseLines(text: String, caseSensitive: Boolean = true) = GlobPatterns(
+            splitLines(text).mapNotNull { GlobPattern.compile(it, caseSensitive) }
+        )
+
+        /**
+         * Splits the content of an ignore-like file into single patterns, skipping the blank lines and the `#` comments.
+         * A pattern starting with `#` has to be escaped: `\#`.
+         */
+        fun splitLines(text: String) = text
+            .lineSequence()
+            .map(String::trimStart)
+            .filter { it.isNotBlank() && !it.startsWith("#") }
+            .toList()
 
         /**
          * Returns the patterns of the [text] that cannot be compiled, see [GlobPattern.compile].

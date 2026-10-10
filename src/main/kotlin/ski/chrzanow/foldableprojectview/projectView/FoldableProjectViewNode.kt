@@ -29,6 +29,7 @@ class FoldableProjectViewNode(
         presentation.apply {
             val tooltip = when (rule.type) {
                 RuleType.PATTERN -> rule.pattern.ifBlank { null }
+                RuleType.PATTERNS_FILE -> message("foldableProjectView.patternsFile.description", rule.pattern)
                 RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
             }
             addText(ColoredFragment(rule.name, tooltip, SimpleTextAttributes(STYLE_PLAIN, rule.foreground)))

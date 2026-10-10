@@ -103,6 +103,19 @@ class FoldableProjectSettingsStateTest : BasePlatformTestCase() {
         assertEquals(listOf(Rule.ignoredFiles(enabled = false)), settings.rules)
     }
 
+    fun `test patterns file paths are collected from the active patterns file rules`() {
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", ".foldignore", type = RuleType.PATTERNS_FILE))
+            rules.add(Rule("Docker", ".dockerignore .foldignore", type = RuleType.PATTERNS_FILE))
+            rules.add(Rule("Disabled", ".npmignore", type = RuleType.PATTERNS_FILE, enabled = false))
+            rules.add(Rule("Patterns", ".gitignore"))
+            rules.add(Rule.ignoredFiles())
+        }
+
+        assertEquals(listOf(".foldignore", ".dockerignore"), settings.patternsFilePaths)
+        assertEquals(emptyList<String>(), FoldableProjectSettings().patternsFilePaths)
+    }
+
     fun `test getState returns itself`() {
         val settings = FoldableProjectSettings()
 

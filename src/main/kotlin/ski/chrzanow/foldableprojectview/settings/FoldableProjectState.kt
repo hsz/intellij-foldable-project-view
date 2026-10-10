@@ -7,6 +7,7 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
+import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import com.intellij.ui.JBColor
 import java.awt.Color
 
@@ -27,12 +28,28 @@ val FoldableProjectState.ignoredFilesRule: Rule?
     get() = rules.firstOrNull { it.type == RuleType.IGNORED_FILES }
 
 /**
+ * Paths of the patterns files used by the active [RuleType.PATTERNS_FILE] rules, relative to the module content roots,
+ * see [Rule.patternsFilePaths].
+ */
+val FoldableProjectState.patternsFilePaths: List<String>
+    get() = rules
+        .filter { it.isActive && it.type == RuleType.PATTERNS_FILE }
+        .flatMap(Rule::patternsFilePaths)
+        .distinct()
+
+/**
  * What the [Rule] matches.
  */
 enum class RuleType {
 
     /** Elements matching the glob [Rule.pattern]. */
     PATTERN,
+
+    /**
+     * Elements matching the glob patterns read from the files listed in [Rule.pattern], like `.foldignore` or `.dockerignore`.
+     * The files are located in the module content roots, and contain one gitignore-like pattern per line, see [GlobPatterns.parseLines].
+     */
+    PATTERNS_FILE,
 
     /**
      * Elements ignored by the VCS. There is a single built-in rule of this type, which cannot be removed
@@ -77,9 +94,29 @@ data class Rule(
     val isActive
         get() = enabled && (type == RuleType.IGNORED_FILES || pattern.isNotBlank())
 
+    /**
+     * Whether the rule matches by glob patterns, either entered directly or read from the patterns files.
+     */
+    val usesPatterns
+        get() = type != RuleType.IGNORED_FILES
+
+    /**
+     * Paths of the patterns files listed in [pattern], relative to the module content root, see [RuleType.PATTERNS_FILE].
+     */
+    val patternsFilePaths
+        get() = when (type) {
+            RuleType.PATTERNS_FILE -> patternsFilePaths(pattern)
+            else -> emptyList()
+        }
+
     fun getScope(project: Project, state: FoldableProjectState) = FoldableProjectSearchScope(project, state, this)
 
     companion object {
+
+        /**
+         * Parses the space-separated paths of the patterns files, see [RuleType.PATTERNS_FILE].
+         */
+        fun patternsFilePaths(text: String) = GlobPatterns.split(text).map { it.trim('/') }.filter(String::isNotEmpty)
 
         /**
          * Creates the built-in rule folding the VCS-ignored files.

@@ -44,6 +44,24 @@ class RuleTest {
         assertFalse(Rule("a", "  ").isActive)
         assertTrue(Rule.ignoredFiles().isActive)
         assertFalse(Rule.ignoredFiles(enabled = false).isActive)
+        assertTrue(Rule("a", ".foldignore", type = RuleType.PATTERNS_FILE).isActive)
+        assertFalse(Rule("a", " ", type = RuleType.PATTERNS_FILE).isActive)
+    }
+
+    @Test
+    fun `uses patterns`() {
+        assertTrue(Rule("a", "*.kt").usesPatterns)
+        assertTrue(Rule("a", ".foldignore", type = RuleType.PATTERNS_FILE).usesPatterns)
+        assertFalse(Rule.ignoredFiles().usesPatterns)
+    }
+
+    @Test
+    fun `patterns file paths`() {
+        assertEquals(listOf(".foldignore", "docker/.dockerignore"), Rule("a", " .foldignore /docker/.dockerignore/ ", type = RuleType.PATTERNS_FILE).patternsFilePaths)
+        assertEquals(listOf("My Notes.ignore"), Rule("a", "\"My Notes.ignore\"", type = RuleType.PATTERNS_FILE).patternsFilePaths)
+        assertEquals(emptyList<String>(), Rule("a", "/ ", type = RuleType.PATTERNS_FILE).patternsFilePaths)
+        assertEquals(emptyList<String>(), Rule("a", ".foldignore").patternsFilePaths)
+        assertEquals(emptyList<String>(), Rule.ignoredFiles().patternsFilePaths)
     }
 
     @Test
@@ -54,6 +72,7 @@ class RuleTest {
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", action = RuleAction.HIDE))
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", enabled = false))
         assertNotEquals(Rule("a", ""), Rule("a", "", type = RuleType.IGNORED_FILES))
+        assertNotEquals(Rule("a", ".foldignore"), Rule("a", ".foldignore", type = RuleType.PATTERNS_FILE))
     }
 
     @Test
