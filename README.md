@@ -82,6 +82,9 @@ By default, folding is applied to the module roots only. Enable <kbd>Fold in nes
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored
 files are folded in the module roots only.
 
+Folding works in the <kbd>Project</kbd> pane as well as in the scope-based panes (<kbd>Project Files</kbd>, custom scopes).
+The scope-based panes pass only files to the plugin, so directories are not folded there, even with <kbd>Match directories</kbd> enabled.
+
 ### Patterns from ignore-like files
 
 Instead of entering the patterns in the IDE, a rule can read them from files kept in the repository: switch the rule's

@@ -138,7 +138,8 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         if (parent is ProjectViewProjectNode || parent is AbstractProjectNode || parent is AbstractModuleNode) {
             return true
         }
-        // Custom scope views: the root directory is attached to a non-directory (scope/root) node.
+        // Scope-based panes (`Project Files`, custom scopes) use the internal `ScopeViewTreeModel` nodes instead of the
+        // `PsiDirectoryNode`s, and attach the content root node to the project node that has no virtual file.
         val parentNode = parent
         if (parentNode is ProjectViewNode<*> && parentNode !is PsiDirectoryNode &&
             parentNode.virtualFile?.isDirectory != true

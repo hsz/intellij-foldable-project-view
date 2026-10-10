@@ -1,12 +1,16 @@
 package ski.chrzanow.foldableprojectview.projectView
 
+import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.ViewSettings
 import com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.FileStatus
+import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
@@ -52,8 +56,44 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
     private val docsNode
         get() = rootNode.children.filterIsInstance<PsiDirectoryNode>().single { it.nodeName == "docs" }
 
-    private fun modify(parent: PsiDirectoryNode = rootNode, children: Collection<AbstractTreeNode<*>> = parent.children) =
+    private fun modify(parent: ProjectViewNode<*> = rootNode, children: Collection<AbstractTreeNode<*>> = parent.children) =
         provider.modify(parent, children.toMutableList(), ViewSettings.DEFAULT)
+
+    /**
+     * Mimics the nodes of the Scope view (`ScopeViewTreeModel`), used by the "Project Files" and custom scopes panes:
+     * directories are represented by the internal nodes that are not [PsiDirectoryNode]s, the content root node
+     * is attached to the project node with no virtual file, and only the [PsiFileNode] children are passed to the providers.
+     */
+    private class ScopeViewNode(
+        project: Project,
+        parent: ProjectViewNode<*>?,
+        private val file: VirtualFile?,
+    ) : ProjectViewNode<Any>(project, file ?: Any(), ViewSettings.DEFAULT) {
+
+        init {
+            setParent(parent)
+        }
+
+        override fun getVirtualFile() = file
+
+        override fun contains(file: VirtualFile) = this.file?.let { VfsUtilCore.isAncestor(it, file, false) } == true
+
+        override fun getChildren(): Collection<AbstractTreeNode<*>> = file?.children.orEmpty()
+            .filterNot(VirtualFile::isDirectory)
+            .mapNotNull { PsiManager.getInstance(project).findFile(it) }
+            .map { PsiFileNode(project, it, ViewSettings.DEFAULT) }
+
+        override fun update(presentation: PresentationData) = Unit
+    }
+
+    private val scopeViewProjectNode
+        get() = ScopeViewNode(project, null, null)
+
+    private val scopeViewRootNode
+        get() = ScopeViewNode(project, scopeViewProjectNode, myFixture.tempDirFixture.getFile("")!!)
+
+    private val scopeViewDocsNode
+        get() = ScopeViewNode(project, scopeViewRootNode, myFixture.tempDirFixture.getFile("docs")!!)
 
     private val AbstractTreeNode<*>.nodeName
         get() = (this as? ProjectViewNode<*>)?.virtualFile?.name ?: name.orEmpty()
@@ -458,6 +498,34 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
         assertEquals(listOf("Readme", "Docs"), groups.map { it.name })
         assertEquals(listOf("README.md"), groups[0].children.names())
         assertEquals(listOf("CHANGELOG.md"), groups[1].children.names())
+    }
+
+    fun `test root files are folded in the scope view`() {
+        settings.rules.add(Rule("Docs", "*.md"))
+
+        val result = modify(parent = scopeViewRootNode)
+        val group = result.groups().single()
+
+        assertEquals(listOf("Docs", "build.gradle.kts"), result.names())
+        assertEquals(listOf("CHANGELOG.md", "README.md"), group.children.names())
+    }
+
+    fun `test root files are hidden in the scope view`() {
+        settings.rules.add(Rule("Docs", "*.md", action = RuleAction.HIDE))
+
+        val result = modify(parent = scopeViewRootNode)
+
+        assertEmpty(result.groups())
+        assertEquals(listOf("build.gradle.kts"), result.names())
+    }
+
+    fun `test nested files are folded in the scope view when enabled`() {
+        settings.rules.add(Rule("Docs", "*.md"))
+
+        assertEquals(listOf("GUIDE.md"), modify(parent = scopeViewDocsNode).names())
+
+        settings.foldNestedDirectories = true
+        assertEquals(listOf("GUIDE.md"), modify(parent = scopeViewDocsNode).groups().single().children.names())
     }
 
     fun `test group contains matched files`() {

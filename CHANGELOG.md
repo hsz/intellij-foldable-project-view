@@ -25,6 +25,10 @@
 - The defaults for new projects are no longer overwritten every time the settings of any project are saved; they change only when stored explicitly
 - A trailing slash in a pattern is no longer ignored: `build/` now matches directories only, use `build` to match both files and directories
 
+### Fixed
+
+- Files are folded in the scope-based Project View panes (`Project Files`, custom scopes) as well; directories cannot be folded there, as the platform passes files only ([#1](https://github.com/hsz/intellij-foldable-project-view/issues/1))
+
 ## [2.1.0] - 2026-10-10
 
 ### Added
