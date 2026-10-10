@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
+
 ## [2.1.0] - 2026-10-10
 
 ### Added

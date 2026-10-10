@@ -13,6 +13,7 @@ interface FoldableProjectState {
 
     val foldingEnabled: Boolean
     val matchDirectories: Boolean
+    val foldNestedDirectories: Boolean
     val foldIgnoredFiles: Boolean
     val hideEmptyGroups: Boolean
     val hideAllGroups: Boolean

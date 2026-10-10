@@ -20,6 +20,9 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("MATCH_DIRECTORIES")
     override var matchDirectories by property(true)
 
+    @get:OptionTag("FOLD_NESTED_DIRECTORIES")
+    override var foldNestedDirectories by property(false)
+
     @get:OptionTag("HIDE_EMPTY_GROUPS")
     override var hideEmptyGroups by property(true)
 

@@ -79,6 +79,13 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             }
 
             row {
+                checkBox(message("foldableProjectView.settings.foldNestedDirectories"))
+                    .bindSelected(settingsProperty, FoldableProjectSettings::foldNestedDirectories)
+                    .comment(message("foldableProjectView.settings.foldNestedDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                    .applyToComponent { setMnemonic('n') }
+            }
+
+            row {
                 checkBox(message("foldableProjectView.settings.foldIgnoredFiles"))
                     .bindSelected(settingsProperty, FoldableProjectSettings::foldIgnoredFiles)
                     .comment(message("foldableProjectView.settings.foldIgnoredFiles.comment"), MAX_LINE_LENGTH_WORD_WRAP)

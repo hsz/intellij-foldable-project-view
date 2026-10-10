@@ -45,6 +45,9 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
             .findDirectory(myFixture.tempDirFixture.getFile("")!!)!!
             .let { PsiDirectoryNode(project, it, ViewSettings.DEFAULT) }
 
+    private val docsNode
+        get() = rootNode.children.filterIsInstance<PsiDirectoryNode>().single { it.nodeName == "docs" }
+
     private fun modify(parent: PsiDirectoryNode = rootNode, children: Collection<AbstractTreeNode<*>> = parent.children) =
         provider.modify(parent, children.toMutableList(), ViewSettings.DEFAULT)
 
@@ -128,14 +131,72 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
         assertEmpty(modify().groups())
     }
 
-    fun `test nested directories are not folded`() {
+    fun `test nested directories are not folded by default`() {
         settings.rules.add(Rule("Docs", "*.md"))
 
-        val docs = rootNode.children.filterIsInstance<PsiDirectoryNode>().single { it.nodeName == "docs" }
-        val result = modify(parent = docs)
+        val result = modify(parent = docsNode)
 
         assertEmpty(result.groups())
         assertEquals(listOf("GUIDE.md"), result.names())
+    }
+
+    fun `test nested directories are folded when enabled`() {
+        settings.rules.add(Rule("Docs", "*.md"))
+        settings.foldNestedDirectories = true
+
+        val result = modify(parent = docsNode)
+        val group = result.groups().single()
+
+        assertEquals(listOf("Docs"), result.names())
+        assertEquals(listOf("GUIDE.md"), group.children.names())
+    }
+
+    fun `test anchored patterns match root elements only`() {
+        settings.rules.add(Rule("Docs", "/*.md"))
+        settings.foldNestedDirectories = true
+
+        assertEquals(listOf("CHANGELOG.md", "README.md"), modify().groups().single().children.names())
+        assertEmpty(modify(parent = docsNode).groups())
+    }
+
+    fun `test empty groups are shown in module roots only`() {
+        settings.rules.add(Rule("Nothing", "*.nothing"))
+        settings.foldNestedDirectories = true
+        settings.hideEmptyGroups = false
+
+        assertEquals(listOf("Nothing"), modify().groups().map { it.name })
+        assertEmpty(modify(parent = docsNode).groups())
+    }
+
+    fun `test ignored files are folded in module roots only`() {
+        settings.foldNestedDirectories = true
+        settings.foldIgnoredFiles = true
+
+        val docs = docsNode
+        val children = docs.children.map { node ->
+            object : PsiFileNode(project, (node as PsiFileNode).value, ViewSettings.DEFAULT) {
+                override fun getFileStatus() = FileStatus.IGNORED
+            }
+        }
+
+        val result = modify(parent = docs, children = children)
+
+        assertEmpty(result.groups())
+        assertEquals(listOf("GUIDE.md"), result.names())
+    }
+
+    fun `test rule edited in place is applied`() {
+        val rule = Rule("Docs", "*.md")
+        settings.rules.add(rule)
+
+        assertEquals(listOf("CHANGELOG.md", "README.md"), modify().groups().single().children.names())
+
+        rule.pattern = "*.kts"
+        assertEquals(listOf("build.gradle.kts"), modify().groups().single().children.names())
+
+        settings.caseSensitive = false
+        rule.pattern = "readme.MD"
+        assertEquals(listOf("README.md"), modify().groups().single().children.names())
     }
 
     fun `test ignored files are folded into a dedicated group`() {

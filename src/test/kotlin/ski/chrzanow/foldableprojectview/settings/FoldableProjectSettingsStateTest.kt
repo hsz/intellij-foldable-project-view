@@ -10,6 +10,7 @@ class FoldableProjectSettingsStateTest : BasePlatformTestCase() {
 
         assertTrue(settings.foldingEnabled)
         assertTrue(settings.matchDirectories)
+        assertFalse(settings.foldNestedDirectories)
         assertTrue(settings.hideEmptyGroups)
         assertFalse(settings.hideAllGroups)
         assertTrue(settings.caseSensitive)
