@@ -2,6 +2,7 @@ package ski.chrzanow.foldableprojectview.projectView
 
 import com.intellij.ide.projectView.ProjectView
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -33,7 +34,9 @@ class FoldableProjectViewRefresher(private val project: Project) : Disposable {
     }
 
     fun refresh() {
-        ProjectView.getInstance(project).currentProjectViewPane?.updateFromRoot(true)
+        ApplicationManager.getApplication().invokeLater({
+            ProjectView.getInstance(project).currentProjectViewPane?.updateFromRoot(true)
+        }, project.disposed)
     }
 
     override fun dispose() = Unit
