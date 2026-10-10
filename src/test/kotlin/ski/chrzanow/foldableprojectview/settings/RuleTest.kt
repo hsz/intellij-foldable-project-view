@@ -6,8 +6,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
 import java.awt.Color
 
 class RuleTest {
@@ -16,13 +14,21 @@ class RuleTest {
     fun defaults() {
         val rule = Rule()
 
-        assertEquals(DEFAULT_RULE_NAME, rule.name)
-        assertEquals(DEFAULT_RULE_PATTERN, rule.pattern)
+        assertEquals("", rule.name)
+        assertEquals("", rule.pattern)
         assertNull(rule.background)
         assertNull(rule.foreground)
         assertEquals(RuleAction.GROUP, rule.action)
         assertEquals(RuleType.PATTERN, rule.type)
         assertTrue(rule.enabled)
+        assertFalse(rule.isActive)
+    }
+
+    @Test
+    fun `display name falls back to a placeholder`() {
+        assertEquals("Docs", Rule("Docs", "*.md").displayName)
+        assertEquals("Unnamed rule", Rule().displayName)
+        assertEquals("Unnamed rule", Rule("  ", "*.md").displayName)
     }
 
     @Test

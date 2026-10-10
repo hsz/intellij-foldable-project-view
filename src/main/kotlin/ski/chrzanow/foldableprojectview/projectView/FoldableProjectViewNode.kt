@@ -32,15 +32,15 @@ class FoldableProjectViewNode(
                 RuleType.PATTERNS_FILE -> message("foldableProjectView.patternsFile.description", rule.pattern)
                 RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
             }
-            addText(ColoredFragment(rule.name, tooltip, SimpleTextAttributes(STYLE_PLAIN, rule.foreground)))
+            addText(ColoredFragment(rule.displayName, tooltip, SimpleTextAttributes(STYLE_PLAIN, rule.foreground)))
             addText(ColoredFragment(" ${children.size}", tooltip, GRAYED_ATTRIBUTES))
             setIcon(CollapseComponent)
         }
     }
 
-    override fun getName() = rule.name
+    override fun getName() = rule.displayName
 
-    override fun toString() = rule.name
+    override fun toString() = rule.displayName
 
     override fun computeBackgroundColor() = rule.background
 

@@ -4,8 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.Converter
 import com.intellij.util.xmlb.annotations.OptionTag
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_NAME
-import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.DEFAULT_RULE_PATTERN
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import com.intellij.ui.JBColor
@@ -70,10 +68,14 @@ enum class RuleAction {
     HIDE,
 }
 
+/**
+ * Folding rule. New rules start with an empty [name] and [pattern]; such rules are kept, but not applied until filled in,
+ * see [isActive].
+ */
 data class Rule(
-    var name: String = DEFAULT_RULE_NAME,
+    var name: String = "",
 
-    var pattern: String = DEFAULT_RULE_PATTERN,
+    var pattern: String = "",
 
     @get:OptionTag(converter = ColorConverter::class)
     var background: Color? = null,
@@ -93,6 +95,12 @@ data class Rule(
      */
     val isActive
         get() = enabled && (type == RuleType.IGNORED_FILES || pattern.isNotBlank())
+
+    /**
+     * The [name] shown in the Project View and in the search scopes, with a placeholder for the rules that have no name yet.
+     */
+    val displayName
+        get() = name.ifBlank { message("foldableProjectView.unnamedRule") }
 
     /**
      * Whether the rule matches by glob patterns, either entered directly or read from the patterns files.

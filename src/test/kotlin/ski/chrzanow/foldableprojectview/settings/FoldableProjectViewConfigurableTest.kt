@@ -4,12 +4,16 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.ComponentValidator
+import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.fields.ExpandableTextField
 import com.intellij.ui.table.TableView
 import com.intellij.util.ui.UIUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
+import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import javax.swing.JButton
 import javax.swing.JComponent
 
@@ -47,6 +51,11 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
      */
     private fun JComponent.patternFields() = UIUtil.findComponentsOfType(this, ExpandableTextField::class.java)
 
+    private fun JComponent.nameField() = UIUtil.findComponentsOfType(this, JBTextField::class.java)
+        .single { it.emptyText.text == message("foldableProjectView.settings.name.placeholder") }
+
+    private fun JComponent.matchesLabel() = UIUtil.findComponentsOfType(this, JBLabel::class.java).single { it.name == FoldableRulesEditor.MATCHES_LABEL_NAME }
+
     private fun JComponent.selectRule(index: Int) = UIUtil.findComponentsOfType(this, TableView::class.java).single().setRowSelectionInterval(index, index)
 
     /**
@@ -68,6 +77,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
     fun `test invalid patterns are reported as a warning`() = withRules(Rule("Docs", "*.md [z-a].md")) {
         withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            component.selectRule(0)
             val patternField = component.patternFields()[0]
             val validator = ComponentValidator.getInstance(patternField).get()
 
@@ -78,6 +88,97 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
             patternField.text = "*.md"
             assertNull(validator.validationInfo)
+        }
+    }
+
+    fun `test blank name and patterns are reported as warnings`() = withRules(Rule("Docs", "*.md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            component.selectRule(0)
+            val nameField = component.nameField()
+            val patternField = component.patternFields()[0]
+            val nameValidator = ComponentValidator.getInstance(nameField).get()
+            val patternValidator = ComponentValidator.getInstance(patternField).get()
+
+            assertEquals("Docs", nameField.text)
+            assertNull(nameValidator.validationInfo)
+            assertNull(patternValidator.validationInfo)
+
+            nameField.text = " "
+            assertEquals(message("foldableProjectView.settings.name.empty"), nameValidator.validationInfo!!.message)
+            assertTrue(nameValidator.validationInfo!!.warning)
+
+            patternField.text = ""
+            assertEquals(message("foldableProjectView.settings.patterns.empty.tooltip"), patternValidator.validationInfo!!.message)
+            assertTrue(patternValidator.validationInfo!!.warning)
+
+            nameField.text = "Documentation"
+            patternField.text = "*.md"
+            assertNull(nameValidator.validationInfo)
+            assertNull(patternValidator.validationInfo)
+        }
+    }
+
+    fun `test blank patterns of the built-in ignored files rule are not reported`() = withRules(Rule.ignoredFiles()) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            component.selectRule(0)
+            val patternField = component.patternFields()[0]
+
+            assertEquals("", patternField.text)
+            assertNull(ComponentValidator.getInstance(patternField).get().validationInfo)
+        }
+    }
+
+    fun `test rule editor shows how many elements the rule matches`() = withRules(Rule("Docs", "*.md")) {
+        myFixture.addFileToProject("README.md", "")
+        myFixture.addFileToProject("CHANGELOG.md", "")
+        myFixture.addFileToProject("docs/GUIDE.md", "")
+        myFixture.addFileToProject("build.gradle.kts", "")
+
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val label = component.matchesLabel()
+            assertEquals("", label.text)
+
+            component.selectRule(0)
+            assertEquals("Matches 2 elements in the module roots", label.text)
+
+            component.patternFields()[0].text = "README.md"
+            assertEquals("Matches one element in the module roots", label.text)
+
+            component.patternFields()[0].text = "*.txt"
+            assertEquals("Matches no elements in the module roots", label.text)
+
+            component.patternFields()[0].text = "*.md"
+            component.checkBox(message("foldableProjectView.settings.foldNestedDirectories")).isSelected = true
+            assertEquals("Matches 3 elements in the project", label.text)
+
+            component.patternFields()[0].text = ""
+            assertEquals("", label.text)
+        }
+    }
+
+    fun `test blank rules are kept in the table`() = withRules(Rule("Docs", "*.md")) {
+        val settingsProperty = PropertyGraph().property(FoldableProjectSettings().apply { copyFrom(project.service<FoldableProjectSettings>()) })
+        val table = FoldableRulesTable(settingsProperty)
+
+        table.addRule(Rule())
+        UIUtil.dispatchAllInvocationEvents()
+        table.addRule(RulePresets.create().first())
+        UIUtil.dispatchAllInvocationEvents()
+
+        assertEquals(listOf("Docs", "", "Documentation"), settingsProperty.get().rules.map { it.name })
+        assertEquals(RulePresets.create().first(), table.tableView.selection.single())
+    }
+
+    fun `test presets are valid`() {
+        val presets = RulePresets.create()
+
+        assertTrue(presets.isNotEmpty())
+        assertEquals(presets.size, presets.map { it.name }.distinct().size)
+        presets.forEach { preset ->
+            assertTrue(preset.name.isNotBlank())
+            assertTrue(preset.isActive)
+            assertEquals(RuleType.PATTERN, preset.type)
+            assertEmpty(GlobPatterns.invalidPatterns(preset.pattern))
         }
     }
 

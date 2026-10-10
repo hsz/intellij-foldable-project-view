@@ -26,7 +26,7 @@
           <li>Gitignore-like patterns with negation (<code>!pattern</code>), directory-only matching (<code>dir/</code>), and quoted names with spaces</li>
           <li>Rules reading their patterns from ignore-like files in the repository, like <code>.foldignore</code> or <code>.dockerignore</code></li>
           <li>Search scopes based on the folding rules</li>
-          <li>Live Project View preview</li>
+          <li>Live Project View preview, rule presets, and a live count of the elements matched by the edited rule</li>
           <li>Defaults for new projects, synchronized by Settings Sync</li>
         </ul>
         <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />

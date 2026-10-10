@@ -3,8 +3,12 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.execution.util.ListTableWithButtons
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
+import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.ui.*
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
@@ -67,6 +71,31 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     override fun createElement() = Rule()
 
+    /**
+     * The `+` button offers an empty rule and the [RulePresets] instead of adding a rule right away.
+     */
+    override fun createAddAction() = AnActionButtonRunnable { button ->
+        val group = DefaultActionGroup().apply {
+            add(addRuleAction(message("foldableProjectView.settings.presets.empty")) { createElement() })
+            add(Separator.create(message("foldableProjectView.settings.presets")))
+            RulePresets.create().forEach { preset ->
+                add(addRuleAction(preset.name) { preset })
+            }
+        }
+        JBPopupFactory.getInstance()
+            .createActionGroupPopup(null, group, button.dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true)
+            .show(button.preferredPopupPoint)
+    }
+
+    private fun addRuleAction(text: String, rule: () -> Rule) = DumbAwareAction.create(text) {
+        addRule(rule())
+    }
+
+    /**
+     * Appends the [rule] to the table and selects it.
+     */
+    fun addRule(rule: Rule) = addNewElement(rule)
+
     override fun addNewElement(newElement: Rule) {
         super.addNewElement(newElement)
         SwingUtilities.invokeLater {
@@ -81,7 +110,11 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
 
     override fun cloneElement(variable: Rule) = variable.copy()
 
-    override fun isEmpty(element: Rule) = element.type != RuleType.IGNORED_FILES && element.pattern.isBlank()
+    /**
+     * Blank rules are never dropped silently: they are kept, marked in the table, and not applied until filled in,
+     * see [Rule.isActive].
+     */
+    override fun isEmpty(element: Rule) = false
 
     /**
      * Checkbox that enables or disables the rule without removing it.
@@ -152,39 +185,60 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         }
     }
 
+    /**
+     * Shows the rule name, or a grayed placeholder for the rules that have no name yet.
+     */
     private class NameColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.name")) {
 
-        override fun valueOf(item: Rule?) = item?.name
+        override fun valueOf(item: Rule?) = item?.displayName
+
+        override fun getRenderer(item: Rule?) = object : ColoredTableCellRenderer() {
+
+            override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
+                val attributes = when {
+                    item?.name.isNullOrBlank() -> SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES
+                    else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                }
+                append(value?.toString().orEmpty(), attributes)
+            }
+        }
     }
 
     /**
      * Shows the rule patterns, or what the rule matches for the rules that do not list patterns directly.
-     * Rules with invalid patterns are marked with a warning icon.
+     * Rules with invalid patterns, and rules with no patterns at all, are marked with a warning icon.
      */
     private class PatternsColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.patterns")) {
 
-        override fun valueOf(item: Rule?) = when (item?.type) {
-            RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
-            RuleType.PATTERNS_FILE -> message("foldableProjectView.patternsFile.description", item.pattern)
-            else -> item?.pattern
+        override fun valueOf(item: Rule?) = when {
+            item == null -> null
+            item.type == RuleType.IGNORED_FILES -> message("foldableProjectView.ignoredFiles.description")
+            item.pattern.isBlank() -> message("foldableProjectView.settings.patterns.empty")
+            item.type == RuleType.PATTERNS_FILE -> message("foldableProjectView.patternsFile.description", item.pattern)
+            else -> item.pattern
         }
 
         override fun getRenderer(item: Rule?) = object : ColoredTableCellRenderer() {
 
             override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
-                val attributes = when (item?.type) {
-                    RuleType.PATTERN -> SimpleTextAttributes.REGULAR_ATTRIBUTES
+                val attributes = when {
+                    item?.type == RuleType.PATTERN && item.pattern.isNotBlank() -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                     else -> SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES
                 }
                 append(value?.toString().orEmpty(), attributes)
 
-                val invalidPatterns = when (item?.type) {
-                    RuleType.PATTERN -> GlobPatterns.invalidPatterns(item.pattern)
-                    else -> emptyList()
+                val warning = when {
+                    item == null || !item.usesPatterns -> null
+                    item.pattern.isBlank() -> message("foldableProjectView.settings.patterns.empty.tooltip")
+                    item.type == RuleType.PATTERN -> GlobPatterns.invalidPatterns(item.pattern)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { message("foldableProjectView.settings.patterns.invalid", it.joinToString(" ")) }
+
+                    else -> null
                 }
-                if (invalidPatterns.isNotEmpty()) {
+                if (warning != null) {
                     icon = AllIcons.General.Warning
-                    toolTipText = message("foldableProjectView.settings.patterns.invalid", invalidPatterns.joinToString(" "))
+                    toolTipText = warning
                 }
             }
         }

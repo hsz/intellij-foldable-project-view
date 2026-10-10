@@ -85,7 +85,7 @@ class FoldableProjectSearchScope(project: Project, state: FoldableProjectState, 
 
     override fun isSearchInLibraries() = false
 
-    override fun getDisplayName() = rule.name
+    override fun getDisplayName() = rule.displayName
 
-    override fun toString() = "${rule.name}: ${rule.pattern}"
+    override fun toString() = "${rule.displayName}: ${rule.pattern}"
 }

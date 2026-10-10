@@ -65,9 +65,13 @@ Patterns are matched against paths relative to the module content root:
   as in gitignore, the last matching pattern decides,
 - names containing spaces are wrapped in double quotes (`"My Notes.md"`) or have the spaces escaped (`My\ Notes.md`).
 
-Invalid patterns (e.g., `[z-a]`) are skipped; the settings page reports them with a warning next to the pattern field
-and in the rules table. Rules are applied in order – the first matching rule takes precedence. Folding rules are also
-available as search scopes (e.g., in <kbd>Find in Files</kbd>).
+The <kbd>+</kbd> button of the rules table adds an empty rule or one of the presets (Documentation, CI/CD, Build,
+Configuration, Dotfiles) that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
+project the rule matches with the current options. Rules with no name are labeled `Unnamed rule`, rules with no patterns
+are kept but not applied, and both are reported with a warning. Invalid patterns (e.g., `[z-a]`) are skipped; the
+settings page reports them with a warning next to the pattern field and in the rules table. Rules are applied in order –
+the first matching rule takes precedence. Folding rules are also available as search scopes (e.g., in
+<kbd>Find in Files</kbd>).
 
 Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
 entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
