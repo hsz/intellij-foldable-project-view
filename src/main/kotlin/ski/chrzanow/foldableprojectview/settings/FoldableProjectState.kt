@@ -40,5 +40,7 @@ private class ColorConverter : Converter<Color>() {
 
     override fun toString(value: Color) = value.rgb.toString()
 
+    // java.awt.Color is required here to preserve the alpha channel; the result is wrapped in JBColor anyway
+    @Suppress("UseJBColor")
     override fun fromString(value: String) = runCatching { Color(value.toInt(), true).let { JBColor(it, it) } }.getOrNull()
 }
