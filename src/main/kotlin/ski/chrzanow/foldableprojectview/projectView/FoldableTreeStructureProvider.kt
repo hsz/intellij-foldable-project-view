@@ -82,7 +82,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
         val rules = state.rules.filter { it.pattern.isNotBlank() }
         rules.zip(getScopes(state, rules)).forEach { (rule, scope) ->
-            fold(rule) { node -> node.virtualFile?.let(scope::contains) ?: false }
+            fold(rule) { node -> (node as? ProjectViewNode<*>)?.virtualFile?.let(scope::contains) ?: false }
         }
 
         // VCS ignore checks are relatively expensive, so the ignored files are folded in the module roots only.
@@ -160,7 +160,4 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         return ChangeListManager.getInstance(project).isIgnoredFile(file) ||
             VcsIgnoreManager.getInstance(project).isPotentiallyIgnoredFile(file)
     }
-
-    private val AbstractTreeNode<*>.virtualFile
-        get() = (this as? ProjectViewNode<*>)?.virtualFile
 }
