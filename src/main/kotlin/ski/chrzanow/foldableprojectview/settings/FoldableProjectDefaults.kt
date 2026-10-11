@@ -11,8 +11,8 @@ import com.intellij.openapi.components.Storage
  * Application-level settings used to initialize the settings of projects that have no settings stored yet.
  * Being roamable, they are synchronized by the IDE Settings Sync.
  *
- * The defaults are changed explicitly only – with the `Use as Defaults for New Projects` button of the project settings,
- * or by editing them in the settings for new projects.
+ * The defaults are changed explicitly only – by applying the project settings with the `Use as defaults for new projects`
+ * box checked, or by editing them in the settings for new projects.
  */
 @Service(Service.Level.APP)
 @State(

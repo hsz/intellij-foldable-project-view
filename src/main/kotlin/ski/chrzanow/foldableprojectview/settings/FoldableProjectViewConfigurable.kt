@@ -21,7 +21,9 @@ import com.intellij.ui.components.JBViewport
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
+import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.not
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
@@ -81,6 +83,19 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     private val settingsProperty = propertyGraph.lazyProperty { FoldableProjectSettings().apply { copyFrom(settings) } }
     private val foldingEnabledPredicate = settingsProperty.createPredicate(FoldableProjectSettings::foldingEnabled)
     private val differsFromDefaultsPredicate = settingsProperty.createPredicate { it != defaults.createSettings() }
+
+    /**
+     * Whether the edited settings are to be stored as the defaults for new projects when they are applied.
+     * Storing is deferred to [apply], so canceling the Settings dialog discards the request like any other change on the page.
+     */
+    private val storeAsDefaultsProperty = propertyGraph.property(false).apply {
+        differsFromDefaultsPredicate.addListener { differs ->
+            // Nothing to store once the edited settings equal the defaults.
+            if (!differs) {
+                set(false)
+            }
+        }
+    }
 
     private val ruleProperty = propertyGraph
         .lazyProperty<Rule?> { null }
@@ -186,11 +201,19 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         }
         if (!project.isDefault) {
             row {
-                button(message("foldableProjectView.settings.defaults.store")) { storeAsDefaults() }
+                checkBox(message("foldableProjectView.settings.defaults.store"))
+                    .bindSelected(storeAsDefaultsProperty)
                     .enabledIf(differsFromDefaultsPredicate)
+                    .applyToComponent { setMnemonic('u') }
                 button(message("foldableProjectView.settings.defaults.load")) { copyFromDefaults() }
                     .enabledIf(differsFromDefaultsPredicate)
-            }.rowComment(message("foldableProjectView.settings.defaults.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
+            row {
+                comment(message("foldableProjectView.settings.defaults.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+            }.visibleIf(differsFromDefaultsPredicate)
+            row {
+                comment(message("foldableProjectView.settings.defaults.same"), MAX_LINE_LENGTH_WORD_WRAP)
+            }.visibleIf(differsFromDefaultsPredicate.not())
         }
         group(message("foldableProjectView.settings.support")) {
             row {
@@ -273,7 +296,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         if (tree.selectedGroupRule() === rule) {
             return
         }
-        TreeUtil.promiseSelect(tree, TreeVisitor { path ->
+        TreeUtil.promiseSelect(tree) { path ->
             val node = TreeUtil.getLastUserObject(path)
             when {
                 node is FoldableProjectViewNode -> when {
@@ -285,7 +308,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 node is ProjectViewNode<*> && with(provider) { node.isModuleRoot() } -> TreeVisitor.Action.CONTINUE
                 else -> TreeVisitor.Action.SKIP_CHILDREN
             }
-        }).onError {
+        }.onError {
             tree.clearSelection()
         }
     }
@@ -302,7 +325,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
 
     private fun JTree.selectedGroupRule() = (TreeUtil.getLastUserObject(selectionPath) as? FoldableProjectViewNode)?.value
 
-    override fun isModified() = settingsProperty.get() != settings
+    override fun isModified() = settingsProperty.get() != settings || storeAsDefaultsProperty.get()
 
     override fun apply() {
         when {
@@ -311,20 +334,26 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 defaults.store(settings)
             }
 
-            else -> settings.update(project) {
-                copyFrom(settingsProperty.get())
+            else -> {
+                settings.update(project) {
+                    copyFrom(settingsProperty.get())
+                }
+                if (storeAsDefaultsProperty.get()) {
+                    storeAsDefaults()
+                }
             }
         }
         invalidateTable()
     }
 
     /**
-     * Stores the currently edited settings as the defaults for new projects.
+     * Stores the applied settings as the defaults for new projects, see [storeAsDefaultsProperty].
      */
     private fun storeAsDefaults() {
-        defaults.store(settingsProperty.get())
+        defaults.store(settings)
+        storeAsDefaultsProperty.set(false)
 
-        // Re-emit the settings so the defaults buttons pick up the new defaults.
+        // Re-emit the settings so the defaults controls pick up the new defaults.
         settingsProperty.set(settingsProperty.get())
     }
 
@@ -339,6 +368,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     }
 
     override fun reset() {
+        storeAsDefaultsProperty.set(false)
         settingsProperty.set(settingsProperty.get().apply {
             copyFrom(settings)
         })

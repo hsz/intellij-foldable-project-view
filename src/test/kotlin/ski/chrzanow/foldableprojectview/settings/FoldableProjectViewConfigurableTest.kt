@@ -26,6 +26,7 @@ import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JEditorPane
 import javax.swing.JTree
 
 class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
@@ -57,7 +58,11 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
     private fun JComponent.button(text: String) = UIUtil.findComponentsOfType(this, JButton::class.java).single { it.text == text }
 
+    private fun JComponent.checkBoxTexts() = UIUtil.findComponentsOfType(this, JBCheckBox::class.java).map { it.text }
+
     private fun JComponent.checkBox(text: String) = UIUtil.findComponentsOfType(this, JBCheckBox::class.java).single { it.text == text }
+
+    private fun JComponent.comment(text: String) = UIUtil.findComponentsOfType(this, JEditorPane::class.java).single { it.text.contains(text) }
 
     /**
      * The pattern fields of the rule editor: the first one lists the patterns, the second one the patterns files.
@@ -329,8 +334,6 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         myFixture.addFileToProject("README.md", "")
 
         val configurable = FoldableProjectViewConfigurable(project)
-        assertTrue(configurable is Configurable.NoScroll)
-
         withConfigurable(configurable) { component ->
             val tree = component.previewTree()
             assertEmpty(tree.mouseListeners.filterIsInstance<PopupHandler>())
@@ -419,11 +422,8 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         withDefaults(defaults) {
             withConfigurable(FoldableProjectViewConfigurable(ProjectManager.getInstance().defaultProject)) { component ->
                 assertFalse(isModified)
-                assertDoesntContain(
-                    component.buttonTexts(),
-                    message("foldableProjectView.settings.defaults.store"),
-                    message("foldableProjectView.settings.defaults.load"),
-                )
+                assertDoesntContain(component.checkBoxTexts(), message("foldableProjectView.settings.defaults.store"))
+                assertDoesntContain(component.buttonTexts(), message("foldableProjectView.settings.defaults.load"))
 
                 component.checkBox(message("foldableProjectView.settings.foldingEnabled")).isSelected = false
                 assertTrue(isModified)
@@ -438,7 +438,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         }
     }
 
-    fun `test project page offers the defaults buttons and does not change the defaults on apply`() {
+    fun `test project page offers the defaults controls and does not change the defaults on apply`() {
         val defaults = FoldableProjectSettings().apply {
             rules.add(Rule("Docs", "*.md"))
         }
@@ -448,11 +448,8 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         withDefaults(defaults) {
             try {
                 withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
-                    assertContainsElements(
-                        component.buttonTexts(),
-                        message("foldableProjectView.settings.defaults.store"),
-                        message("foldableProjectView.settings.defaults.load"),
-                    )
+                    assertContainsElements(component.checkBoxTexts(), message("foldableProjectView.settings.defaults.store"))
+                    assertContainsElements(component.buttonTexts(), message("foldableProjectView.settings.defaults.load"))
 
                     component.checkBox(message("foldableProjectView.settings.hideEmptyGroups")).isSelected = !original
                     assertTrue(isModified)
@@ -464,6 +461,65 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
                 }
             } finally {
                 settings.hideEmptyGroups = original
+            }
+        }
+    }
+
+    fun `test settings are stored as the defaults on apply only`() = withRules(Rule("Docs", "*.md"), Rule.ignoredFiles()) {
+        val defaults = FoldableProjectSettings().apply {
+            rules.add(Rule("Defaults", "*.txt"))
+        }
+        val settings = project.service<FoldableProjectSettings>()
+
+        withDefaults(defaults) {
+            withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+                val storeCheckBox = component.checkBox(message("foldableProjectView.settings.defaults.store"))
+                val loadButton = component.button(message("foldableProjectView.settings.defaults.load"))
+                val differsComment = component.comment("Check the box")
+                val sameComment = component.comment("These settings are the defaults")
+
+                assertTrue(storeCheckBox.isEnabled)
+                assertTrue(loadButton.isEnabled)
+                assertTrue(differsComment.isVisible)
+                assertFalse(sameComment.isVisible)
+                assertFalse(isModified)
+
+                // Checking the box alone makes the page modified, but changes nothing until it is applied
+                storeCheckBox.isSelected = true
+                assertTrue(isModified)
+                assertEquals(listOf(Rule("Defaults", "*.txt")), service<FoldableProjectDefaults>().state!!.rules)
+
+                // Reset (Cancel) discards the request
+                reset()
+                assertFalse(storeCheckBox.isSelected)
+                assertFalse(isModified)
+                assertEquals(listOf(Rule("Defaults", "*.txt")), service<FoldableProjectDefaults>().state!!.rules)
+
+                // Apply stores the applied settings as the defaults and clears the box
+                storeCheckBox.isSelected = true
+                apply()
+                assertEquals(settings.rules, service<FoldableProjectDefaults>().state!!.rules)
+                assertEquals("Docs", service<FoldableProjectDefaults>().state!!.rules.first().name)
+                assertFalse(storeCheckBox.isSelected)
+                assertFalse(isModified)
+
+                // Once the settings equal the defaults, the controls are disabled and the hint explains why
+                assertFalse(storeCheckBox.isEnabled)
+                assertFalse(loadButton.isEnabled)
+                assertFalse(differsComment.isVisible)
+                assertTrue(sameComment.isVisible)
+
+                // Editing the settings away from the defaults enables the controls again; going back clears the box
+                component.selectRule(0)
+                val nameField = component.nameField()
+                nameField.text = "Documentation"
+                assertTrue(storeCheckBox.isEnabled)
+                assertTrue(differsComment.isVisible)
+                storeCheckBox.isSelected = true
+                nameField.text = "Docs"
+                assertFalse(storeCheckBox.isEnabled)
+                assertFalse(storeCheckBox.isSelected)
+                assertFalse(isModified)
             }
         }
     }

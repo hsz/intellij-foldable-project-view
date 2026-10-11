@@ -120,8 +120,10 @@ This is the way to go when the folding rules should be versioned together with t
 Settings are stored per project in `.idea/FoldableProjectView.xml`. Projects without stored settings start with the
 defaults, which are kept at the IDE level and synchronized by Settings Sync. The defaults change only when you ask for it:
 
-- <kbd>Use as Defaults for New Projects</kbd> in the project settings stores the current settings as the defaults,
-- <kbd>Copy from Defaults</kbd> replaces the settings of the current project with the defaults,
+- check <kbd>Use as defaults for new projects</kbd> in the project settings to store the settings as the defaults when
+  they are applied – like any other change on the page, the request is discarded by <kbd>Cancel</kbd>,
+- <kbd>Copy from Defaults</kbd> replaces the settings of the current project with the defaults (until applied),
+- both controls are disabled, and the page says so, while the settings being edited equal the defaults,
 - the same page under the settings for new projects (<kbd>File</kbd> > <kbd>New Projects Setup</kbd> >
   <kbd>Settings for New Projects…</kbd>) edits the defaults directly.
 

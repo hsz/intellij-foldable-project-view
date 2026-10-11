@@ -10,7 +10,7 @@
 - Per-rule `Action` to choose whether the matched elements are grouped or hidden from the Project View
 - Per-rule `Enabled` checkbox to switch a rule off without removing it
 - The `Ignored files` group is now a built-in rule listed in the rules table: it can be renamed, colored, reordered to change its precedence, hidden, or disabled, but not removed
-- `Use as Defaults for New Projects` and `Copy from Defaults` buttons in the settings to store the current settings as the defaults for new projects, or to apply the defaults to the current project ([#12](https://github.com/hsz/intellij-foldable-project-view/issues/12), [#68](https://github.com/hsz/intellij-foldable-project-view/issues/68))
+- `Use as defaults for new projects` checkbox and `Copy from Defaults` button in the settings to store the settings as the defaults for new projects when they are applied (so `Cancel` discards the request), or to apply the defaults to the current project; the page tells when the edited settings already equal the defaults ([#12](https://github.com/hsz/intellij-foldable-project-view/issues/12), [#68](https://github.com/hsz/intellij-foldable-project-view/issues/68))
 - The settings page is available in the settings for new projects (`New Projects Setup`), where it edits the defaults directly
 - Negated patterns (`*.yml !docker-compose.yml`) to exclude elements from a rule; as in gitignore, the last matching pattern decides
 - Patterns ending with a slash (`build/`) match directories only
