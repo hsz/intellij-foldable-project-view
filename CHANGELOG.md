@@ -18,7 +18,8 @@
 - Invalid patterns are reported with a warning in the rule editor and in the rules table instead of being silently ignored
 - Rules can read their patterns from ignore-like files kept in the repository (`.foldignore`, `.dockerignore`, etc.), one gitignore-like pattern per line; the Project View is refreshed when the files change, and missing files are reported in the rule editor ([#4](https://github.com/hsz/intellij-foldable-project-view/issues/4), [#29](https://github.com/hsz/intellij-foldable-project-view/issues/29))
 - Rule presets (Documentation, CI/CD, Build, Configuration, Dotfiles) offered by the `+` button of the rules table
-- The rule editor shows how many elements of the project the edited rule matches with the current options
+- The rule editor shows how many elements of the project the edited rule matches with the current options; the tooltip of the counter lists the first matched paths
+- Pattern syntax help behind a `?` icon next to the `Patterns` and `Files` fields of the rule editor; the field labels and the color checkboxes got mnemonics
 - Rules with a blank name or no patterns are reported with a warning in the rule editor and in the rules table; the fields show placeholders with examples
 - Theme-aware palette of named group colors (Blue, Green, Orange, Rose, Violet, Yellow, Gray) in the rule editor; the backgrounds reuse the platform File Colors, so they follow the light/dark theme and its overrides, while `Custom…` still opens the color picker
 
@@ -30,6 +31,7 @@
 - A trailing slash in a pattern is no longer ignored: `build/` now matches directories only, use `build` to match both files and directories
 - Settings page layout: the pattern field and the table column are called `Patterns` (a rule is a name plus patterns and a style), `Match directories` was renamed to `Also fold directories`, the options depending on `Enable folding` are indented, and the support note moved to the bottom of the page
 - New rules start with an empty name and patterns instead of `Rule name` and `*.md`; rules with a blank name are labeled `Unnamed rule` in the Project View, and rules with no patterns are kept (but not applied) instead of being silently dropped
+- The rule editor shows a description of the built-in `Ignored files` rule instead of the disabled `Source` switch and the empty `Patterns` field
 - Group colors picked from the palette are stored by name (`Blue`) and newly enabled colors default to the palette instead of a color derived from the current theme; custom colors stored by earlier versions are kept and still used as is in both themes
 - The live preview spans the full height of the settings page next to the scrollable options and rules, so it stays visible while a rule is edited; selecting a rule highlights its folding group in the preview and vice versa. The preview is read-only: it offers no Project View context menu and does not open files behind the Settings dialog
 

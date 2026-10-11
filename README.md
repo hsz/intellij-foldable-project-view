@@ -59,7 +59,7 @@ Patterns are matched against paths relative to the module content root:
 
 - `*` matches any characters except `/`, `?` matches a single character, `**` matches any number of directories,
   `[abc]`/`[a-z]`/`[!abc]` are character classes, and `\` escapes the next character,
-- patterns without a slash match on any level, a leading slash anchors the pattern to the root (`/README.md`),
+- patterns without a slash match on any level, patterns containing a slash are anchored to the root (`/README.md`, `src/*.md`),
 - a trailing slash matches directories only (`build/`), if <kbd>Also fold directories</kbd> is enabled,
 - a leading `!` negates the pattern: `*.yml !docker-compose.yml` matches all YAML files except `docker-compose.yml`;
   as in gitignore, the last matching pattern decides,
@@ -67,7 +67,8 @@ Patterns are matched against paths relative to the module content root:
 
 The <kbd>+</kbd> button of the rules table adds an empty rule or one of the presets (Documentation, CI/CD, Build,
 Configuration, Dotfiles) that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
-project the rule matches with the current options. Rules with no name are labeled `Unnamed rule`, rules with no patterns
+project the rule matches with the current options – hover the counter to see the first matched paths – and the <kbd>?</kbd>
+icon next to the <kbd>Patterns</kbd> field recaps the pattern syntax. Rules with no name are labeled `Unnamed rule`, rules with no patterns
 are kept but not applied, and both are reported with a warning. Invalid patterns (e.g., `[z-a]`) are skipped; the
 settings page reports them with a warning next to the pattern field and in the rules table. Rules are applied in order –
 the first matching rule takes precedence. Folding rules are also available as search scopes (e.g., in

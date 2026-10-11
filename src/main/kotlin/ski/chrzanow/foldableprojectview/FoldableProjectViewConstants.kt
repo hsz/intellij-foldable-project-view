@@ -27,6 +27,11 @@ object FoldableProjectViewConstants {
     const val MATCH_COUNT_LIMIT = 50_000
 
     /**
+     * Maximum number of the matched elements listed in the tooltip of the match counter, see `FoldableRulesEditor`.
+     */
+    const val MATCH_PREVIEW_LIMIT = 10
+
+    /**
      * Delay used to coalesce bursts of events (keystrokes in the settings, VCS status or file changes) into a single
      * Project View refresh, see `Debouncer`.
      */

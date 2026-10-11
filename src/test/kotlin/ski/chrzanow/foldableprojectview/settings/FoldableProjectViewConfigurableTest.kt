@@ -22,11 +22,13 @@ import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JEditorPane
+import javax.swing.JLabel
 import javax.swing.JTree
 
 class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
@@ -63,6 +65,13 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     private fun JComponent.checkBox(text: String) = UIUtil.findComponentsOfType(this, JBCheckBox::class.java).single { it.text == text }
 
     private fun JComponent.comment(text: String) = UIUtil.findComponentsOfType(this, JEditorPane::class.java).single { it.text.contains(text) }
+
+    private fun JComponent.label(text: String) = UIUtil.findComponentsOfType(this, JLabel::class.java).single { it.text == text }
+
+    /**
+     * The lines of an HTML tooltip in a stable order, as the matched elements are listed in the file system order.
+     */
+    private fun String.sortedLines() = removeSurrounding("<html>", "</html>").split("<br>").sorted().joinToString("<br>", "<html>", "</html>")
 
     /**
      * The pattern fields of the rule editor: the first one lists the patterns, the second one the patterns files.
@@ -168,13 +177,35 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         }
     }
 
-    fun `test blank patterns of the built-in ignored files rule are not reported`() = withRules(Rule.ignoredFiles()) {
+    fun `test built-in ignored files rule shows a description instead of the patterns`() = withRules(Rule("Docs", "*.md"), Rule.ignoredFiles()) {
         withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
-            component.selectRule(0)
-            val patternField = component.patternFields()[0]
+            val (patternField, filesField) = component.patternFields()
+            val sourceLabel = component.label(message("foldableProjectView.settings.type"))
+            val description = UIUtil.findComponentsOfType(component, JComponent::class.java).single { it.name == FoldableRulesEditor.IGNORED_FILES_DESCRIPTION_NAME }
 
+            component.selectRule(0)
+            assertTrue(sourceLabel.isVisible)
+            assertTrue(patternField.isVisible)
+            assertFalse(description.isVisible)
+
+            component.selectRule(1)
+            assertFalse(sourceLabel.isVisible)
+            assertFalse(patternField.isVisible)
+            assertFalse(filesField.isVisible)
+            assertTrue(description.isVisible)
             assertEquals("", patternField.text)
             assertNull(ComponentValidator.getInstance(patternField).get().validationInfo)
+        }
+    }
+
+    fun `test rule editor labels are bound to their fields`() = withRules(Rule("Docs", "*.md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val labels = UIUtil.findComponentsOfType(component, JLabel::class.java)
+            fun labelOf(field: JComponent) = UIUtil.removeMnemonic(labels.single { it.labelFor === field }.text)
+
+            assertEquals(message("foldableProjectView.settings.name"), labelOf(component.nameField()))
+            assertEquals(message("foldableProjectView.settings.patterns"), labelOf(component.patternFields()[0]))
+            assertEquals(message("foldableProjectView.settings.patternsFile"), labelOf(component.patternFields()[1]))
         }
     }
 
@@ -189,6 +220,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
             component.selectRule(0)
             label.assertTextEventually("Matches 2 elements in the module roots")
+            assertEquals("<html>CHANGELOG.md<br>README.md</html>", label.toolTipText.sortedLines())
 
             // the count is not recomputed on every keystroke, but once the typing pauses
             component.patternFields()[0].text = "R"
@@ -199,13 +231,34 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
             component.patternFields()[0].text = "*.txt"
             label.assertTextEventually("Matches no elements in the module roots")
+            assertNull(label.toolTipText)
 
+            // the tooltip lists the matched elements relative to their content roots
             component.patternFields()[0].text = "*.md"
             component.checkBox(message("foldableProjectView.settings.foldNestedDirectories")).isSelected = true
             label.assertTextEventually("Matches 3 elements in the project")
+            assertEquals("<html>CHANGELOG.md<br>README.md<br>docs/GUIDE.md</html>", label.toolTipText.sortedLines())
 
             component.patternFields()[0].text = ""
             label.assertTextEventually("")
+            assertNull(label.toolTipText)
+        }
+    }
+
+    fun `test matches tooltip lists the first elements only`() = withRules(Rule("Docs", "*.md")) {
+        val count = FoldableProjectViewConstants.MATCH_PREVIEW_LIMIT + 3
+        repeat(count) { myFixture.addFileToProject("file$it.md", "") }
+
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val label = component.matchesLabel()
+
+            component.selectRule(0)
+            label.assertTextEventually("Matches $count elements in the module roots")
+
+            val lines = label.toolTipText.removeSurrounding("<html>", "</html>").split("<br>")
+            assertEquals(FoldableProjectViewConstants.MATCH_PREVIEW_LIMIT + 1, lines.size)
+            assertEquals(message("foldableProjectView.settings.matches.more", 3), lines.last())
+            lines.dropLast(1).forEach { assertTrue(it, it.matches(Regex("file\\d+\\.md"))) }
         }
     }
 
