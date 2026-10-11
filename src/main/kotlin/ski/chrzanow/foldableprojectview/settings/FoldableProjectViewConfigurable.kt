@@ -3,6 +3,7 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure
 import com.intellij.ide.projectView.impl.ProjectViewPane
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.actionSystem.UiDataProvider
@@ -22,11 +23,13 @@ import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.not
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.components.BorderLayoutPanel
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.HELP_TOPIC
@@ -38,9 +41,14 @@ import ski.chrzanow.foldableprojectview.createPredicate
 import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
 import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
 import java.awt.Dimension
+import java.awt.Rectangle
 import javax.swing.JComponent
+import javax.swing.JScrollPane
 import javax.swing.JTree
+import javax.swing.Scrollable
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+import javax.swing.SwingConstants
 
 /**
  * Settings page: the options and the folding rules on the left, the live Project View preview filling the right side.
@@ -70,6 +78,16 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
          * Number of the rules table rows shown without scrolling.
          */
         private const val VISIBLE_RULES = 6
+
+        /**
+         * Whether the preview is shown, remembered across the projects and the IDE restarts.
+         */
+        private const val PREVIEW_VISIBLE_KEY = "FoldableProjectView.settings.preview.visible"
+
+        /**
+         * Scrolling step of the settings column, in pixels. Without it the column would scroll by a single pixel per step.
+         */
+        private const val SCROLL_UNIT = 16
     }
 
     private val defaults = service<FoldableProjectDefaults>()
@@ -119,6 +137,36 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     }
 
     /**
+     * Whether the preview is shown next to the settings. It is a UI preference, not a setting: it does not make the page
+     * modified, and is stored as soon as it is toggled, so the page reopens as the user left it.
+     * The settings column follows the width of the page while the preview is hidden, and scrolls horizontally otherwise.
+     */
+    private val previewVisibleProperty = propertyGraph.property(PropertiesComponent.getInstance().getBoolean(PREVIEW_VISIBLE_KEY, true)).apply {
+        afterChange { visible ->
+            PropertiesComponent.getInstance().setValue(PREVIEW_VISIBLE_KEY, visible, true)
+            previewPanel?.isVisible = visible
+            settingsScrollPane?.apply {
+                horizontalScrollBarPolicy = horizontalScrollBarPolicy(visible)
+                parent?.apply {
+                    revalidate()
+                    repaint()
+                }
+            }
+        }
+    }
+
+    private var previewPanel: JComponent? = null
+    private var settingsScrollPane: JScrollPane? = null
+
+    /**
+     * The settings column scrolls horizontally only when the preview takes a part of the page width.
+     */
+    private fun horizontalScrollBarPolicy(previewVisible: Boolean) = when {
+        previewVisible && !project.isDefault -> HORIZONTAL_SCROLLBAR_AS_NEEDED
+        else -> HORIZONTAL_SCROLLBAR_NEVER
+    }
+
+    /**
      * The preview pane and its tree structure provider; `null` for the default project, which has nothing to preview.
      */
     private var preview: ProjectViewPane? = null
@@ -148,13 +196,28 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 comment(message("foldableProjectView.settings.defaults.description"), MAX_LINE_LENGTH_WORD_WRAP)
             }
         }
-        // The sponsorship links go first, where they are seen while the plugin is actually being configured: a single line
-        // with GitHub Sponsors as the primary channel, instead of a group buried at the bottom of the page.
-        row(message("foldableProjectView.settings.support")) {
+        // The sponsorship links go first, where they are seen while the plugin is actually being configured: the text on its
+        // own line and the links below it, so they are fully visible next to the preview, with GitHub Sponsors as the
+        // primary channel, instead of a group buried at the bottom of the page.
+        row {
+            label(message("foldableProjectView.settings.support"))
+        }
+        row {
             browserLink(message("foldableProjectView.settings.support.github"), SPONSOR_GITHUB_URL)
             browserLink(message("foldableProjectView.settings.support.kofi"), SPONSOR_KOFI_URL)
             browserLink(message("foldableProjectView.settings.support.paypal"), SPONSOR_PAYPAL_URL)
-        }.bottomGap(BottomGap.SMALL)
+        }
+        separator()
+            .topGap(TopGap.SMALL)
+            .bottomGap(BottomGap.SMALL)
+        if (!project.isDefault) {
+            // A UI preference rather than a setting, see [previewVisibleProperty].
+            row {
+                checkBox(message("foldableProjectView.settings.preview.show"))
+                    .bindSelected(previewVisibleProperty)
+                    .applyToComponent { setMnemonic('p') }
+            }
+        }
         row {
             checkBox(message("foldableProjectView.settings.foldingEnabled"))
                 .bindSelected(settingsProperty, FoldableProjectSettings::foldingEnabled)
@@ -265,12 +328,40 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             }.resizableRow()
         }.apply {
             border = JBUI.Borders.emptyLeft(10)
+            isVisible = previewVisibleProperty.get()
+            previewPanel = this
         }
     }
 
+    /**
+     * Wraps the settings column so it is scrolled by a sensible step and, while the preview is hidden, follows the width of
+     * its scroll pane: the comments wrap and the rules table shrinks instead of being cut off on the right. While the preview
+     * is shown, the column keeps its preferred width and is scrolled horizontally instead.
+     */
+    private fun createScrollableSettingsPanel() = object : BorderLayoutPanel(), Scrollable {
+
+        init {
+            addToCenter(createSettingsPanel())
+        }
+
+        override fun getPreferredScrollableViewportSize(): Dimension = preferredSize
+
+        override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = JBUI.scale(SCROLL_UNIT)
+
+        override fun getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = when (orientation) {
+            SwingConstants.VERTICAL -> visibleRect.height
+            else -> visibleRect.width
+        }
+
+        override fun getScrollableTracksViewportWidth() = project.isDefault || !previewVisibleProperty.get()
+
+        override fun getScrollableTracksViewportHeight() = false
+    }
+
     override fun createPanel() = panel {
-        val settingsPanel = ScrollPaneFactory.createScrollPane(createSettingsPanel(), true).apply {
-            horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_NEVER
+        val settingsPanel = ScrollPaneFactory.createScrollPane(createScrollableSettingsPanel(), true).apply {
+            horizontalScrollBarPolicy = horizontalScrollBarPolicy(previewVisibleProperty.get())
+            settingsScrollPane = this
         }
         // The preview is not available for the default project (e.g., in the "New Projects Setup" settings).
         val content = when {
@@ -385,6 +476,8 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     override fun disposeUIResources() {
         preview = null
         previewProvider = null
+        previewPanel = null
+        settingsScrollPane = null
         super.disposeUIResources()
     }
 

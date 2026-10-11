@@ -25,7 +25,7 @@ _Foldable Project View is free and sponsor-supported. If it saves you time, cons
 - Rules with a blank name or no patterns are reported with a warning in the rule editor and in the rules table; the fields show placeholders with examples
 - Theme-aware palette of named group colors (Blue, Green, Orange, Rose, Violet, Yellow, Gray) in the rule editor; the backgrounds reuse the platform File Colors, so they follow the light/dark theme and its overrides, while `Custom…` still opens the color picker
 - A one-time notification inviting to sponsor the plugin, shown only after a couple of weeks of actual use, with `Remind me later` and `Don't show again` options; the plugin stays free
-- The sponsorship links in the settings moved from a group at the bottom of the page to a compact row of links at its top
+- The sponsorship links in the settings moved from a group at the bottom of the page to its top: a line of text with the links below it, separated from the options by a divider
 - `♥ Sponsor Foldable Project View` action at the bottom of the Project View options menu, opening the GitHub Sponsors page
 - The Marketplace `What's New` notes are generated from this changelog and open with a one-line reminder that the plugin is free and sponsor-supported
 
@@ -41,10 +41,12 @@ _Foldable Project View is free and sponsor-supported. If it saves you time, cons
 - The rule editor shows a description of the built-in `Ignored files` rule instead of the disabled `Source` switch and the empty `Patterns` field
 - Group colors picked from the palette are stored by name (`Blue`) and newly enabled colors default to the palette instead of a color derived from the current theme; custom colors stored by earlier versions are kept and still used as is in both themes
 - The live preview spans the full height of the settings page next to the scrollable options and rules, so it stays visible while a rule is edited; selecting a rule highlights its folding group in the preview and vice versa. The preview is read-only: it offers no Project View context menu and does not open files behind the Settings dialog
+- The live preview can be hidden with the `Show Project View preview` checkbox above `Enable folding` to give the options and the rules the whole page width; the choice is remembered
 
 ### Fixed
 
 - The settings and the rules are scrollable when they do not fit the Settings dialog
+- The settings column scrolls horizontally while the preview is shown instead of being cut off by it, follows the page width while the preview is hidden, and scrolls by a sensible step instead of a single pixel
 - The selected rule stays selected after `Apply`, `Reset`, and `Copy from Defaults`, and the first rule is selected when the settings page opens, so the rule editor no longer goes blank
 - The `?` button of the settings page opens the plugin documentation instead of a non-existent JetBrains help page
 - The settings preview and the match counter are refreshed once the typing pauses instead of on every keystroke, and the Project View is restructured once per burst of VCS file status or patterns file changes instead of on every event, which used to block the IDE during VCS refreshes

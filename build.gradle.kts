@@ -25,3 +25,11 @@ tasks {
         changeNotes = intellijPlatform.pluginConfiguration.changeNotes.map { nudge + it }
     }
 }
+
+intellijPlatformTesting {
+    runIde {
+        register("runLatest") {
+            localPath = file("/Users/hsz/Applications/IntelliJ IDEA.app")
+        }
+    }
+}

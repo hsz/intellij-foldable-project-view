@@ -2,6 +2,7 @@ package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.ide.DataManager
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
@@ -12,6 +13,7 @@ import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.ColorPanel
+import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
@@ -29,7 +31,10 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JEditorPane
 import javax.swing.JLabel
+import javax.swing.JScrollPane
 import javax.swing.JTree
+import javax.swing.Scrollable
+import javax.swing.SwingConstants
 
 class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
@@ -67,6 +72,10 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     private fun JComponent.comment(text: String) = UIUtil.findComponentsOfType(this, JEditorPane::class.java).single { it.text.contains(text) }
 
     private fun JComponent.label(text: String) = UIUtil.findComponentsOfType(this, JLabel::class.java).single { it.text == text }
+
+    private fun JComponent.settingsScrollPane() = UIUtil.getParentOfType(JScrollPane::class.java, checkBox(message("foldableProjectView.settings.foldingEnabled")))!!
+
+    private fun JComponent.previewPanel() = UIUtil.getParentOfType(OnePixelSplitter::class.java, previewTree())!!.secondComponent
 
     /**
      * The lines of an HTML tooltip in a stable order, as the matched elements are listed in the file system order.
@@ -408,6 +417,75 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             assertNull(CommonDataKeys.NAVIGATABLE.getData(dataContext))
             assertNull(CommonDataKeys.PSI_ELEMENT.getData(dataContext))
             assertNull(CommonDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext))
+        }
+    }
+
+    fun `test preview can be hidden to give the settings the whole page`() = withRules(Rule("Docs", "*.md")) {
+        val properties = PropertiesComponent.getInstance()
+        val key = "FoldableProjectView.settings.preview.visible"
+        val original = properties.getValue(key)
+
+        try {
+            properties.unsetValue(key)
+            withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+                val previewPanel = component.previewPanel()
+                val previewCheckBox = component.checkBox(message("foldableProjectView.settings.preview.show"))
+                val scrollPane = component.settingsScrollPane()
+                val view = scrollPane.viewport.view as Scrollable
+
+                // the toggle goes right above "Enable folding"
+                val checkBoxTexts = component.checkBoxTexts()
+                assertEquals(checkBoxTexts.indexOf(message("foldableProjectView.settings.foldingEnabled")) - 1, checkBoxTexts.indexOf(previewCheckBox.text))
+
+                // shown by default, with the settings column scrolled horizontally
+                assertTrue(previewCheckBox.isSelected)
+                assertTrue(previewPanel.isVisible)
+                assertFalse(view.scrollableTracksViewportWidth)
+                assertEquals(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED, scrollPane.horizontalScrollBarPolicy)
+
+                // hiding is a UI preference: it is stored at once and does not make the page modified
+                previewCheckBox.doClick()
+                assertFalse(previewPanel.isVisible)
+                assertTrue(view.scrollableTracksViewportWidth)
+                assertEquals(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER, scrollPane.horizontalScrollBarPolicy)
+                assertFalse(properties.getBoolean(key, true))
+                assertFalse(isModified)
+
+                previewCheckBox.doClick()
+                assertTrue(previewPanel.isVisible)
+                assertFalse(view.scrollableTracksViewportWidth)
+                assertTrue(properties.getBoolean(key, true))
+            }
+
+            // the page reopens as it was left
+            properties.setValue(key, false, true)
+            withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+                assertFalse(component.checkBox(message("foldableProjectView.settings.preview.show")).isSelected)
+                assertFalse(component.previewPanel().isVisible)
+                assertTrue((component.settingsScrollPane().viewport.view as Scrollable).scrollableTracksViewportWidth)
+            }
+        } finally {
+            properties.setValue(key, original)
+        }
+    }
+
+    fun `test settings column scrolls by a sensible step`() = withRules(Rule("Docs", "*.md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val scrollPane = component.settingsScrollPane()
+            val view = scrollPane.viewport.view as Scrollable
+
+            assertFalse(view.scrollableTracksViewportHeight)
+            assertTrue(view.getScrollableUnitIncrement(scrollPane.viewport.viewRect, SwingConstants.VERTICAL, 1) > 1)
+        }
+    }
+
+    fun `test settings follow the page width without the preview for the default project`() {
+        withConfigurable(FoldableProjectViewConfigurable(ProjectManager.getInstance().defaultProject)) { component ->
+            val scrollPane = component.settingsScrollPane()
+
+            assertDoesntContain(component.checkBoxTexts(), message("foldableProjectView.settings.preview.show"))
+            assertTrue((scrollPane.viewport.view as Scrollable).scrollableTracksViewportWidth)
+            assertEquals(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER, scrollPane.horizontalScrollBarPolicy)
         }
     }
 
