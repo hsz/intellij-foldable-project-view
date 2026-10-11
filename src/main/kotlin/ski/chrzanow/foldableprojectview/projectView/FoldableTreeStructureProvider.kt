@@ -20,6 +20,8 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.changes.ChangeListManager
 import com.intellij.openapi.vcs.changes.VcsIgnoreManager
+import ski.chrzanow.foldableprojectview.Debouncer
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.REFRESH_DELAY
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
@@ -120,12 +122,16 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
     /**
      * Makes the provider use the given [property] as the settings source and refresh the [pane] when it changes.
-     * Used to render the live preview in the plugin settings.
+     * Used to render the live preview in the plugin settings: the property changes with every keystroke in the rule editor,
+     * so the refreshes are coalesced and the pane is restructured [REFRESH_DELAY] after the last change.
      */
     fun withPreview(pane: ProjectViewPane, property: ObservableProperty<out FoldableProjectState>) = apply {
         stateProvider = property::get
-        property.afterChange(pane) {
+        val refresher = Debouncer.create(project, pane, REFRESH_DELAY) {
             pane.updateFromRoot(true)
+        }
+        property.afterChange(pane) {
+            refresher.request()
         }
     }
 

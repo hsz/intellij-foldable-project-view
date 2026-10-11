@@ -1,5 +1,6 @@
 package ski.chrzanow.foldableprojectview.settings
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.properties.ObservableProperty
@@ -25,8 +26,10 @@ import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.util.ui.ColorIcon
 import com.intellij.util.ui.EmptyIcon
 import com.intellij.util.ui.UIUtil
+import ski.chrzanow.foldableprojectview.Debouncer
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.MATCH_COUNT_LIMIT
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.REFRESH_DELAY
 import ski.chrzanow.foldableprojectview.bindColor
 import ski.chrzanow.foldableprojectview.bindColorControl
 import ski.chrzanow.foldableprojectview.bindSelectedItem
@@ -42,11 +45,14 @@ import kotlin.reflect.KMutableProperty1
  * The [settingsProperty] provides the options the matching depends on (case sensitivity, directories, nested folding);
  * the [project] is used to validate the patterns files paths (see [RuleType.PATTERNS_FILE]) and to count the elements
  * matched by the edited rule. It is `null` when the editor is used for the defaults of new projects.
+ * Counting the matches may visit the whole project content, so with a [parentDisposable] the count is recomputed
+ * [REFRESH_DELAY] after the last change instead of on every keystroke.
  */
 class FoldableRulesEditor(
     private val ruleProperty: ObservableMutableProperty<Rule?>,
     private val settingsProperty: ObservableProperty<out FoldableProjectState>,
     private val project: Project? = null,
+    parentDisposable: Disposable? = null,
 ) : UiDslUnnamedConfigurable.Simple() {
 
     private val selectedRowPredicate = object : ComponentPredicate() {
@@ -106,6 +112,12 @@ class FoldableRulesEditor(
         foreground = UIUtil.getContextHelpForeground()
     }
 
+    private val matchesUpdater = if (project != null && parentDisposable != null) {
+        Debouncer.create(project, parentDisposable, REFRESH_DELAY, ::updateMatchesLabel)
+    } else {
+        null
+    }
+
     override fun Panel.createContent() {
         rowsRange {
             row(message("foldableProjectView.settings.name")) {
@@ -162,7 +174,7 @@ class FoldableRulesEditor(
                 row("") {
                     cell(matchesLabel)
                 }.visibleIf(usesPatternsPredicate)
-                settingsProperty.afterChange { updateMatchesLabel() }
+                settingsProperty.afterChange { scheduleMatchesUpdate() }
                 updateMatchesLabel()
             }
             row(message("foldableProjectView.settings.action")) {
@@ -270,6 +282,8 @@ class FoldableRulesEditor(
             roots.none { root -> root.findFileByRelativePath(path) != null }
         }
     }
+
+    private fun scheduleMatchesUpdate() = matchesUpdater?.request() ?: updateMatchesLabel()
 
     private fun updateMatchesLabel() {
         matchesLabel.text = matchesText().orEmpty()

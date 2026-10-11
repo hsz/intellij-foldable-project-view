@@ -58,7 +58,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         }
 
     private val rulesTable = FoldableRulesTable(settingsProperty)
-    private val rulesEditor = FoldableRulesEditor(ruleProperty, settingsProperty, project.takeUnless { it.isDefault })
 
     private val settingsPanel = panel {
         row {
@@ -154,6 +153,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .align(Align.FILL)
                     .resizableColumn()
 
+                val rulesEditor = FoldableRulesEditor(ruleProperty, settingsProperty, project.takeUnless { it.isDefault }, disposable!!)
                 cell(rulesEditor.createPanel().apply { registerValidators(disposable!!) })
                     .applyIfEnabled()
 

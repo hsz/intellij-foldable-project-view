@@ -35,6 +35,7 @@
 ### Fixed
 
 - The settings page is scrollable when it does not fit the Settings dialog
+- The settings preview and the match counter are refreshed once the typing pauses instead of on every keystroke, and the Project View is restructured once per burst of VCS file status or patterns file changes instead of on every event, which used to block the IDE during VCS refreshes
 - Files are folded in the scope-based Project View panes (`Project Files`, custom scopes) as well; directories cannot be folded there, as the platform passes files only ([#1](https://github.com/hsz/intellij-foldable-project-view/issues/1))
 
 ## [2.1.0] - 2026-10-10

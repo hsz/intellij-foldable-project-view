@@ -6,6 +6,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.ComponentValidator
 import com.intellij.openapi.observable.properties.PropertyGraph
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.components.JBCheckBox
@@ -57,6 +58,12 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         .single { it.emptyText.text == message("foldableProjectView.settings.name.placeholder") }
 
     private fun JComponent.matchesLabel() = UIUtil.findComponentsOfType(this, JBLabel::class.java).single { it.name == FoldableRulesEditor.MATCHES_LABEL_NAME }
+
+    /**
+     * The matches label is updated with a delay after the last change, see [FoldableRulesEditor].
+     */
+    private fun JBLabel.assertTextEventually(expected: String) =
+        PlatformTestUtil.waitWithEventsDispatching({ "Expected '$expected', but was '$text'" }, { text == expected }, 5)
 
     private fun JComponent.selectRule(index: Int) = UIUtil.findComponentsOfType(this, TableView::class.java).single().setRowSelectionInterval(index, index)
 
@@ -151,20 +158,24 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             assertEquals("", label.text)
 
             component.selectRule(0)
-            assertEquals("Matches 2 elements in the module roots", label.text)
+            label.assertTextEventually("Matches 2 elements in the module roots")
 
+            // the count is not recomputed on every keystroke, but once the typing pauses
+            component.patternFields()[0].text = "R"
+            component.patternFields()[0].text = "README"
             component.patternFields()[0].text = "README.md"
-            assertEquals("Matches one element in the module roots", label.text)
+            assertEquals("Matches 2 elements in the module roots", label.text)
+            label.assertTextEventually("Matches one element in the module roots")
 
             component.patternFields()[0].text = "*.txt"
-            assertEquals("Matches no elements in the module roots", label.text)
+            label.assertTextEventually("Matches no elements in the module roots")
 
             component.patternFields()[0].text = "*.md"
             component.checkBox(message("foldableProjectView.settings.foldNestedDirectories")).isSelected = true
-            assertEquals("Matches 3 elements in the project", label.text)
+            label.assertTextEventually("Matches 3 elements in the project")
 
             component.patternFields()[0].text = ""
-            assertEquals("", label.text)
+            label.assertTextEventually("")
         }
     }
 
