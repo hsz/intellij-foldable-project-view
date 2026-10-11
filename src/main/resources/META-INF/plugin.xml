@@ -77,5 +77,13 @@
                     relative-to-action="ProjectView.FlattenPackages"
                     anchor="before"/>
         </action>
+        <group id="ProjectView.FoldableProjectView.Sponsor">
+            <separator/>
+            <action id="ProjectView.FoldableProjectView.SponsorOnGitHub"
+                    class="ski.chrzanow.foldableprojectview.actionSystem.SponsorAction"/>
+            <add-to-group
+                    group-id="ProjectView.ToolWindow.SecondaryActions"
+                    anchor="last"/>
+        </group>
     </actions>
 </idea-plugin>

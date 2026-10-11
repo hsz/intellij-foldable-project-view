@@ -141,6 +141,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     /**
      * The options, the folding rules, and the defaults, as a single scrollable column.
      */
+    @Suppress("DialogTitleCapitalization")
     private fun createSettingsPanel() = panel {
         if (project.isDefault) {
             row {
