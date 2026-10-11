@@ -55,6 +55,8 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
     private fun JComponent.buttonTexts() = UIUtil.findComponentsOfType(this, JButton::class.java).map { it.text }
 
+    private fun JComponent.button(text: String) = UIUtil.findComponentsOfType(this, JButton::class.java).single { it.text == text }
+
     private fun JComponent.checkBox(text: String) = UIUtil.findComponentsOfType(this, JBCheckBox::class.java).single { it.text == text }
 
     /**
@@ -179,7 +181,6 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
         withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
             val label = component.matchesLabel()
-            assertEquals("", label.text)
 
             component.selectRule(0)
             label.assertTextEventually("Matches 2 elements in the module roots")
@@ -233,7 +234,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             assertTrue(stored.isCustom)
             assertEquals(RuleColors.foreground("Green")!!.rgb, stored.rgb)
 
-            component.selectRule(0) // the table selection is reset on apply
+            // the table selection survives the apply, so the editor still shows the rule
             assertEquals(FoldableRulesEditor.CUSTOM_COLOR, comboBox.selectedItem)
             assertTrue(colorPanel.isVisible)
 
@@ -242,7 +243,6 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             apply()
             assertSame(RuleColors.foreground("Blue"), project.service<FoldableProjectSettings>().rules[0].foreground)
 
-            component.selectRule(0)
             checkBox.isSelected = false
             apply()
             assertNull(project.service<FoldableProjectSettings>().rules[0].foreground)
@@ -259,13 +259,13 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
             val tree = component.previewTree()
             val table = component.rulesTable()
-            assertNull(tree.selectedGroupRule)
 
-            // table -> preview
-            component.selectRule(0)
+            // the first rule is selected when the page opens, and so is its group in the preview
+            assertEquals(0, table.selectedRow)
             tree.assertSelectedGroupEventually(table.selectedObject as Rule)
             assertEquals("Docs", tree.selectedGroupRule!!.name)
 
+            // table -> preview
             component.selectRule(1)
             tree.assertSelectedGroupEventually(table.selectedObject as Rule)
             assertEquals("Build", tree.selectedGroupRule!!.name)
@@ -281,9 +281,47 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             })
             assertSame(docsRule, table.selectedObject)
 
-            // the selection is cleared when no rule is selected
-            apply()
+            // the preview selection is cleared when no rule is selected
+            table.clearSelection()
             tree.assertSelectedGroupEventually(null)
+        }
+    }
+
+    fun `test rule selection is kept after apply, reset, and copy from defaults`() = withRules(
+        Rule("Docs", "*.md"),
+        Rule("Build", "*.kts"),
+        Rule("CI", ".github"),
+    ) {
+        withDefaults(FoldableProjectSettings().apply { rules.add(Rule("Defaults", "*.txt")) }) {
+            withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+                val table = component.rulesTable()
+                val nameField = component.nameField()
+
+                // the first rule is selected when the page opens, so the editor is never blank
+                assertEquals(0, table.selectedRow)
+                assertEquals("Docs", nameField.text)
+                assertTrue(nameField.isEnabled)
+
+                component.selectRule(1)
+                nameField.text = "Gradle"
+                apply()
+                assertEquals(1, table.selectedRow)
+                assertEquals("Gradle", nameField.text)
+                assertEquals("Gradle", project.service<FoldableProjectSettings>().rules[1].name)
+
+                nameField.text = "Maven"
+                reset()
+                assertEquals(1, table.selectedRow)
+                assertEquals("Gradle", nameField.text)
+                assertFalse(isModified)
+
+                // the selected row is clamped when fewer rules are loaded
+                component.selectRule(2)
+                component.button(message("foldableProjectView.settings.defaults.load")).doClick()
+                assertEquals(listOf("Defaults", message("foldableProjectView.ignoredFiles")), table.items.map { (it as Rule).name })
+                assertEquals(1, table.selectedRow)
+                assertEquals(message("foldableProjectView.ignoredFiles"), nameField.text)
+            }
         }
     }
 

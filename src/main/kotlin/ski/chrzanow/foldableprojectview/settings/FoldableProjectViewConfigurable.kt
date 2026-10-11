@@ -16,6 +16,7 @@ import com.intellij.ui.ClientProperty
 import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
+import com.intellij.ui.TableUtil
 import com.intellij.ui.components.JBViewport
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
@@ -350,8 +351,17 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         super.disposeUIResources()
     }
 
+    /**
+     * Reloads the table from the edited settings, keeping the selected row (or selecting the first one), so the rule editor
+     * does not go blank after Apply, Reset, or Copy from Defaults, and shows the first rule as soon as the page opens.
+     */
     private fun invalidateTable() = rulesTable.apply {
+        val selectedRow = tableView.selectedRow
         setValues(settingsProperty.get().rules)
-        tableView.selection.clear()
+        if (tableView.rowCount > 0) {
+            val row = selectedRow.coerceIn(0, tableView.rowCount - 1)
+            tableView.setRowSelectionInterval(row, row)
+            TableUtil.scrollSelectionToVisible(tableView)
+        }
     }
 }
