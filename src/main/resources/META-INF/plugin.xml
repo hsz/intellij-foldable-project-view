@@ -4,12 +4,6 @@
     <vendor>hsz</vendor>
 
     <description><![CDATA[
-        <b>Support Foldable Project View</b><br>
-        If you find this plugin useful, support its development via
-        <a href="https://github.com/sponsors/hsz">GitHub Sponsors</a>,
-        <a href="https://ko-fi.com/hszanowski">Ko-fi</a>, or
-        <a href="https://paypal.me/hsz">PayPal</a>.
-        You can also find my other projects on <a href="https://github.com/hsz">GitHub</a>.<br><br>
         The Foldable Project View is a plugin for the IntelliJ-based IDEs that lets you fold files located in the root of your project.<br><br>
         Available features:
         <ul>
@@ -29,7 +23,11 @@
           <li>Live Project View preview, rule presets, and a live count of the elements matched by the edited rule</li>
           <li>Defaults for new projects, synchronized by Settings Sync</li>
         </ul>
-        <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />
+        <img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" /><br><br>
+        <b>Free and sponsor-supported.</b>
+        If the plugin saves you time, consider <a href="https://github.com/sponsors/hsz">sponsoring it on GitHub</a>
+        (one-time tips via <a href="https://ko-fi.com/hszanowski">Ko-fi</a> or <a href="https://paypal.me/hsz">PayPal</a> are welcome too).<br>
+        <a href="https://github.com/sponsors/hsz"><img src="https://img.shields.io/github/sponsors/hsz?style=for-the-badge&logo=githubsponsors&label=Sponsor" alt="Sponsor hsz on GitHub" /></a>
         ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
