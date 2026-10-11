@@ -36,13 +36,7 @@ See the [documentation](https://github.com/hsz/intellij-foldable-project-view#us
 
 ## Demo
 
-<!--
-  GitHub renders <video> only for files uploaded through its web editor (githubusercontent.com / user-attachments URLs),
-  a committed .mp4 is stripped – see https://bobbyhadz.com/blog/embed-video-into-github-readme-markdown.
-  To get an inline player: edit README.md on github.com, drag .github/readme/Foldable-small.mp4 (< 10 MB) into the
-  editor, and replace the poster link below with the generated URL.
--->
-[![Watch the Foldable Project View demo video](.github/readme/Foldable.png)](https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.mp4)
+[![Watch the Foldable Project View demo video](.github/readme/Foldable.png)](https://github.com/user-attachments/assets/409d979f-8fa2-4d46-8729-78a6e9895b6d)
 
 ## Compatibility
 
