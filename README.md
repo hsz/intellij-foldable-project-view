@@ -27,8 +27,6 @@ Available features:
 Works in all IntelliJ-based IDEs (IntelliJ IDEA, PyCharm, WebStorm, Rider, GoLand, …) on IntelliJ Platform 2025.3+.
 See the [documentation](https://github.com/hsz/intellij-foldable-project-view#usage) for the details.
 
-<a href="https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.mp4"><img src="https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.png" alt="Watch the Foldable Project View demo video" width="800" /></a>
-
 > **Free and sponsor-supported.** If the plugin saves you time, consider sponsoring it via
 > **[GitHub Sponsors](https://github.com/sponsors/hsz)**, **[Ko-fi](https://ko-fi.com/hszanowski)**, or **[PayPal](https://paypal.me/hsz)**.
 > You can also find my other projects on [GitHub](https://github.com/hsz).
