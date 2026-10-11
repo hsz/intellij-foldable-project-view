@@ -19,6 +19,7 @@ import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.Cell
+import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
 import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.selected
@@ -135,12 +136,12 @@ class FoldableRulesEditor(
             row(message("foldableProjectView.settings.type")) {
                 segmentedButton(listOf(RuleType.PATTERN, RuleType.PATTERNS_FILE)) { text = it.text }
                     .bind(typeProperty)
-            }.rowComment(message("foldableProjectView.settings.type.comment"), 40)
+            }.rowComment(message("foldableProjectView.settings.type.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                 .enabledIf(usesPatternsPredicate)
             row(message("foldableProjectView.settings.patterns")) {
                 expandableTextField()
                     .align(Align.FILL)
-                    .comment(message("foldableProjectView.settings.patterns.comment"), 40)
+                    .comment(message("foldableProjectView.settings.patterns.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { emptyText.text = message("foldableProjectView.settings.patterns.placeholder") }
                     .bindText(ruleProperty, Rule::pattern)
                     .validationOnInput { field ->
@@ -157,7 +158,7 @@ class FoldableRulesEditor(
             row(message("foldableProjectView.settings.patternsFile")) {
                 expandableTextField()
                     .align(Align.FILL)
-                    .comment(message("foldableProjectView.settings.patternsFile.comment"), 40)
+                    .comment(message("foldableProjectView.settings.patternsFile.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { emptyText.text = message("foldableProjectView.settings.patternsFile.placeholder") }
                     .bindText(ruleProperty, Rule::pattern)
                     .validationOnInput { field ->
@@ -180,7 +181,7 @@ class FoldableRulesEditor(
             row(message("foldableProjectView.settings.action")) {
                 segmentedButton(RuleAction.entries) { text = it.text }
                     .bindSelectedItem(ruleProperty, Rule::action, RuleAction.GROUP)
-            }.rowComment(message("foldableProjectView.settings.action.comment"), 40)
+            }.rowComment(message("foldableProjectView.settings.action.comment"), MAX_LINE_LENGTH_WORD_WRAP)
             row {
                 val foregroundCheckBox = checkBox(message("foldableProjectView.settings.foreground"))
                     .bindColorControl(ruleProperty, Rule::foreground, RuleColors.foregrounds.first())
@@ -192,7 +193,7 @@ class FoldableRulesEditor(
                     .bindColorControl(ruleProperty, Rule::background, RuleColors.backgrounds.first())
 
                 colorChooser(RuleColors.backgrounds, Rule::background, backgroundCheckBox.selected)
-            }.rowComment(message("foldableProjectView.settings.color.comment"), 40)
+            }.rowComment(message("foldableProjectView.settings.color.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                 .enabledIf(groupActionPredicate)
         }.enabledIf(selectedRowPredicate)
     }

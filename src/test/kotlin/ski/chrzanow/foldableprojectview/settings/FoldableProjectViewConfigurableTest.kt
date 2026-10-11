@@ -1,5 +1,8 @@
 package ski.chrzanow.foldableprojectview.settings
 
+import com.intellij.ide.DataManager
+import com.intellij.ide.projectView.impl.nodes.PsiFileNode
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.ProjectManager
@@ -9,16 +12,21 @@ import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.ColorPanel
+import com.intellij.ui.PopupHandler
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.fields.ExpandableTextField
 import com.intellij.ui.table.TableView
+import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.UIUtil
+import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
+import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JTree
 
 class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
@@ -65,7 +73,23 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     private fun JBLabel.assertTextEventually(expected: String) =
         PlatformTestUtil.waitWithEventsDispatching({ "Expected '$expected', but was '$text'" }, { text == expected }, 5)
 
-    private fun JComponent.selectRule(index: Int) = UIUtil.findComponentsOfType(this, TableView::class.java).single().setRowSelectionInterval(index, index)
+    private fun JComponent.rulesTable() = UIUtil.findComponentsOfType(this, TableView::class.java).single()
+
+    private fun JComponent.selectRule(index: Int) = rulesTable().setRowSelectionInterval(index, index)
+
+    private fun JComponent.previewTree() = UIUtil.findComponentsOfType(this, JTree::class.java).single { it.name == FoldableProjectViewConfigurable.PREVIEW_TREE_NAME }
+
+    /**
+     * The rule of the folding group selected in the preview, if any.
+     */
+    private val JTree.selectedGroupRule: Rule?
+        get() = (TreeUtil.getLastUserObject(selectionPath) as? FoldableProjectViewNode)?.value
+
+    /**
+     * The preview is restructured asynchronously, so its selection follows the table with a delay.
+     */
+    private fun JTree.assertSelectedGroupEventually(expected: Rule?) =
+        PlatformTestUtil.waitWithEventsDispatching({ "Expected '$expected' selected in the preview, but was '$selectedGroupRule'" }, { selectedGroupRule == expected }, 10)
 
     /**
      * The color combo box and the color picker editing the given rule color property (`foreground` or `background`).
@@ -222,6 +246,74 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             checkBox.isSelected = false
             apply()
             assertNull(project.service<FoldableProjectSettings>().rules[0].foreground)
+        }
+    }
+
+    fun `test selected rule and its folding group are kept in sync between the table and the preview`() = withRules(
+        Rule("Docs", "*.md"),
+        Rule("Build", "*.kts"),
+    ) {
+        myFixture.addFileToProject("README.md", "")
+        myFixture.addFileToProject("build.gradle.kts", "")
+
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val tree = component.previewTree()
+            val table = component.rulesTable()
+            assertNull(tree.selectedGroupRule)
+
+            // table -> preview
+            component.selectRule(0)
+            tree.assertSelectedGroupEventually(table.selectedObject as Rule)
+            assertEquals("Docs", tree.selectedGroupRule!!.name)
+
+            component.selectRule(1)
+            tree.assertSelectedGroupEventually(table.selectedObject as Rule)
+            assertEquals("Build", tree.selectedGroupRule!!.name)
+
+            // preview -> table
+            val docsRule = table.items[0]
+            PlatformTestUtil.waitForPromise(TreeUtil.promiseSelect(tree) { path ->
+                when ((TreeUtil.getLastUserObject(path) as? FoldableProjectViewNode)?.value) {
+                    docsRule -> TreeVisitor.Action.INTERRUPT
+                    null -> TreeVisitor.Action.CONTINUE
+                    else -> TreeVisitor.Action.SKIP_CHILDREN
+                }
+            })
+            assertSame(docsRule, table.selectedObject)
+
+            // the selection is cleared when no rule is selected
+            apply()
+            tree.assertSelectedGroupEventually(null)
+        }
+    }
+
+    fun `test preview is read-only`() = withRules(Rule("Docs", "*.md")) {
+        myFixture.addFileToProject("README.md", "")
+
+        val configurable = FoldableProjectViewConfigurable(project)
+        assertTrue(configurable is Configurable.NoScroll)
+
+        withConfigurable(configurable) { component ->
+            val tree = component.previewTree()
+            assertEmpty(tree.mouseListeners.filterIsInstance<PopupHandler>())
+
+            component.selectRule(0)
+            tree.assertSelectedGroupEventually(component.rulesTable().selectedObject as Rule)
+
+            // select the file folded into the group: it must not be exposed to the navigation and the Project View actions
+            PlatformTestUtil.waitForPromise(TreeUtil.promiseSelect(tree) { path ->
+                when (TreeUtil.getLastUserObject(path)) {
+                    is PsiFileNode -> TreeVisitor.Action.INTERRUPT
+                    else -> TreeVisitor.Action.CONTINUE
+                }
+            })
+            assertNull(tree.selectedGroupRule)
+
+            val dataContext = DataManager.getInstance().getDataContext(tree)
+            assertNull(CommonDataKeys.NAVIGATABLE_ARRAY.getData(dataContext))
+            assertNull(CommonDataKeys.NAVIGATABLE.getData(dataContext))
+            assertNull(CommonDataKeys.PSI_ELEMENT.getData(dataContext))
+            assertNull(CommonDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext))
         }
     }
 

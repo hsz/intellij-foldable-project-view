@@ -31,10 +31,11 @@
 - Settings page layout: the pattern field and the table column are called `Patterns` (a rule is a name plus patterns and a style), `Match directories` was renamed to `Also fold directories`, the options depending on `Enable folding` are indented, and the support note moved to the bottom of the page
 - New rules start with an empty name and patterns instead of `Rule name` and `*.md`; rules with a blank name are labeled `Unnamed rule` in the Project View, and rules with no patterns are kept (but not applied) instead of being silently dropped
 - Group colors picked from the palette are stored by name (`Blue`) and newly enabled colors default to the palette instead of a color derived from the current theme; custom colors stored by earlier versions are kept and still used as is in both themes
+- The live preview spans the full height of the settings page next to the scrollable options and rules, so it stays visible while a rule is edited; selecting a rule highlights its folding group in the preview and vice versa. The preview is read-only: it offers no Project View context menu and does not open files behind the Settings dialog
 
 ### Fixed
 
-- The settings page is scrollable when it does not fit the Settings dialog
+- The settings and the rules are scrollable when they do not fit the Settings dialog
 - The `?` button of the settings page opens the plugin documentation instead of a non-existent JetBrains help page
 - The settings preview and the match counter are refreshed once the typing pauses instead of on every keystroke, and the Project View is restructured once per burst of VCS file status or patterns file changes instead of on every event, which used to block the IDE during VCS refreshes
 - Files are folded in the scope-based Project View panes (`Project Files`, custom scopes) as well; directories cannot be folded there, as the platform passes files only ([#1](https://github.com/hsz/intellij-foldable-project-view/issues/1))

@@ -124,11 +124,16 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
      * Makes the provider use the given [property] as the settings source and refresh the [pane] when it changes.
      * Used to render the live preview in the plugin settings: the property changes with every keystroke in the rule editor,
      * so the refreshes are coalesced and the pane is restructured [REFRESH_DELAY] after the last change.
+     * The [afterRefresh] callback runs on the EDT once the restructured pane is ready.
      */
-    fun withPreview(pane: ProjectViewPane, property: ObservableProperty<out FoldableProjectState>) = apply {
+    fun withPreview(
+        pane: ProjectViewPane,
+        property: ObservableProperty<out FoldableProjectState>,
+        afterRefresh: () -> Unit = {},
+    ) = apply {
         stateProvider = property::get
         val refresher = Debouncer.create(project, pane, REFRESH_DELAY) {
-            pane.updateFromRoot(true)
+            pane.updateFromRoot(true).doWhenDone(afterRefresh)
         }
         property.afterChange(pane) {
             refresher.request()
@@ -137,7 +142,11 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
     private fun ProjectViewNode<*>.isDirectory() = this is PsiDirectoryNode || virtualFile?.isDirectory == true
 
-    private fun ProjectViewNode<*>.isModuleRoot(): Boolean {
+    /**
+     * Whether the node is a directory the rules are applied to even when [FoldableProjectState.foldNestedDirectories] is off:
+     * a module content root, or a module directory.
+     */
+    fun ProjectViewNode<*>.isModuleRoot(): Boolean {
         if (this !is PsiDirectoryNode && virtualFile?.isDirectory != true) {
             return false
         }

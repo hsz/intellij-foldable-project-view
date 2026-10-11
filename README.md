@@ -73,6 +73,9 @@ settings page reports them with a warning next to the pattern field and in the r
 the first matching rule takes precedence. Folding rules are also available as search scopes (e.g., in
 <kbd>Find in Files</kbd>).
 
+The <kbd>Preview</kbd> next to the settings is a live, read-only Project View reflecting the unsaved settings: selecting
+a rule in the table highlights its folding group in the preview, and selecting a group in the preview selects its rule.
+
 Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
 entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
 or the rule's search scope. Rules can be disabled with the checkbox in the first column of the table – disabled rules
