@@ -182,6 +182,48 @@ class FoldableProjectSettingsTest : LightPlatformTestCase() {
         assertEquals(rule, restored)
     }
 
+    fun `test palette colors are stored by name`() {
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md", background = RuleColors.background("Blue"), foreground = RuleColors.foreground("Green")))
+            rules.add(Rule.ignoredFiles())
+        }
+
+        val element = serialize(settings)!!
+        val xml = JDOMUtil.write(element)
+        assertTrue(xml, xml.contains("""<option name="background" value="Blue" />"""))
+        assertTrue(xml, xml.contains("""<option name="foreground" value="Green" />"""))
+
+        val restored = roundtrip(settings)
+
+        assertEquals(settings.rules, restored.rules)
+        assertSame(RuleColors.background("Blue"), restored.rules[0].background)
+        assertSame(RuleColors.foreground("Green"), restored.rules[0].foreground)
+    }
+
+    fun `test unknown color names and malformed colors are dropped on deserialization`() {
+        val element = JDOMUtil.load(
+            """
+            <FoldableProjectSettings>
+              <option name="RULES">
+                <list>
+                  <Rule>
+                    <option name="name" value="Docs" />
+                    <option name="pattern" value="*.md" />
+                    <option name="background" value="Purple" />
+                    <option name="foreground" value="not-a-color" />
+                  </Rule>
+                </list>
+              </option>
+            </FoldableProjectSettings>
+            """.trimIndent()
+        )
+
+        val restored = FoldableProjectSettings().apply { loadState(element.deserialize(FoldableProjectSettings::class.java)) }
+
+        assertNull(restored.rules.first().background)
+        assertNull(restored.rules.first().foreground)
+    }
+
     fun `test copyFrom keeps rule colors`() {
         val source = FoldableProjectSettings().apply {
             rules.add(Rule("Docs", "*.md", background = Color.RED, foreground = Color.BLUE))

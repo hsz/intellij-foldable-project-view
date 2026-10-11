@@ -3,9 +3,11 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.openapi.components.service
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.ComponentValidator
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.ui.ColorPanel
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
@@ -57,6 +59,16 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     private fun JComponent.matchesLabel() = UIUtil.findComponentsOfType(this, JBLabel::class.java).single { it.name == FoldableRulesEditor.MATCHES_LABEL_NAME }
 
     private fun JComponent.selectRule(index: Int) = UIUtil.findComponentsOfType(this, TableView::class.java).single().setRowSelectionInterval(index, index)
+
+    /**
+     * The color combo box and the color picker editing the given rule color property (`foreground` or `background`).
+     */
+    private fun JComponent.colorChooser(property: String): Pair<ComboBox<*>, ColorPanel> {
+        val comboBoxes = UIUtil.findComponentsOfType(this, ComboBox::class.java)
+        val colorPanels = UIUtil.findComponentsOfType(this, ColorPanel::class.java)
+        val index = comboBoxes.indexOfFirst { it.name == property }
+        return comboBoxes[index] to colorPanels[index]
+    }
 
     /**
      * Runs [block] with the project rules replaced by [rules], restoring the original ones afterwards.
@@ -153,6 +165,52 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
 
             component.patternFields()[0].text = ""
             assertEquals("", label.text)
+        }
+    }
+
+    fun `test rule colors are picked from the theme-aware palette or customized`() = withRules(Rule("Docs", "*.md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            component.selectRule(0)
+            val (comboBox, colorPanel) = component.colorChooser("foreground")
+            val checkBox = component.checkBox(message("foldableProjectView.settings.foreground"))
+
+            assertEquals(RuleColors.foregrounds + FoldableRulesEditor.CUSTOM_COLOR, (0 until comboBox.itemCount).map { comboBox.getItemAt(it) })
+            assertFalse(checkBox.isSelected)
+            assertFalse(comboBox.isEnabled)
+            assertFalse(colorPanel.isVisible)
+
+            checkBox.isSelected = true
+            assertTrue(comboBox.isEnabled)
+            assertEquals(RuleColors.foregrounds.first(), comboBox.selectedItem)
+            assertFalse(colorPanel.isVisible)
+
+            comboBox.selectedItem = RuleColors.foreground("Green")
+            assertFalse(colorPanel.isVisible)
+
+            // the picker starts from the previously selected named color, as a custom color used as is in both themes
+            comboBox.selectedItem = FoldableRulesEditor.CUSTOM_COLOR
+            assertTrue(colorPanel.isVisible)
+            assertEquals(RuleColors.foreground("Green")!!.rgb, colorPanel.selectedColor!!.rgb)
+            assertTrue(isModified)
+            apply()
+
+            val stored = project.service<FoldableProjectSettings>().rules[0].foreground!!
+            assertTrue(stored.isCustom)
+            assertEquals(RuleColors.foreground("Green")!!.rgb, stored.rgb)
+
+            component.selectRule(0) // the table selection is reset on apply
+            assertEquals(FoldableRulesEditor.CUSTOM_COLOR, comboBox.selectedItem)
+            assertTrue(colorPanel.isVisible)
+
+            comboBox.selectedItem = RuleColors.foreground("Blue")
+            assertFalse(colorPanel.isVisible)
+            apply()
+            assertSame(RuleColors.foreground("Blue"), project.service<FoldableProjectSettings>().rules[0].foreground)
+
+            component.selectRule(0)
+            checkBox.isSelected = false
+            apply()
+            assertNull(project.service<FoldableProjectSettings>().rules[0].foreground)
         }
     }
 

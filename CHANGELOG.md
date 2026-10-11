@@ -20,6 +20,7 @@
 - Rule presets (Documentation, CI/CD, Build, Configuration, Dotfiles) offered by the `+` button of the rules table
 - The rule editor shows how many elements of the project the edited rule matches with the current options
 - Rules with a blank name or no patterns are reported with a warning in the rule editor and in the rules table; the fields show placeholders with examples
+- Theme-aware palette of named group colors (Blue, Green, Orange, Rose, Violet, Yellow, Gray) in the rule editor; the backgrounds reuse the platform File Colors, so they follow the light/dark theme and its overrides, while `Custom…` still opens the color picker
 
 ### Changed
 
@@ -29,6 +30,7 @@
 - A trailing slash in a pattern is no longer ignored: `build/` now matches directories only, use `build` to match both files and directories
 - Settings page layout: the pattern field and the table column are called `Patterns` (a rule is a name plus patterns and a style), `Match directories` was renamed to `Also fold directories`, the options depending on `Enable folding` are indented, and the support note moved to the bottom of the page
 - New rules start with an empty name and patterns instead of `Rule name` and `*.md`; rules with a blank name are labeled `Unnamed rule` in the Project View, and rules with no patterns are kept (but not applied) instead of being silently dropped
+- Group colors picked from the palette are stored by name (`Blue`) and newly enabled colors default to the palette instead of a color derived from the current theme; custom colors stored by earlier versions are kept and still used as is in both themes
 
 ### Fixed
 

@@ -71,16 +71,19 @@ enum class RuleAction {
 /**
  * Folding rule. New rules start with an empty [name] and [pattern]; such rules are kept, but not applied until filled in,
  * see [isActive].
+ *
+ * The [background] and [foreground] of the folding group are either theme-aware [RuleColor]s from the [RuleColors] palette
+ * or custom colors picked by the user, see [ColorConverter].
  */
 data class Rule(
     var name: String = "",
 
     var pattern: String = "",
 
-    @get:OptionTag(converter = ColorConverter::class)
+    @get:OptionTag(converter = BackgroundColorConverter::class)
     var background: Color? = null,
 
-    @get:OptionTag(converter = ColorConverter::class)
+    @get:OptionTag(converter = ForegroundColorConverter::class)
     var foreground: Color? = null,
 
     var action: RuleAction = RuleAction.GROUP,
@@ -138,11 +141,19 @@ data class Rule(
     }
 }
 
-private class ColorConverter : Converter<Color>() {
+/**
+ * Stores a [RuleColor] by its id (`Blue`), and a custom color by its ARGB value (`-16777216`), as the earlier versions did.
+ */
+private abstract class ColorConverter(private val palette: List<RuleColor>) : Converter<Color>() {
 
-    override fun toString(value: Color) = value.rgb.toString()
+    override fun toString(value: Color) = (value as? RuleColor)?.id ?: value.rgb.toString()
 
     // java.awt.Color is required here to preserve the alpha channel; the result is wrapped in JBColor anyway
     @Suppress("UseJBColor")
-    override fun fromString(value: String) = runCatching { Color(value.toInt(), true).let { JBColor(it, it) } }.getOrNull()
+    override fun fromString(value: String) = palette.firstOrNull { it.id == value }
+        ?: value.toIntOrNull()?.let { Color(it, true) }?.let { JBColor(it, it) }
 }
+
+private class BackgroundColorConverter : ColorConverter(RuleColors.backgrounds)
+
+private class ForegroundColorConverter : ColorConverter(RuleColors.foregrounds)

@@ -16,7 +16,7 @@ The Foldable Project View is a plugin for the IntelliJ-based IDEs that lets you 
 
 Available features:
 - Fold matching root elements of the project modules in the Project View
-- Multiple named folding rules with custom foreground/background colors
+- Multiple named folding rules with theme-aware or custom foreground/background colors
 - Enable/disable folding via Preferences or Project View options menu
 - Optionally fold directories
 - Optionally fold in nested directories
@@ -81,6 +81,11 @@ are kept, but neither applied nor exposed as search scopes.
 The built-in `Ignored files` rule folds the files and folders ignored by the VCS. It cannot be removed, but it can be
 disabled (also with the <kbd>Fold Ignored Files</kbd> toggle in the Project View options menu), renamed, colored, moved
 to change its precedence, or switched to the `Hide` action.
+
+The foreground and background of a folding group are picked from a palette of named colors (Blue, Green, Orange, Rose,
+Violet, Yellow, Gray) that follow the IDE theme – the backgrounds are the platform File Colors, so the groups look like
+the scope-colored files around them, also when a theme overrides them. Choose <kbd>Custom…</kbd> to pick any other
+color; such a color is used as is in both the light and dark themes.
 
 By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
 to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored
