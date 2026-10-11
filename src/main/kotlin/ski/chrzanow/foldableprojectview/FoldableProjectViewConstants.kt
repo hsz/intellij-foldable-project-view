@@ -7,6 +7,18 @@ object FoldableProjectViewConstants {
 
     const val COLOR_COLUMN_TEXT = "Aa"
     const val STORAGE_FILE = "FoldableProjectView.xml"
+    const val PLUGIN_ID = "ski.chrzanow.foldableprojectview"
+
+    /**
+     * Help topic of the settings page; the platform routes the topics prefixed with the plugin id to the plugin's
+     * `WebHelpProvider`, see `FoldableProjectViewHelpProvider`.
+     */
+    const val HELP_TOPIC = "$PLUGIN_ID.settings"
+
+    /**
+     * Documentation opened by the `?` button of the settings page.
+     */
+    const val DOCUMENTATION_URL = "https://github.com/hsz/intellij-foldable-projectview#usage"
 
     /**
      * Maximum number of the project content files visited to compute the number of elements matched by a rule

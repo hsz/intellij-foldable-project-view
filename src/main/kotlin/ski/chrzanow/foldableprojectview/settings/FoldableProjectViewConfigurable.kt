@@ -13,6 +13,7 @@ import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.HELP_TOPIC
 import ski.chrzanow.foldableprojectview.bindSelected
 import ski.chrzanow.foldableprojectview.createPredicate
 import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
@@ -22,7 +23,7 @@ import javax.swing.JComponent
 
 class FoldableProjectViewConfigurable(private val project: Project) : BoundSearchableConfigurable(
     displayName = message("foldableProjectView.name"),
-    helpTopic = "FoldableProjectView",
+    helpTopic = HELP_TOPIC,
     _id = ID,
 ) {
 

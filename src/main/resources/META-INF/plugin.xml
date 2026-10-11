@@ -44,6 +44,9 @@
                 id="FoldableProjectViewConfigurable"
                 instance="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewConfigurable"/>
 
+        <webHelpProvider
+                implementation="ski.chrzanow.foldableprojectview.settings.FoldableProjectViewHelpProvider"/>
+
         <searchScopesProvider
                 implementation="ski.chrzanow.foldableprojectview.psi.search.FoldableProjectScopesProvider"/>
 
