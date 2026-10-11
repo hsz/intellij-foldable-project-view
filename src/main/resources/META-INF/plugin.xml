@@ -52,6 +52,16 @@
 
         <treeStructureProvider
                 implementation="ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider"/>
+
+        <!--suppress PluginXmlCapitalization -->
+        <notificationGroup
+                id="Foldable Project View"
+                displayType="STICKY_BALLOON"
+                key="notification.group.foldableProjectView"
+                bundle="messages.FoldableProjectViewBundle"/>
+
+        <postStartupActivity
+                implementation="ski.chrzanow.foldableprojectview.sponsor.SponsorNotificationActivity"/>
     </extensions>
 
     <actions>

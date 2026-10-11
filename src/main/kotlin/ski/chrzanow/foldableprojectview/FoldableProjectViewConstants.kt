@@ -1,6 +1,7 @@
 package ski.chrzanow.foldableprojectview
 
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 
 object FoldableProjectViewConstants {
@@ -36,4 +37,17 @@ object FoldableProjectViewConstants {
      * Project View refresh, see `Debouncer`.
      */
     val REFRESH_DELAY: Duration = 250.milliseconds
+
+    const val SPONSOR_GITHUB_URL = "https://github.com/sponsors/hsz"
+    const val SPONSOR_KOFI_URL = "https://ko-fi.com/hszanowski"
+    const val SPONSOR_PAYPAL_URL = "https://paypal.me/hsz"
+
+    /**
+     * Minimum number of project sessions with folding enabled, and the minimum time since the first of them,
+     * before the sponsorship notification is shown; it is snoozed for [SPONSOR_SNOOZE] every time it is shown.
+     * See `SponsorNotificationState`.
+     */
+    const val SPONSOR_MIN_SESSIONS = 10
+    val SPONSOR_MIN_USAGE: Duration = 14.days
+    val SPONSOR_SNOOZE: Duration = 90.days
 }
