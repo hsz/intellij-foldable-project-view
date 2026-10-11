@@ -38,8 +38,8 @@ class FoldableToggleOptionActionTest : BasePlatformTestCase() {
         if (dataId == "project") project else null
     }
 
-    fun `test fold root files action reflects and changes folding enabled`() {
-        val action = FoldRootFilesAction()
+    fun `test enable folding action reflects and changes folding enabled`() {
+        val action = EnableFoldingAction()
         settings.foldingEnabled = true
         assertTrue(action.isSelected(event(action)))
 
@@ -77,7 +77,7 @@ class FoldableToggleOptionActionTest : BasePlatformTestCase() {
     }
 
     fun `test changing option notifies listeners`() {
-        val action = FoldRootFilesAction()
+        val action = EnableFoldingAction()
         settings.foldingEnabled = true
         var notifications = 0
         project.messageBus.connect(testRootDisposable)

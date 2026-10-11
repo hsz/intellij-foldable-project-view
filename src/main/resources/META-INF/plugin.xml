@@ -63,8 +63,8 @@
     </extensions>
 
     <actions>
-        <action id="ProjectView.FoldRootFiles"
-                class="ski.chrzanow.foldableprojectview.actionSystem.FoldRootFilesAction">
+        <action id="ProjectView.EnableFolding"
+                class="ski.chrzanow.foldableprojectview.actionSystem.EnableFoldingAction">
             <add-to-group
                     group-id="ProjectView.ToolWindow.SecondaryActions"
                     relative-to-action="ProjectView.FoldIgnoredFiles"

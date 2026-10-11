@@ -31,6 +31,7 @@ _Foldable Project View is free and sponsor-supported. If it saves you time, cons
 
 ### Changed
 
+- The `Fold Root Files` action in the Project View options menu was renamed to `Enable Folding` to accurately reflect that it controls all folding and hiding rules across the project, not just root files
 - The global `Hide all groups` option was replaced with the per-rule `Hide` action; existing settings are migrated automatically
 - The global `Fold ignored files` option was replaced with the built-in `Ignored files` rule; the `Fold Ignored Files` action in the Project View options menu now toggles that rule, and existing settings are migrated automatically
 - The defaults for new projects are no longer overwritten every time the settings of any project are saved; they change only when stored explicitly

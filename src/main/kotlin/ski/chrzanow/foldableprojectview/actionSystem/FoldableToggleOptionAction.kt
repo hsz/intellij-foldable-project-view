@@ -44,7 +44,7 @@ abstract class FoldableToggleOptionAction(property: KMutableProperty1<FoldablePr
     }
 }
 
-class FoldRootFilesAction : FoldableToggleOptionAction(FoldableProjectSettings::foldingEnabled)
+class EnableFoldingAction : FoldableToggleOptionAction(FoldableProjectSettings::foldingEnabled)
 
 /**
  * Toggles the built-in `Ignored files` rule, see [foldIgnoredFiles].
