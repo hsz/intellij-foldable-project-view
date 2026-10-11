@@ -20,6 +20,7 @@ import com.intellij.ui.TableUtil
 import com.intellij.ui.components.JBViewport
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.panel
@@ -29,6 +30,9 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.HELP_TOPIC
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.SPONSOR_GITHUB_URL
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.SPONSOR_KOFI_URL
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.SPONSOR_PAYPAL_URL
 import ski.chrzanow.foldableprojectview.bindSelected
 import ski.chrzanow.foldableprojectview.createPredicate
 import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
@@ -143,6 +147,13 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 comment(message("foldableProjectView.settings.defaults.description"), MAX_LINE_LENGTH_WORD_WRAP)
             }
         }
+        // The sponsorship links go first, where they are seen while the plugin is actually being configured: a single line
+        // with GitHub Sponsors as the primary channel, instead of a group buried at the bottom of the page.
+        row(message("foldableProjectView.settings.support")) {
+            browserLink(message("foldableProjectView.settings.support.github"), SPONSOR_GITHUB_URL)
+            browserLink(message("foldableProjectView.settings.support.kofi"), SPONSOR_KOFI_URL)
+            browserLink(message("foldableProjectView.settings.support.paypal"), SPONSOR_PAYPAL_URL)
+        }.bottomGap(BottomGap.SMALL)
         row {
             checkBox(message("foldableProjectView.settings.foldingEnabled"))
                 .bindSelected(settingsProperty, FoldableProjectSettings::foldingEnabled)
@@ -214,11 +225,6 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             row {
                 comment(message("foldableProjectView.settings.defaults.same"), MAX_LINE_LENGTH_WORD_WRAP)
             }.visibleIf(differsFromDefaultsPredicate.not())
-        }
-        group(message("foldableProjectView.settings.support")) {
-            row {
-                comment(message("foldableProjectView.settings.support.comment"), MAX_LINE_LENGTH_WORD_WRAP)
-            }
         }
     }
 

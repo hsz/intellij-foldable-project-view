@@ -23,6 +23,7 @@
 - Rules with a blank name or no patterns are reported with a warning in the rule editor and in the rules table; the fields show placeholders with examples
 - Theme-aware palette of named group colors (Blue, Green, Orange, Rose, Violet, Yellow, Gray) in the rule editor; the backgrounds reuse the platform File Colors, so they follow the light/dark theme and its overrides, while `Custom…` still opens the color picker
 - A one-time notification inviting to sponsor the plugin, shown only after a couple of weeks of actual use, with `Remind me later` and `Don't show again` options; the plugin stays free
+- The sponsorship links in the settings moved from a group at the bottom of the page to a compact row of links at its top
 
 ### Changed
 
