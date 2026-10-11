@@ -19,7 +19,7 @@ object FoldableProjectViewConstants {
     /**
      * Documentation opened by the `?` button of the settings page.
      */
-    const val DOCUMENTATION_URL = "https://github.com/hsz/intellij-foldable-projectview#usage"
+    const val DOCUMENTATION_URL = "https://github.com/hsz/intellij-foldable-project-view#usage"
 
     /**
      * Maximum number of the project content files visited to compute the number of elements matched by a rule

@@ -4,8 +4,6 @@
 
 ## [Unreleased]
 
-_Foldable Project View is free and sponsor-supported. If it saves you time, consider [♥ sponsoring it on GitHub](https://github.com/sponsors/hsz)._
-
 ### Added
 
 - `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
@@ -122,10 +120,10 @@ _Foldable Project View is free and sponsor-supported. If it saves you time, cons
 - Live ProjectView preview
 - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
 
-[Unreleased]: https://github.com/hsz/intellij-foldable-projectview/compare/v2.1.0...HEAD
-[2.1.0]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.4...v2.1.0
-[1.1.4]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.1...v1.1.4
-[1.1.1]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.0.2...v1.1.0
-[1.0.2]: https://github.com/hsz/intellij-foldable-projectview/compare/v1.0.0...v1.0.2
-[1.0.0]: https://github.com/hsz/intellij-foldable-projectview/commits/v1.0.0
+[Unreleased]: https://github.com/hsz/intellij-foldable-project-view/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.4...v2.1.0
+[1.1.4]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.1...v1.1.4
+[1.1.1]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.0.2...v1.1.0
+[1.0.2]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.0.0...v1.0.2
+[1.0.0]: https://github.com/hsz/intellij-foldable-project-view/commits/v1.0.0

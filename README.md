@@ -1,59 +1,70 @@
 # Foldable Project View
 
-![Build](https://github.com/hsz/intellij-foldable-projectview/workflows/Build/badge.svg)
+![Build](https://github.com/hsz/intellij-foldable-project-view/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/17288.svg)](https://plugins.jetbrains.com/plugin/17288)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/17288.svg)](https://plugins.jetbrains.com/plugin/17288)
+[![Sponsor](https://img.shields.io/github/sponsors/hsz?style=flat&logo=githubsponsors&label=Sponsor)](https://github.com/sponsors/hsz)
 
 <!-- Plugin description -->
-
-> **Support Foldable Project View**
->
-> If you find this plugin useful, support its development via **[GitHub Sponsors](https://github.com/sponsors/hsz)**, **[Ko-fi](https://ko-fi.com/hszanowski)**, or **[PayPal](https://paypal.me/hsz)**.
->
-> You can also find my other projects on [GitHub](https://github.com/hsz).
-
-The Foldable Project View is a plugin for the IntelliJ-based IDEs that lets you fold files located in the root of your project.
+Foldable Project View declutters the Project View of the IntelliJ-based IDEs: files and directories matching your
+rules – READMEs, CI configs, build scripts, dotfiles, VCS-ignored files – are folded into named, colored groups or
+hidden altogether, so the code you work on is the first thing you see.
 
 Available features:
-- Fold matching root elements of the project modules in the Project View
-- Multiple named folding rules with theme-aware or custom foreground/background colors
-- Enable/disable folding via Preferences or Project View options menu
-- Optionally fold directories
-- Optionally fold in nested directories
+- Multiple named folding rules with gitignore-like patterns, applied to the module roots or to all nested directories
+- Group the matched elements or hide them from the Project View, per rule
+- Theme-aware palette of group colors (Blue, Green, Orange, Rose, Violet, Yellow, Gray) or custom colors
 - Built-in `Ignored files` rule folding the VCS-ignored files – rename, color, reorder, hide, or disable it like any other rule
-- Enable or disable rules without removing them
-- Hide empty groups
-- Hide matched elements instead of grouping them, per rule
-- Case-insensitive matching
-- Gitignore-like patterns with negation (`!pattern`), directory-only matching (`dir/`), and quoted names with spaces
+- Negation (`!pattern`), directory-only matching (`dir/`), quoted names with spaces, and case-insensitive matching
 - Rules reading their patterns from ignore-like files in the repository, like `.foldignore` or `.dockerignore`
-- Search scopes based on the folding rules
-- Live Project View preview
+- Rule presets (Documentation, CI/CD, Build, Configuration, Dotfiles) and a live count of the elements matched by the edited rule
+- Enable or disable rules without removing them, optionally fold directories, hide empty groups
+- Enable/disable folding via Settings or the Project View options menu
+- Search scopes based on the folding rules, e.g., in `Find in Files`
+- Live Project View preview in the settings
 - Defaults for new projects, synchronized by Settings Sync
+
+Works in all IntelliJ-based IDEs (IntelliJ IDEA, PyCharm, WebStorm, Rider, GoLand, …) on IntelliJ Platform 2025.3+.
+See the [documentation](https://github.com/hsz/intellij-foldable-project-view#usage) for the details.
+
+<a href="https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.mp4"><img src="https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.png" alt="Watch the Foldable Project View demo video" width="800" /></a>
+
+> **Free and sponsor-supported.** If the plugin saves you time, consider sponsoring it via
+> **[GitHub Sponsors](https://github.com/sponsors/hsz)**, **[Ko-fi](https://ko-fi.com/hszanowski)**, or **[PayPal](https://paypal.me/hsz)**.
+> You can also find my other projects on [GitHub](https://github.com/hsz).
+<!-- Plugin description end -->
 
 ## Demo
 
-<img src="https://github.com/hsz/intellij-foldable-projectview/raw/main/.github/readme/foldable-projectview.gif" alt="Foldable Project View Demo" />
+<!--
+  GitHub renders <video> only for files uploaded through its web editor (githubusercontent.com / user-attachments URLs),
+  a committed .mp4 is stripped – see https://bobbyhadz.com/blog/embed-video-into-github-readme-markdown.
+  To get an inline player: edit README.md on github.com, drag .github/readme/Foldable-small.mp4 (< 10 MB) into the
+  editor, and replace the poster link below with the generated URL.
+-->
+[![Watch the Foldable Project View demo video](.github/readme/Foldable.png)](https://github.com/hsz/intellij-foldable-project-view/raw/main/.github/readme/Foldable.mp4)
 
-<!-- Plugin description end -->
+## Compatibility
 
-## Screenshots
-
-### Project View
-![Project View](.github/readme/project-view.png)
-
-### Preferences
-![Preferences](.github/readme/preferences.png)
+- IntelliJ Platform 2025.3 and newer
+- All IntelliJ-based IDEs: IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, Rider, GoLand, CLion, RubyMine, DataGrip, Android Studio, …
 
 ## Usage
 
-Open <kbd>Settings/Preferences</kbd> > <kbd>Tools</kbd> > <kbd>Foldable Project View</kbd> and define the folding rules.
+Open <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Foldable Project View</kbd> and define the folding rules.
 Each rule has a name, which is used as the group label in the Project View, and a list of space-separated
 gitignore-like glob patterns in the <kbd>Patterns</kbd> field, e.g.:
 
 ```
 README.md *.yml !docker-compose.yml gradle* .github/ "My Notes.md"
 ```
+
+The <kbd>Preview</kbd> next to the settings is a live, read-only Project View reflecting the unsaved settings: selecting
+a rule in the table highlights its folding group in the preview, and selecting a group in the preview selects its rule.
+Folding as a whole is switched with <kbd>Enable folding</kbd> on the settings page or <kbd>Enable Folding</kbd> in the
+Project View options menu (<kbd>⋮</kbd> in the Project tool window header).
+
+### Rules and patterns
 
 Patterns are matched against paths relative to the module content root:
 
@@ -63,37 +74,50 @@ Patterns are matched against paths relative to the module content root:
 - a trailing slash matches directories only (`build/`), if <kbd>Also fold directories</kbd> is enabled,
 - a leading `!` negates the pattern: `*.yml !docker-compose.yml` matches all YAML files except `docker-compose.yml`;
   as in gitignore, the last matching pattern decides,
-- names containing spaces are wrapped in double quotes (`"My Notes.md"`) or have the spaces escaped (`My\ Notes.md`).
+- names containing spaces are wrapped in double quotes (`"My Notes.md"`) or have the spaces escaped (`My\ Notes.md`),
+- matching is case-insensitive unless <kbd>Case-sensitive</kbd> is enabled.
 
 The <kbd>+</kbd> button of the rules table adds an empty rule or one of the presets (Documentation, CI/CD, Build,
 Configuration, Dotfiles) that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
 project the rule matches with the current options – hover the counter to see the first matched paths – and the <kbd>?</kbd>
-icon next to the <kbd>Patterns</kbd> field recaps the pattern syntax. Rules with no name are labeled `Unnamed rule`, rules with no patterns
-are kept but not applied, and both are reported with a warning. Invalid patterns (e.g., `[z-a]`) are skipped; the
-settings page reports them with a warning next to the pattern field and in the rules table. Rules are applied in order –
-the first matching rule takes precedence. Folding rules are also available as search scopes (e.g., in
-<kbd>Find in Files</kbd>).
+icon next to the <kbd>Patterns</kbd> field recaps the pattern syntax.
 
-The <kbd>Preview</kbd> next to the settings is a live, read-only Project View reflecting the unsaved settings: selecting
-a rule in the table highlights its folding group in the preview, and selecting a group in the preview selects its rule.
+Rules are applied in order – the first matching rule takes precedence. Rules with no name are labeled `Unnamed rule`,
+rules with no patterns are kept but not applied, and both are reported with a warning. Invalid patterns (e.g., `[z-a]`)
+are skipped; the settings page reports them with a warning next to the pattern field and in the rules table.
+
+### Group or hide
 
 Each rule either groups the matched elements into a folding group (the default) or hides them from the Project View
-entirely – pick the action in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
-or the rule's search scope. Rules can be disabled with the checkbox in the first column of the table – disabled rules
-are kept, but neither applied nor exposed as search scopes.
+entirely – pick the <kbd>Action</kbd> in the rule editor. Hidden elements can still be found with <kbd>Search Everywhere</kbd>
+or the rule's search scope.
+
+Rules can be disabled with the checkbox in the first column of the table – disabled rules are kept, but neither applied
+nor exposed as search scopes. By default, a module root shows the group of every rule, even an empty one, so the rules
+are visible at a glance; <kbd>Hide empty groups</kbd> removes the groups whose rules match nothing (nested directories
+never show empty groups).
+
+Folding rules are also available as search scopes (e.g., in <kbd>Find in Files</kbd>), named after the rules.
+
+### Ignored files
 
 The built-in `Ignored files` rule folds the files and folders ignored by the VCS. It cannot be removed, but it can be
 disabled (also with the <kbd>Fold Ignored Files</kbd> toggle in the Project View options menu), renamed, colored, moved
 to change its precedence, or switched to the `Hide` action.
+
+### Colors
 
 The foreground and background of a folding group are picked from a palette of named colors (Blue, Green, Orange, Rose,
 Violet, Yellow, Gray) that follow the IDE theme – the backgrounds are the platform File Colors, so the groups look like
 the scope-colored files around them, also when a theme overrides them. Choose <kbd>Custom…</kbd> to pick any other
 color; such a color is used as is in both the light and dark themes.
 
-By default, folding is applied to the module roots only. Enable <kbd>Fold in nested directories</kbd> to apply the rules
-to the content of all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored
-files are folded in the module roots only.
+### Directories, nested directories, and scope panes
+
+By default, folding is applied to the module roots only, and only files are folded. Enable <kbd>Also fold directories</kbd>
+to fold the matching directories as well, and <kbd>Fold in nested directories</kbd> to apply the rules to the content of
+all directories – anchored patterns like `/README.md` still match root elements only, and VCS-ignored files are folded
+in the module roots only.
 
 Folding works in the <kbd>Project</kbd> pane as well as in the scope-based panes (<kbd>Project Files</kbd>, custom scopes).
 The scope-based panes pass only files to the plugin, so directories are not folded there, even with <kbd>Also fold directories</kbd> enabled.
@@ -128,6 +152,18 @@ defaults, which are kept at the IDE level and synchronized by Settings Sync. The
 - the same page under the settings for new projects (<kbd>File</kbd> > <kbd>New Projects Setup</kbd> >
   <kbd>Settings for New Projects…</kbd>) edits the defaults directly.
 
+## Installation
+
+- Using the IDE built-in plugin system:
+
+  <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Foldable Project View"</kbd> >
+  <kbd>Install Plugin</kbd>
+
+- Manually:
+
+  Download the [latest release](https://github.com/hsz/intellij-foldable-project-view/releases/latest) and install it manually using
+  <kbd>Settings</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+
 ## Development
 
 ```bash
@@ -137,18 +173,13 @@ defaults, which are kept at the IDE level and synchronized by Settings Sync. The
 ./gradlew verifyPlugin  # run the IntelliJ Plugin Verifier
 ```
 
-## Installation
+The plugin description shown on the JetBrains Marketplace is generated from the section of this file between the
+`<!-- Plugin description -->` and `<!-- Plugin description end -->` markers; the `What's New` notes come from
+[CHANGELOG.md](CHANGELOG.md).
 
-- Using IDE built-in plugin system:
-  
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Foldable Project View"</kbd> >
-  <kbd>Install Plugin</kbd>
-  
-- Manually:
+## Changelog
 
-  Download the [latest release](https://github.com/hsz/intellij-foldable-projectview/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
-
+See [CHANGELOG.md](CHANGELOG.md) for the release history.
 
 ---
 Plugin based on the [IntelliJ Platform Plugin Template][template].
