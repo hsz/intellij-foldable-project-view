@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-11
+
 ### Added
 
 - `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
@@ -120,7 +122,8 @@
 - Live ProjectView preview
 - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
 
-[Unreleased]: https://github.com/hsz/intellij-foldable-project-view/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/hsz/intellij-foldable-project-view/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.4...v2.1.0
 [1.1.4]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.1...v1.1.4
 [1.1.1]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.0...v1.1.1
