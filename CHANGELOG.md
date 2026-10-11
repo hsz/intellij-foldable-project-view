@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+_Foldable Project View is free and sponsor-supported. If it saves you time, consider [♥ sponsoring it on GitHub](https://github.com/sponsors/hsz)._
+
 ### Added
 
 - `Fold in nested directories` option to apply the folding rules to the content of all directories, not only to the module roots ([#6](https://github.com/hsz/intellij-foldable-project-view/issues/6), [#30](https://github.com/hsz/intellij-foldable-project-view/issues/30))
@@ -25,6 +27,7 @@
 - A one-time notification inviting to sponsor the plugin, shown only after a couple of weeks of actual use, with `Remind me later` and `Don't show again` options; the plugin stays free
 - The sponsorship links in the settings moved from a group at the bottom of the page to a compact row of links at its top
 - `♥ Sponsor Foldable Project View` action at the bottom of the Project View options menu, opening the GitHub Sponsors page
+- The Marketplace `What's New` notes are generated from this changelog and open with a one-line reminder that the plugin is free and sponsor-supported
 
 ### Changed
 
