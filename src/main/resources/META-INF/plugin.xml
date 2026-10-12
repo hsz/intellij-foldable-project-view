@@ -7,6 +7,11 @@
 
     <depends>com.intellij.modules.platform</depends>
 
+    <!-- Loaded only when the bundled JSON plugin is available; see ski.chrzanow.foldableprojectview.json.xml -->
+    <content>
+        <module name="ski.chrzanow.foldableprojectview.json"/>
+    </content>
+
     <resource-bundle>messages.FoldableProjectViewBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">

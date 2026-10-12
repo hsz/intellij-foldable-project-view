@@ -6,18 +6,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.SearchScopeProvider
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
+import ski.chrzanow.foldableprojectview.rules.FoldableRulesResolver
 
 class FoldableProjectScopesProvider : SearchScopeProvider {
 
     override fun getDisplayName() = message("foldableProjectView.name")
 
     override fun getSearchScopes(project: Project, dataContext: DataContext): List<SearchScope> {
-        val settings = project.service<FoldableProjectSettings>()
+        val state = project.service<FoldableRulesResolver>().resolve()
 
         // The built-in ignored files rule has no patterns to search by, so only the active rules with patterns are exposed.
-        return settings.rules
+        return state.rules
             .filter { it.isActive && it.usesPatterns }
-            .map { it.getScope(project, settings) }
+            .map { it.getScope(project, state) }
     }
 }

@@ -1,0 +1,8 @@
+name: Maven
+description: Maven wrapper and build descriptors
+tags: [maven, java, build]
+rules:
+  - id: maven
+    name: Maven
+    patterns: ["pom.xml", "mvnw", "mvnw.cmd", ".mvn/", "target/"]
+    background: Orange

@@ -1,0 +1,8 @@
+name: IDE
+description: Settings of the IDEs and editors
+tags: [ide, config]
+rules:
+  - id: ide
+    name: IDE
+    patterns: [".idea/", "*.iml", ".vscode/", ".fleet/", ".project", ".classpath", ".settings/", "*.sublime-*"]
+    background: Gray

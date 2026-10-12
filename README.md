@@ -17,7 +17,8 @@ Available features:
 - Built-in `Ignored files` rule folding the VCS-ignored files – rename, color, reorder, hide, or disable it like any other rule
 - Negation (`!pattern`), directory-only matching (`dir/`), quoted names with spaces, and case-insensitive matching
 - Rules reading their patterns from ignore-like files in the repository, like `.foldignore` or `.dockerignore`
-- Rule presets (Documentation, CI/CD, Build, Configuration, Dotfiles) and a live count of the elements matched by the edited rule
+- Rule set files: `.foldableprojectview.yaml` versioned with the project, `~/.config/foldableprojectview/rules.yaml` applied to all your projects, and presets – built-in or your own – reusable via `extends`
+- Rule presets (Documentation, CI/CD, Build, Configuration, Dotfiles, Gradle, Maven, Node.js, Python, Docker, IDE) and a live count of the elements matched by the edited rule
 - Enable or disable rules without removing them, optionally fold directories, hide empty groups
 - Enable/disable folding via Settings or the Project View options menu
 - Search scopes based on the folding rules, e.g., in `Find in Files`
@@ -70,7 +71,8 @@ Patterns are matched against paths relative to the module content root:
 - matching is case-insensitive unless <kbd>Case-sensitive</kbd> is enabled.
 
 The <kbd>+</kbd> button of the rules table adds an empty rule or one of the presets (Documentation, CI/CD, Build,
-Configuration, Dotfiles) that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
+Configuration, Dotfiles, Gradle, Maven, Node.js, Python, Docker, IDE, plus your own – see [Rule set files](#rule-set-files))
+that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
 project the rule matches with the current options – hover the counter to see the first matched paths – and the <kbd>?</kbd>
 icon next to the <kbd>Patterns</kbd> field recaps the pattern syntax.
 
@@ -130,12 +132,60 @@ LICENSE*
 
 The files are looked up in the content root of every module, so each module can have its own `.foldignore`. The Project
 View is refreshed whenever the files change, and the settings page warns about files that do not exist in any module root.
-This is the way to go when the folding rules should be versioned together with the project while `.idea/FoldableProjectView.xml` is not.
+Such a file carries the patterns of a single rule; to version whole rules – names, colors, actions – use a rule set file.
+
+### Rule set files
+
+Rules do not have to live in the IDE settings. A *rule set* is a YAML file with the options and the rules, which can be
+versioned with the project, kept in your home directory for all your projects, or shared as a preset:
+
+```yaml
+# .foldableprojectview.yaml
+name: Kotlin Gradle project
+extends: [builtin:docs, builtin:ci]     # include presets (built-in or from your user directory) by id
+options:                                # optional; only the keys present are applied
+  foldNestedDirectories: true
+rules:
+  - id: gradle                          # stable identity, derived from the name when missing
+    name: Gradle
+    patterns: ["gradle/", "gradlew*", "*.gradle.kts", "gradle.properties"]
+    background: Green                   # palette name or #RRGGBB
+    action: group                       # group (default) | hide
+  - id: local
+    name: Local
+    patternsFiles: [.foldignore]        # a rule reading its patterns from ignore-like files
+  - id: docs                            # override a rule of an included preset by id
+    enabled: false
+```
+
+The rule sets are discovered in layers; a later layer adds rules or overrides the earlier ones by `id`:
+
+1. **Built-in presets** shipped with the plugin ([`src/main/resources/presets`](src/main/resources/presets)) – never applied
+   on their own, only offered by the <kbd>+</kbd> button or included via `extends: [builtin:<name>]`. Contributions are
+   welcome: a preset is a single YAML file, see the [README](src/main/resources/presets/README.md) there.
+2. **User directory** – `~/.config/foldableprojectview` by default, configurable on the settings page:
+   `rules.yaml` is applied to every project you open, and the YAML files of the `presets` subdirectory are offered as
+   presets next to the built-in ones and reachable as `extends: [user:<name>]`. Dotfiles-friendly.
+3. **Project files** – `.foldableprojectview.yaml` in the project root and in the module content roots, versioned with
+   the project, so a team shares the rules without committing `.idea`.
+4. **IDE settings** – `.idea/FoldableProjectView.xml`, the rules edited on the settings page. A settings rule with the
+   `id` of a file rule replaces it.
+
+On the settings page, the rules of the files are listed with their origin (<kbd>Project file</kbd>, <kbd>User file</kbd>)
+and are read-only – <kbd>Edit File</kbd> opens the file – except for the <kbd>Enabled</kbd> checkbox, which is stored per
+project. The options set by a file disable the corresponding checkboxes, and the page lists the files in effect and the
+files that could not be read. The Project View is refreshed whenever a rule set file changes.
+
+To get started from the rules you already have, use the toolbar of the rules table: <kbd>Export Rules to File…</kbd> writes
+the options and the rules of the settings to a `.foldableprojectview.yaml` (and opens it), <kbd>Save as User Defaults</kbd>
+writes them to `~/.config/foldableprojectview/rules.yaml`. A JSON schema is attached to the files, so the IDE offers
+completion and validation while they are edited (with the bundled JSON and YAML plugins).
 
 ### Defaults for new projects
 
 Settings are stored per project in `.idea/FoldableProjectView.xml`. Projects without stored settings start with the
-defaults, which are kept at the IDE level and synchronized by Settings Sync. The defaults change only when you ask for it:
+defaults, which are kept at the IDE level and synchronized by Settings Sync (prefer the user `rules.yaml` described above
+when the rules should apply to the existing projects too, or live in your dotfiles). The defaults change only when you ask for it:
 
 - check <kbd>Use as defaults for new projects</kbd> in the project settings to store the settings as the defaults when
   they are applied – like any other change on the page, the request is discarded by <kbd>Cancel</kbd>,

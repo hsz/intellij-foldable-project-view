@@ -3,34 +3,72 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.execution.util.ListTableWithButtons
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.Separator
+import com.intellij.openapi.components.service
+import com.intellij.openapi.fileChooser.FileChooserFactory
+import com.intellij.openapi.fileChooser.FileSaverDescriptor
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.util.transform
 import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.*
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.COLOR_COLUMN_TEXT
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.RULE_SET_FILE
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
+import ski.chrzanow.foldableprojectview.rules.FoldableRulesResolver
+import ski.chrzanow.foldableprojectview.rules.RuleSet
+import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
+import ski.chrzanow.foldableprojectview.rules.RuleSetYaml
 import java.awt.Component
+import java.nio.file.Path
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
+import kotlin.io.path.exists
 
-class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty<FoldableProjectSettings>) : ListTableWithButtons<Rule>() {
+/**
+ * Table of the folding rules in effect for the [project]: the rules of the rule set files followed by the rules of the
+ * edited settings, see [FoldableRulesResolver]. The rules of the files are read-only, except for the `Enabled` checkbox,
+ * which is stored per project as an override; the rest is written back to the edited settings.
+ */
+class FoldableRulesTable(
+    private val settingsProperty: ObservableMutableProperty<FoldableProjectSettings>,
+    private val project: Project,
+) : ListTableWithButtons<Rule>() {
+
+    private val resolver
+        get() = project.service<FoldableRulesResolver>()
+
+    private val repository
+        get() = service<RuleSetRepository>()
 
     private val rulesProperty = settingsProperty.transform(
-        { it.rules },
-        {
+        { resolver.resolve(it).rules },
+        { elements ->
             settingsProperty.get().apply {
+                val defaults = resolver.resolve(this).fileRuleDefaults
                 with(rules) {
                     clear()
-                    addAll(it)
+                    addAll(elements.filterNot(Rule::isFromFile))
+                }
+                with(ruleOverrides) {
+                    clear()
+                    elements
+                        .filter(Rule::isFromFile)
+                        .filter { defaults[it.effectiveId] != it.enabled }
+                        .forEach { add(RuleOverride(it.effectiveId, it.enabled)) }
                 }
             }
         },
@@ -62,39 +100,68 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
         .createDecorator(tableView, null)
         .setToolbarPosition(ActionToolbarPosition.RIGHT)
         .setPanelBorder(JBUI.Borders.empty())
+        .addExtraAction(exportAction())
+        .addExtraAction(saveUserDefaultsAction())
 
     override fun isUpDownSupported() = true
 
     override fun shouldEditRowOnCreation() = false
 
-    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), PatternsColumn())
+    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), PatternsColumn(), OriginColumn())
 
     override fun createElement() = Rule()
 
     /**
-     * The `+` button offers an empty rule and the [RulePresets] instead of adding a rule right away.
+     * The `+` button offers an empty rule and the presets – built-in and from the user directory, see [RuleSetRepository] –
+     * instead of adding a rule right away. A preset is copied into the settings, so it can be adjusted afterwards.
      */
     override fun createAddAction() = AnActionButtonRunnable { button ->
         val group = DefaultActionGroup().apply {
-            add(addRuleAction(message("foldableProjectView.settings.presets.empty")) { createElement() })
-            add(Separator.create(message("foldableProjectView.settings.presets")))
-            RulePresets.create().forEach { preset ->
-                add(addRuleAction(preset.name) { preset })
+            add(addRuleAction(message("foldableProjectView.settings.presets.empty")) { listOf(createElement()) })
+            add(Separator.create(message("foldableProjectView.settings.presets.builtin")))
+            repository.builtinPresets.forEach { add(presetAction(it)) }
+            add(Separator.create(message("foldableProjectView.settings.presets.user")))
+            val userPresets = repository.userPresets().ruleSets
+            if (userPresets.isEmpty()) {
+                add(DumbAwareAction.create(message("foldableProjectView.settings.presets.user.empty", repository.userPresetsDirectory.toPresentableUserPath())) {}
+                    .apply { templatePresentation.isEnabled = false })
             }
+            userPresets.forEach { add(presetAction(it)) }
         }
         JBPopupFactory.getInstance()
             .createActionGroupPopup(null, group, button.dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, true)
             .show(button.preferredPopupPoint)
     }
 
-    private fun addRuleAction(text: String, rule: () -> Rule) = DumbAwareAction.create(text) {
-        addRule(rule())
+    private fun presetAction(preset: RuleSet) = addRuleAction(preset.name, preset.description) { repository.copyRules(preset) }
+
+    private fun addRuleAction(text: String, description: String? = null, rules: () -> List<Rule>) = DumbAwareAction.create(text) {
+        addRules(rules())
+    }.apply {
+        templatePresentation.description = description?.takeIf(String::isNotBlank)
     }
+
+    /**
+     * Reloads the rows from the edited settings merged with the rule set files, see [FoldableRulesResolver].
+     */
+    fun reload() = setValues(rulesProperty.get())
 
     /**
      * Appends the [rule] to the table and selects it.
      */
     fun addRule(rule: Rule) = addNewElement(rule)
+
+    /**
+     * Appends the [rules] to the table and selects the first of them.
+     */
+    fun addRules(rules: List<Rule>) {
+        rules.forEach { super.addNewElement(it) }
+        rules.firstOrNull()?.let { first ->
+            SwingUtilities.invokeLater {
+                tableView.selection = listOf(first)
+            }
+        }
+    }
 
     override fun addNewElement(newElement: Rule) {
         super.addNewElement(newElement)
@@ -104,11 +171,83 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
     }
 
     /**
-     * The built-in ignored files rule is pinned: it can be disabled, but not removed.
+     * The built-in ignored files rule is pinned: it can be disabled, but not removed. The rules of the files are removed
+     * by editing the files.
      */
-    override fun canDeleteElement(selection: Rule) = selection.type != RuleType.IGNORED_FILES
+    override fun canDeleteElement(selection: Rule) = selection.type != RuleType.IGNORED_FILES && !selection.isFromFile
 
-    override fun cloneElement(variable: Rule) = variable.copy()
+    /**
+     * Writes the edited options and rules to a `.foldableprojectview.yaml` chosen by the user, see [RuleSetYaml.export].
+     */
+    private fun exportAction() = object : DumbAwareAction(
+        message("foldableProjectView.settings.ruleSets.export"),
+        message("foldableProjectView.settings.ruleSets.export.description"),
+        AllIcons.ToolbarDecorator.Export,
+    ) {
+        override fun actionPerformed(e: AnActionEvent) {
+            val descriptor = FileSaverDescriptor(
+                message("foldableProjectView.settings.ruleSets.export.title"),
+                message("foldableProjectView.settings.ruleSets.export.message"),
+                "yaml",
+                "yml",
+            )
+            val baseDir = project.takeUnless { it.isDefault }?.guessProjectDir()
+            val target = FileChooserFactory.getInstance()
+                .createSaveFileDialog(descriptor, project.takeUnless { it.isDefault })
+                .save(baseDir, RULE_SET_FILE)
+                ?.file
+                ?.toPath()
+                ?: return
+            val name = project.takeUnless { it.isDefault }?.name ?: message("foldableProjectView.name")
+            writeRuleSet(target, RuleSetYaml.export(settingsProperty.get(), name))
+        }
+    }
+
+    /**
+     * Writes the edited options and rules to the user `rules.yaml` applied to every project, see [RuleSetRepository.writeUserRules].
+     */
+    private fun saveUserDefaultsAction() = object : DumbAwareAction(
+        message("foldableProjectView.settings.ruleSets.saveUserDefaults"),
+        message("foldableProjectView.settings.ruleSets.saveUserDefaults.description"),
+        AllIcons.Actions.MenuSaveall,
+    ) {
+        override fun actionPerformed(e: AnActionEvent) {
+            val target = repository.userRulesFile
+            if (target.exists()) {
+                val answer = Messages.showYesNoDialog(
+                    project,
+                    message("foldableProjectView.settings.ruleSets.saveUserDefaults.confirm", target.toPresentableUserPath()),
+                    message("foldableProjectView.settings.ruleSets.saveUserDefaults.title"),
+                    Messages.getQuestionIcon(),
+                )
+                if (answer != Messages.YES) {
+                    return
+                }
+            }
+            writeRuleSet(target, RuleSetYaml.export(settingsProperty.get(), message("foldableProjectView.name")))
+        }
+    }
+
+    /**
+     * Writes the [ruleSet] to the [path], opens it in the editor, and re-emits the settings so the table and the preview
+     * pick up the new file.
+     */
+    private fun writeRuleSet(path: Path, ruleSet: RuleSet) {
+        runCatching { repository.write(path, ruleSet) }
+            .onFailure {
+                Messages.showErrorDialog(project, message("foldableProjectView.settings.ruleSets.failed", path, it.message.orEmpty()), message("foldableProjectView.name"))
+                return
+            }
+        if (!project.isDefault) {
+            LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { OpenFileDescriptor(project, it).navigate(true) }
+        }
+        settingsProperty.set(settingsProperty.get())
+    }
+
+    /**
+     * The rows are copies of the resolved rules; the origin is not a part of the data class, so it is carried over by hand.
+     */
+    override fun cloneElement(variable: Rule) = variable.copy().also { it.origin = variable.origin }
 
     /**
      * Blank rules are never dropped silently: they are kept, marked in the table, and not applied until filled in,
@@ -117,7 +256,8 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
     override fun isEmpty(element: Rule) = false
 
     /**
-     * Checkbox that enables or disables the rule without removing it.
+     * Checkbox that enables or disables the rule without removing it. It is the only editable property of the rules
+     * coming from the rule set files.
      */
     private class EnabledColumn : ColumnInfo<Rule, Boolean>(message("foldableProjectView.settings.enabled")) {
 
@@ -240,6 +380,24 @@ class FoldableRulesTable(private val settingsProperty: ObservableMutableProperty
                     icon = AllIcons.General.Warning
                     toolTipText = warning
                 }
+            }
+        }
+    }
+
+    /**
+     * Shows where the rule is stored: the IDE settings, or the rule set file it comes from, see [Rule.origin].
+     */
+    private class OriginColumn : ColumnInfo<Rule, String>(message("foldableProjectView.settings.origin")) {
+
+        override fun getTooltipText() = message("foldableProjectView.settings.origin.tooltip")
+
+        override fun valueOf(item: Rule?) = item?.origin?.displayName ?: message("foldableProjectView.settings.origin.settings")
+
+        override fun getRenderer(item: Rule?) = object : ColoredTableCellRenderer() {
+
+            override fun customizeCellRenderer(table: JTable, value: Any?, selected: Boolean, hasFocus: Boolean, row: Int, column: Int) {
+                append(value?.toString().orEmpty(), SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                toolTipText = item?.origin?.path?.toString()
             }
         }
     }

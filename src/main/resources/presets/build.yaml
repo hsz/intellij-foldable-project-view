@@ -1,0 +1,7 @@
+name: Build
+description: Build scripts and lock files of the common build tools
+tags: [build, general]
+rules:
+  - id: build
+    name: Build
+    patterns: ["gradle/", "gradlew*", "*.gradle", "*.gradle.kts", "gradle.properties", "pom.xml", "Makefile", "CMakeLists.txt", "*.lock", "package-lock.json"]

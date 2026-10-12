@@ -13,20 +13,33 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.RULE_SET_FILE
+import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.USER_RULES_FILE
+import ski.chrzanow.foldableprojectview.rules.isolateUserDirectory
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
 import ski.chrzanow.foldableprojectview.settings.RuleType
+import ski.chrzanow.foldableprojectview.settings.RuleOverride
 import ski.chrzanow.foldableprojectview.settings.foldIgnoredFiles
 import java.awt.Color
+import java.nio.file.Path
+import kotlin.io.path.writeText
 
 class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
     private lateinit var settings: FoldableProjectSettings
     private lateinit var provider: FoldableTreeStructureProvider
+    private lateinit var userDirectory: Path
+    private lateinit var restoreUserDirectory: () -> Unit
 
     override fun setUp() {
         super.setUp()
+        // The rule set files of the developer must not leak into the tests.
+        isolateUserDirectory().let { (directory, restore) ->
+            userDirectory = directory
+            restoreUserDirectory = restore
+        }
         // A fresh state has no rules at all, including the built-in ignored files rule.
         settings = project.service<FoldableProjectSettings>().apply {
             copyFrom(FoldableProjectSettings())
@@ -43,6 +56,7 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
     override fun tearDown() {
         try {
             settings.copyFrom(FoldableProjectSettings())
+            restoreUserDirectory()
         } finally {
             super.tearDown()
         }
@@ -537,5 +551,90 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
 
         assertTrue(group.contains(readme))
         assertFalse(group.contains(gradle))
+    }
+
+    fun `test rules of the project rule set file are applied before the settings rules`() {
+        myFixture.addFileToProject(
+            RULE_SET_FILE,
+            """
+            rules:
+              - id: docs
+                name: Docs
+                patterns: ["*.md"]
+            """.trimIndent()
+        )
+        settings.rules.add(Rule("Gradle", "*.kts"))
+
+        val groups = modify().groups()
+
+        assertEquals(listOf("Docs", "Gradle"), groups.map { it.name })
+        assertEquals(listOf("CHANGELOG.md", "README.md"), groups[0].children.names())
+        assertTrue(groups[0].value.isFromFile)
+        assertFalse(groups[1].value.isFromFile)
+    }
+
+    fun `test project rule set file changes are applied`() {
+        val file = myFixture.addFileToProject(RULE_SET_FILE, "rules:\n  - {id: docs, name: Docs, patterns: ['*.md']}\n").virtualFile
+
+        assertEquals(listOf("CHANGELOG.md", "README.md"), modify().groups().single().children.names())
+
+        myFixture.saveText(file, "rules:\n  - {id: docs, name: Docs, patterns: ['*.kts']}\n")
+        assertEquals(listOf("build.gradle.kts"), modify().groups().single().children.names())
+    }
+
+    fun `test file rule disabled by an override is not applied`() {
+        myFixture.addFileToProject(RULE_SET_FILE, "rules:\n  - {id: docs, name: Docs, patterns: ['*.md']}\n")
+        settings.hideEmptyGroups = false
+
+        assertEquals(listOf("Docs"), modify().groups().map { it.name })
+
+        settings.ruleOverrides.add(RuleOverride("docs", enabled = false))
+        assertEmpty(modify().groups())
+    }
+
+    fun `test options of the project rule set file override the settings`() {
+        myFixture.addFileToProject(RULE_SET_FILE, "options:\n  matchDirectories: true\nrules: []\n")
+        settings.matchDirectories = false
+        settings.rules.add(Rule("Sources", "src docs"))
+
+        assertEquals(listOf("docs", "src"), modify().groups().single().children.names())
+    }
+
+    fun `test user rules are applied to the project and overridden by the project file by id`() {
+        userDirectory.resolve(USER_RULES_FILE).writeText(
+            """
+            rules:
+              - id: docs
+                name: Docs
+                patterns: ["*.md"]
+              - id: gradle
+                name: Gradle
+                patterns: ["*.kts"]
+            """.trimIndent()
+        )
+        myFixture.addFileToProject(RULE_SET_FILE, "rules:\n  - {id: docs, name: Documentation}\n")
+
+        val groups = modify().groups()
+
+        assertEquals(listOf("Documentation", "Gradle"), groups.map { it.name })
+        assertEquals(listOf("CHANGELOG.md", "README.md"), groups[0].children.names())
+        assertEquals(listOf("build.gradle.kts"), groups[1].children.names())
+    }
+
+    fun `test settings rule with the id of a file rule replaces it`() {
+        myFixture.addFileToProject(RULE_SET_FILE, "rules:\n  - {id: docs, name: Docs, patterns: ['*.md']}\n")
+        settings.rules.add(Rule("Docs", "*.kts"))
+
+        val group = modify().groups().single()
+
+        assertFalse(group.value.isFromFile)
+        assertEquals(listOf("build.gradle.kts"), group.children.names())
+    }
+
+    fun `test invalid project rule set file is skipped`() {
+        myFixture.addFileToProject(RULE_SET_FILE, "rules: [\n")
+        settings.rules.add(Rule("Docs", "*.md"))
+
+        assertEquals(listOf("Docs"), modify().groups().map { it.name })
     }
 }

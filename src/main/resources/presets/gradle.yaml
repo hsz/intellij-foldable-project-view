@@ -1,0 +1,8 @@
+name: Gradle
+description: Gradle wrapper, build scripts, and properties
+tags: [gradle, kotlin, java, build]
+rules:
+  - id: gradle
+    name: Gradle
+    patterns: ["gradle/", "gradlew", "gradlew.bat", "*.gradle", "*.gradle.kts", "gradle.properties", "gradle.lockfile", ".gradle/", "build/"]
+    background: Green

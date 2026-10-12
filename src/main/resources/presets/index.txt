@@ -1,0 +1,13 @@
+# Built-in presets offered by the `+` button of the rules table and reachable via `extends: [builtin:<name>]`.
+# One YAML file per line, in the order shown in the settings. See README.md in this directory.
+docs.yaml
+ci.yaml
+build.yaml
+config.yaml
+dotfiles.yaml
+gradle.yaml
+maven.yaml
+node.yaml
+python.yaml
+docker.yaml
+ide.yaml

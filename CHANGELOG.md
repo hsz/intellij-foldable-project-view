@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- Rule set files: folding rules and options can live in YAML files instead of the IDE settings – `.foldableprojectview.yaml` in the project root or a module content root (versioned with the project, no need to commit `.idea`), and `~/.config/foldableprojectview/rules.yaml` applied to every project. The files are merged with the IDE settings by rule `id`; the Project View is refreshed when they change
+- Presets are now YAML rule sets shipped in the plugin resources (`src/main/resources/presets`), so new presets can be contributed with a single file; they are offered by the `+` button and reusable from other rule sets via `extends: [builtin:<name>]`, but never applied on their own. New presets: Gradle, Maven, Node.js, Python, Docker, IDE
+- User presets: the YAML files of `~/.config/foldableprojectview/presets` are offered next to the built-in presets and reachable via `extends: [user:<name>]`; the user directory is configurable on the settings page
+- Rules from files are listed in the rules table with their origin (`Project file`, `User file`) and are read-only except for the `Enabled` checkbox, which is stored per project; the rule editor tells which file a rule comes from and opens it with `Edit File`. The options set by a file disable the corresponding checkboxes, and the page lists the files in effect and the files that could not be read
+- `Export Rules to File…` and `Save as User Defaults` actions in the toolbar of the rules table, writing the options and the rules of the settings to a `.foldableprojectview.yaml` or to the user `rules.yaml`
+- Rules got a stable `id` (derived from the name when not set), used by `extends` and by the per-project overrides
+- A JSON schema is attached to the rule set files for completion, documentation, and validation, when the bundled JSON plugin is available
+
 ## [3.0.0] - 2026-10-11
 
 ### Added

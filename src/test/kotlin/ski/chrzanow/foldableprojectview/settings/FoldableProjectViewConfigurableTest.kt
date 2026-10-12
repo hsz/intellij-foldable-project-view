@@ -26,7 +26,8 @@ import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants
 import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
-import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
+import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
+import ski.chrzanow.foldableprojectview.rules.isolateUserDirectory
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JEditorPane
@@ -37,6 +38,22 @@ import javax.swing.Scrollable
 import javax.swing.SwingConstants
 
 class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
+
+    private lateinit var restoreUserDirectory: () -> Unit
+
+    override fun setUp() {
+        super.setUp()
+        // The rule set files of the developer must not leak into the tests.
+        restoreUserDirectory = isolateUserDirectory().second
+    }
+
+    override fun tearDown() {
+        try {
+            restoreUserDirectory()
+        } finally {
+            super.tearDown()
+        }
+    }
 
     /**
      * Runs [block] with the application-level defaults replaced by [defaults], restoring the original ones afterwards.
@@ -490,28 +507,67 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     }
 
     fun `test blank rules are kept in the table`() = withRules(Rule("Docs", "*.md")) {
+        val repository = service<RuleSetRepository>()
         val settingsProperty = PropertyGraph().property(FoldableProjectSettings().apply { copyFrom(project.service<FoldableProjectSettings>()) })
-        val table = FoldableRulesTable(settingsProperty)
+        val table = FoldableRulesTable(settingsProperty, project)
+        val preset = repository.copyRules(repository.builtinPresets.first()).single()
 
         table.addRule(Rule())
         UIUtil.dispatchAllInvocationEvents()
-        table.addRule(RulePresets.create().first())
+        table.addRules(listOf(preset))
         UIUtil.dispatchAllInvocationEvents()
 
         assertEquals(listOf("Docs", "", "Documentation"), settingsProperty.get().rules.map { it.name })
-        assertEquals(RulePresets.create().first(), table.tableView.selection.single())
+        assertEquals(preset, table.tableView.selection.single())
+        assertEquals("docs", preset.id)
+        assertNull("preset rules are copied into the settings", preset.origin)
     }
 
-    fun `test presets are valid`() {
-        val presets = RulePresets.create()
+    fun `test file rules are listed read-only with their origin and the enabled override is stored`() = withRules(Rule("Docs", "*.md")) {
+        myFixture.addFileToProject(
+            FoldableProjectViewConstants.RULE_SET_FILE,
+            """
+            rules:
+              - id: gradle
+                name: Gradle
+                patterns: ["*.kts"]
+            """.trimIndent()
+        )
 
-        assertTrue(presets.isNotEmpty())
-        assertEquals(presets.size, presets.map { it.name }.distinct().size)
-        presets.forEach { preset ->
-            assertTrue(preset.name.isNotBlank())
-            assertTrue(preset.isActive)
-            assertEquals(RuleType.PATTERN, preset.type)
-            assertEmpty(GlobPatterns.invalidPatterns(preset.pattern))
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val table = component.rulesTable()
+            val rules = (0 until table.rowCount).map { table.getRow(it) as Rule }
+
+            assertEquals(listOf("Gradle", "Docs"), rules.map { it.name })
+            assertTrue(rules[0].isFromFile)
+            assertEquals(message("foldableProjectView.settings.origin.project"), rules[0].origin!!.displayName)
+            assertFalse(rules[1].isFromFile)
+
+            val fileRuleLabel = UIUtil.findComponentsOfType(component, JBLabel::class.java).single { it.name == FoldableRulesEditor.FILE_RULE_LABEL_NAME }
+            val ruleSetsLabel = UIUtil.findComponentsOfType(component, JBLabel::class.java).single { it.name == FoldableProjectViewConfigurable.RULE_SETS_LABEL_NAME }
+            assertTrue(ruleSetsLabel.text, ruleSetsLabel.text.contains(FoldableProjectViewConstants.RULE_SET_FILE))
+
+            component.selectRule(0)
+            assertTrue(fileRuleLabel.isVisible)
+            assertFalse(component.nameField().isEnabled)
+
+            component.selectRule(1)
+            assertFalse(fileRuleLabel.isVisible)
+            assertTrue(component.nameField().isEnabled)
+
+            // Disabling a file rule is stored as an override instead of a rule.
+            table.setValueAt(false, 0, 0)
+            assertTrue(isModified)
+            apply()
+
+            val settings = project.service<FoldableProjectSettings>()
+            assertEquals(listOf("Docs"), settings.rules.map { it.name })
+            assertEquals(listOf(RuleOverride("gradle", enabled = false)), settings.ruleOverrides)
+
+            // Re-enabling it removes the override.
+            table.setValueAt(true, 0, 0)
+            apply()
+            assertEmpty(settings.ruleOverrides)
         }
     }
 

@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/hsz/intellij-foldable-project-view/schemas/foldableprojectview.schema.json",
+  "title": "Foldable Project View rule set",
+  "description": "Folding rules of the Foldable Project View plugin: a `.foldableprojectview.yaml` file of a project, the user `rules.yaml`, or a preset.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the rule set. Required for presets, where it is shown in the `+` menu of the rules table."
+    },
+    "description": {
+      "type": "string",
+      "description": "What the rule set folds."
+    },
+    "tags": {
+      "type": "array",
+      "description": "Keywords used to group and suggest the presets, like `gradle` or `docs`.",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "extends": {
+      "type": "array",
+      "description": "Other rule sets to include before the rules of this one, by id: `builtin:docs` for a built-in preset, `user:gradle` for a preset of the user directory. A rule of this set with the id of an included rule overrides it.",
+      "items": { "type": "string", "pattern": "^(builtin:|user:)?[^\\s]+$" },
+      "uniqueItems": true
+    },
+    "options": {
+      "type": "object",
+      "description": "Options applied to the projects using this rule set; the keys left out keep the IDE settings.",
+      "additionalProperties": false,
+      "properties": {
+        "foldingEnabled": { "type": "boolean", "description": "Enable folding." },
+        "matchDirectories": { "type": "boolean", "description": "Also fold directories." },
+        "foldNestedDirectories": { "type": "boolean", "description": "Fold in nested directories, not only in the module roots." },
+        "hideEmptyGroups": { "type": "boolean", "description": "Hide the groups that match nothing." },
+        "caseSensitive": { "type": "boolean", "description": "Case-sensitive pattern matching." }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Folding rules, applied in order – the first matching rule takes precedence.",
+      "items": { "$ref": "#/definitions/rule" }
+    }
+  },
+  "definitions": {
+    "color": {
+      "type": "string",
+      "description": "A palette color (Blue, Green, Orange, Rose, Violet, Yellow, Gray) following the IDE theme, or a custom `#RRGGBB` / `#AARRGGBB` color.",
+      "pattern": "^(?i:blue|green|orange|rose|violet|yellow|gray)$|^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    },
+    "patterns": {
+      "description": "Gitignore-like glob patterns, as a list or a single space-separated text: `*` matches any characters but `/`, `**` any number of directories, `?` a single character, `[abc]` one of the listed characters; a leading `/` anchors the pattern to the module root, a trailing `/` matches directories only, a leading `!` excludes the matched elements.",
+      "oneOf": [
+        { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        { "type": "string" }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["id"] },
+        { "required": ["name"] },
+        { "properties": { "type": { "const": "ignoredFiles" } }, "required": ["type"] }
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable identity of the rule, used by `extends` and by the IDE settings to override it. Derived from the name (`CI/CD` becomes `ci-cd`) when missing.",
+          "pattern": "^[^\\s]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Label of the folding group in the Project View."
+        },
+        "patterns": { "$ref": "#/definitions/patterns" },
+        "patternsFiles": {
+          "description": "Paths of ignore-like files with one pattern per line (`.foldignore`, `.dockerignore`), relative to the module content root. A rule lists either `patterns` or `patternsFiles`.",
+          "oneOf": [
+            { "type": "array", "items": { "type": "string", "minLength": 1 } },
+            { "type": "string" }
+          ]
+        },
+        "type": {
+          "type": "string",
+          "description": "What the rule matches: `patterns` (default when `patterns` is present), `patternsFiles` (default when `patternsFiles` is present), or `ignoredFiles` for the built-in rule folding the VCS-ignored files.",
+          "enum": ["patterns", "patternsFiles", "ignoredFiles"]
+        },
+        "background": { "$ref": "#/definitions/color" },
+        "foreground": { "$ref": "#/definitions/color" },
+        "action": {
+          "type": "string",
+          "description": "`group` moves the matched elements into a folding group (default), `hide` removes them from the Project View.",
+          "enum": ["group", "hide"],
+          "default": "group"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Disabled rules are kept, but not applied.",
+          "default": true
+        }
+      },
+      "not": { "required": ["patterns", "patternsFiles"] }
+    }
+  }
+}

@@ -3,7 +3,9 @@ package ski.chrzanow.foldableprojectview.settings
 import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.Converter
 import com.intellij.util.xmlb.annotations.OptionTag
+import com.intellij.util.xmlb.annotations.Transient
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
+import ski.chrzanow.foldableprojectview.rules.RuleOrigin
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
 import com.intellij.ui.JBColor
@@ -74,6 +76,10 @@ enum class RuleAction {
  *
  * The [background] and [foreground] of the folding group are either theme-aware [RuleColor]s from the [RuleColors] palette
  * or custom colors picked by the user, see [ColorConverter].
+ *
+ * The [id] is a stable identity of the rule across the rule set files and the IDE settings: a rule set extending another
+ * one overrides its rules by id, and the IDE settings keep the per-project overrides of the file-sourced rules by id,
+ * see `RuleSetRepository` and `FoldableRulesResolver`. It is derived from the [name] when not set, see [effectiveId].
  */
 data class Rule(
     var name: String = "",
@@ -91,7 +97,39 @@ data class Rule(
     var type: RuleType = RuleType.PATTERN,
 
     var enabled: Boolean = true,
+
+    var id: String = "",
 ) {
+
+    /**
+     * Where the rule comes from: `null` for the rules stored in the IDE settings, otherwise the rule set file.
+     * Not persisted; set by `FoldableRulesResolver` when the layers are merged.
+     */
+    @get:Transient
+    var origin: RuleOrigin? = null
+
+    /**
+     * Whether the rule comes from a rule set file rather than the IDE settings, see [origin].
+     */
+    val isFromFile
+        get() = origin != null
+
+    /**
+     * The [id], or a slug derived from the [name] (`CI/CD` becomes `ci-cd`) when the id is not set.
+     * The built-in ignored files rule is always identified as [IGNORED_FILES_ID].
+     */
+    val effectiveId
+        get() = when {
+            type == RuleType.IGNORED_FILES -> IGNORED_FILES_ID
+            id.isNotBlank() -> id
+            else -> slug(name)
+        }
+
+    /**
+     * Whether [other] stands for this very rule: the same instance for the rules of the IDE settings, which the settings
+     * page edits in place, or the same file-sourced rule, whose instances are rebuilt when the files are re-read.
+     */
+    fun isSameAs(other: Rule?) = other != null && (this === other || (isFromFile && other.isFromFile && effectiveId == other.effectiveId))
 
     /**
      * Whether the rule is enabled and has anything to match.
@@ -123,6 +161,19 @@ data class Rule(
     fun getScope(project: Project, state: FoldableProjectState) = FoldableProjectSearchScope(project, state, this)
 
     companion object {
+
+        /**
+         * The [effectiveId] of the built-in ignored files rule, see [RuleType.IGNORED_FILES].
+         */
+        const val IGNORED_FILES_ID = "ignored-files"
+
+        /**
+         * Turns the [text] into an id: lowercase, with runs of non-alphanumeric characters replaced by a single dash.
+         */
+        fun slug(text: String) = text
+            .lowercase()
+            .replace(Regex("[^\\p{L}\\p{N}]+"), "-")
+            .trim('-')
 
         /**
          * Parses the space-separated paths of the patterns files, see [RuleType.PATTERNS_FILE].

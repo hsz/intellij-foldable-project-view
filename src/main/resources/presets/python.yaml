@@ -1,0 +1,8 @@
+name: Python
+description: Packaging, virtual environments, and the tooling configuration of Python projects
+tags: [python, build]
+rules:
+  - id: python
+    name: Python
+    patterns: ["pyproject.toml", "setup.py", "setup.cfg", "requirements*.txt", "Pipfile", "Pipfile.lock", "poetry.lock", "uv.lock", "tox.ini", ".venv/", "venv/", "*.egg-info/", "__pycache__/", ".pytest_cache/", ".mypy_cache/", ".ruff_cache/"]
+    background: Blue

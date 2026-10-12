@@ -23,7 +23,7 @@ import com.intellij.openapi.vcs.changes.VcsIgnoreManager
 import ski.chrzanow.foldableprojectview.Debouncer
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.REFRESH_DELAY
 import ski.chrzanow.foldableprojectview.psi.search.FoldableProjectSearchScope
-import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
+import ski.chrzanow.foldableprojectview.rules.FoldableRulesResolver
 import ski.chrzanow.foldableprojectview.settings.FoldableProjectState
 import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
@@ -34,10 +34,12 @@ import ski.chrzanow.foldableprojectview.settings.RuleType
  * according to the configured [Rule]s, or removes them from the Project View for the rules with the [RuleAction.HIDE] action.
  * The rules are applied in order, so the first matching rule takes precedence, including the built-in [RuleType.IGNORED_FILES] rule.
  * When [FoldableProjectState.foldNestedDirectories] is enabled, the rules are applied to the content of all directories.
+ *
+ * The rules come from the IDE settings merged with the rule set files, see [FoldableRulesResolver].
  */
 class FoldableTreeStructureProvider(private val project: Project) : TreeStructureProvider, DumbAware {
 
-    private var stateProvider: () -> FoldableProjectState = { project.service<FoldableProjectSettings>() }
+    private var stateProvider: () -> FoldableProjectState = { project.service<FoldableRulesResolver>().resolve() }
 
     /**
      * Scopes compiled for the given rules snapshot. [Rule]s are mutable, so the copies are stored to detect in-place edits.

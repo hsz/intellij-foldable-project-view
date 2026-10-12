@@ -44,6 +44,13 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
     @get:OptionTag("RULES")
     override var rules by list<Rule>()
 
+    /**
+     * Per-project overrides of the rules coming from the rule set files (the user `rules.yaml` and the project
+     * `.foldableprojectview.yaml`), keyed by the rule id; the rules themselves stay in the files, see `FoldableRulesResolver`.
+     */
+    @get:OptionTag("RULE_OVERRIDES")
+    var ruleOverrides by list<RuleOverride>()
+
     override fun getState() = this
 
     override fun loadState(state: FoldableProjectSettings) {
@@ -78,6 +85,16 @@ class FoldableProjectSettings : FoldableProjectState, BaseState(), PersistentSta
         }
     }
 }
+
+/**
+ * Override of a file-sourced rule stored in the IDE settings, see [FoldableProjectSettings.ruleOverrides].
+ * Only the `enabled` flag can be overridden: the rest of the rule is edited in its file.
+ */
+data class RuleOverride(
+    var id: String = "",
+
+    var enabled: Boolean = true,
+)
 
 /**
  * Whether the built-in [RuleType.IGNORED_FILES] rule is enabled. Changing it adds the rule if it is missing.

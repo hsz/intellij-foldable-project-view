@@ -1,0 +1,11 @@
+<!-- Optional part of the plugin loaded only when the bundled JSON plugin is available: attaches the rule set JSON schema
+     to the `.foldableprojectview.yaml` files, see RuleSetSchemaProviderFactory. -->
+<idea-plugin package="ski.chrzanow.foldableprojectview.json">
+    <dependencies>
+        <module name="intellij.json.backend"/>
+    </dependencies>
+
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory implementation="ski.chrzanow.foldableprojectview.json.RuleSetSchemaProviderFactory"/>
+    </extensions>
+</idea-plugin>

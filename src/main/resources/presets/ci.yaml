@@ -1,0 +1,7 @@
+name: CI/CD
+description: Continuous integration and deployment configuration
+tags: [ci, general]
+rules:
+  - id: ci
+    name: CI/CD
+    patterns: [".github/", ".gitlab-ci.yml", ".travis.yml", ".circleci/", "Jenkinsfile", "azure-pipelines.yml", "bitbucket-pipelines.yml", ".buildkite/"]

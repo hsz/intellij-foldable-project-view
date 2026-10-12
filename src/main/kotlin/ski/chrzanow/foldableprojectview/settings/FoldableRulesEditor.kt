@@ -2,6 +2,7 @@ package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.observable.properties.ObservableMutableProperty
 import com.intellij.openapi.observable.properties.ObservableProperty
 import com.intellij.openapi.observable.util.isNotNull
@@ -13,6 +14,7 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.ColorPanel
@@ -26,6 +28,8 @@ import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.selected
 import com.intellij.ui.layout.ComponentPredicate
+import com.intellij.ui.layout.and
+import com.intellij.ui.layout.not
 import com.intellij.util.ui.ColorIcon
 import com.intellij.util.ui.EmptyIcon
 import com.intellij.util.ui.UIUtil
@@ -68,6 +72,13 @@ class FoldableRulesEditor(
                 listener(it != null)
             }
     }
+
+    /**
+     * The rules coming from the rule set files are edited in the files, see [Rule.origin]; the editor only tells where.
+     */
+    private val fileRulePredicate = rulePredicate { it.isFromFile }
+
+    private val editablePredicate = selectedRowPredicate and fileRulePredicate.not()
 
     /**
      * Colors apply to the folding group only, so they are relevant for the [RuleAction.GROUP] action only.
@@ -130,7 +141,25 @@ class FoldableRulesEditor(
         null
     }
 
+    /**
+     * Label telling which file the selected file-sourced rule comes from, see [fileRulePredicate].
+     */
+    private val fileRuleLabel = JBLabel().apply {
+        name = FILE_RULE_LABEL_NAME
+        ruleProperty.afterChange { rule ->
+            text = rule?.origin?.let { message("foldableProjectView.settings.ruleSets.fileRule", it.displayName, it.path?.toPresentableUserPath() ?: it.ruleSet) }.orEmpty()
+        }
+    }
+
     override fun Panel.createContent() {
+        row {
+            cell(fileRuleLabel)
+            link(message("foldableProjectView.settings.ruleSets.editFile")) { openRuleFile() }
+                .visible(project != null)
+        }.visibleIf(fileRulePredicate)
+        row {
+            comment(message("foldableProjectView.settings.ruleSets.fileRule.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+        }.visibleIf(fileRulePredicate)
         rowsRange {
             row(message("foldableProjectView.settings.name.label")) {
                 textField()
@@ -213,7 +242,16 @@ class FoldableRulesEditor(
                 colorChooser(RuleColors.backgrounds, Rule::background, backgroundCheckBox.selected)
             }.rowComment(message("foldableProjectView.settings.color.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                 .enabledIf(groupActionPredicate)
-        }.enabledIf(selectedRowPredicate)
+        }.enabledIf(editablePredicate)
+    }
+
+    /**
+     * Opens the rule set file the selected rule comes from in the editor.
+     */
+    private fun openRuleFile() {
+        val project = project ?: return
+        val path = ruleProperty.get()?.origin?.path ?: return
+        LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { OpenFileDescriptor(project, it).navigate(true) }
     }
 
     /**
@@ -404,6 +442,9 @@ class FoldableRulesEditor(
 
         /** Component name of the description shown instead of the patterns for the built-in ignored files rule. */
         const val IGNORED_FILES_DESCRIPTION_NAME = "FoldableRulesEditor.ignoredFilesDescription"
+
+        /** Component name of the label telling which rule set file the selected rule comes from. */
+        const val FILE_RULE_LABEL_NAME = "FoldableRulesEditor.fileRule"
 
         /** The `Custom…` item of the color combo boxes, see [colorChooser]. */
         val CUSTOM_COLOR = Any()

@@ -1,0 +1,8 @@
+name: Node.js
+description: Package manifests, lock files, and the tooling configuration of JavaScript and TypeScript projects
+tags: [node, javascript, typescript, build]
+rules:
+  - id: node
+    name: Node.js
+    patterns: ["package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", ".npmrc", ".nvmrc", ".yarnrc*", "node_modules/", "tsconfig*.json", "*.config.js", "*.config.ts", "*.config.mjs", ".eslintrc*", ".prettierrc*", "eslint.config.*", "prettier.config.*"]
+    background: Yellow

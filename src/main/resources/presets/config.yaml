@@ -1,0 +1,7 @@
+name: Configuration
+description: Configuration files of tools and environments
+tags: [config, general]
+rules:
+  - id: config
+    name: Configuration
+    patterns: ["*.yml", "*.yaml", "*.toml", "*.properties", "*.ini", ".editorconfig", ".env*", "!.foldableprojectview.yaml"]

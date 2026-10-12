@@ -5,6 +5,8 @@ import com.intellij.configurationStore.serialize
 import com.intellij.openapi.util.JDOMUtil
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.util.xmlb.XmlSerializer
+import ski.chrzanow.foldableprojectview.rules.RuleOrigin
+import ski.chrzanow.foldableprojectview.rules.RuleSetLayer
 import java.awt.Color
 
 class FoldableProjectSettingsTest : LightPlatformTestCase() {
@@ -222,6 +224,35 @@ class FoldableProjectSettingsTest : LightPlatformTestCase() {
 
         assertNull(restored.rules.first().background)
         assertNull(restored.rules.first().foreground)
+    }
+
+    fun `test rule ids and overrides survive serialization and the origin is not stored`() {
+        val settings = FoldableProjectSettings().apply {
+            rules.add(Rule("Docs", "*.md", id = "docs").apply { origin = RuleOrigin(RuleSetLayer.PROJECT, "x", null) })
+            rules.add(Rule.ignoredFiles())
+            ruleOverrides.add(RuleOverride("gradle", enabled = false))
+        }
+
+        val element = serialize(settings)!!
+        val xml = JDOMUtil.write(element)
+        assertTrue(xml, xml.contains("""<option name="id" value="docs" />"""))
+        assertTrue(xml, xml.contains("RULE_OVERRIDES"))
+        assertFalse(xml, xml.contains("origin"))
+
+        val restored = roundtrip(settings)
+
+        assertEquals(settings.rules, restored.rules)
+        assertEquals("docs", restored.rules[0].id)
+        assertNull(restored.rules[0].origin)
+        assertEquals(listOf(RuleOverride("gradle", enabled = false)), restored.ruleOverrides)
+    }
+
+    fun `test effective id is derived from the name`() {
+        assertEquals("docs", Rule("Docs", "*.md").effectiveId)
+        assertEquals("ci-cd", Rule("CI/CD", "*.yml").effectiveId)
+        assertEquals("custom", Rule("Docs", "*.md", id = "custom").effectiveId)
+        assertEquals(Rule.IGNORED_FILES_ID, Rule.ignoredFiles().copy(name = "Noise").effectiveId)
+        assertEquals("", Rule().effectiveId)
     }
 
     fun `test copyFrom keeps rule colors`() {

@@ -4,11 +4,14 @@ import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure
 import com.intellij.ide.projectView.impl.ProjectViewPane
 import com.intellij.ide.util.PropertiesComponent
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.actionSystem.UiDataProvider
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.observable.properties.PropertyGraph
+import com.intellij.openapi.observable.util.transform
 import com.intellij.openapi.options.BoundSearchableConfigurable
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
@@ -18,6 +21,8 @@ import com.intellij.ui.OnePixelSplitter
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.TableUtil
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.JBViewport
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.AlignX
@@ -25,10 +30,12 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.bindSelected
+import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.not
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.components.BorderLayoutPanel
 import com.intellij.util.ui.tree.TreeUtil
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
@@ -40,6 +47,10 @@ import ski.chrzanow.foldableprojectview.bindSelected
 import ski.chrzanow.foldableprojectview.createPredicate
 import ski.chrzanow.foldableprojectview.projectView.FoldableProjectViewNode
 import ski.chrzanow.foldableprojectview.projectView.FoldableTreeStructureProvider
+import ski.chrzanow.foldableprojectview.rules.FoldableRulesResolver
+import ski.chrzanow.foldableprojectview.rules.ResolvedState
+import ski.chrzanow.foldableprojectview.rules.RuleSetOptions
+import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
 import java.awt.Dimension
 import java.awt.Rectangle
 import javax.swing.JComponent
@@ -88,9 +99,17 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
          * Scrolling step of the settings column, in pixels. Without it the column would scroll by a single pixel per step.
          */
         private const val SCROLL_UNIT = 16
+
+        /**
+         * Name of the label listing the rule set files in effect, see the tests.
+         */
+        const val RULE_SETS_LABEL_NAME = "FoldableProjectView.ruleSets"
     }
 
     private val defaults = service<FoldableProjectDefaults>()
+    private val appSettings = service<FoldableProjectViewAppSettings>()
+    private val repository = service<RuleSetRepository>()
+    private val resolver = project.service<FoldableRulesResolver>()
 
     /**
      * Settings edited by this page: the settings of the [project], or the defaults for new projects
@@ -103,8 +122,25 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
 
     private val propertyGraph = PropertyGraph()
     private val settingsProperty = propertyGraph.lazyProperty { FoldableProjectSettings().apply { copyFrom(settings) } }
-    private val foldingEnabledPredicate = settingsProperty.createPredicate(FoldableProjectSettings::foldingEnabled)
+
+    /**
+     * The edited settings merged with the rule set files, as the Project View sees them, see [FoldableRulesResolver].
+     * Feeds the preview, the rule editor, and the information about the files in effect.
+     */
+    private val resolvedProperty = settingsProperty.transform { resolver.resolve(it) }
+
+    private val foldingEnabledPredicate = resolvedProperty.createPredicate { it.foldingEnabled }
     private val differsFromDefaultsPredicate = settingsProperty.createPredicate { it != defaults.createSettings() }
+
+    /**
+     * The directory of the user-level rule sets, an application-level setting edited along with the project settings.
+     */
+    private val userDirectoryProperty = propertyGraph.property(appSettings.userDirectory)
+
+    /**
+     * Whether the option is free to edit, i.e., not set by one of the rule set files, see [ResolvedState.fileOptions].
+     */
+    private fun unlockedPredicate(option: (RuleSetOptions) -> Boolean?) = resolvedProperty.createPredicate { option(it.fileOptions) == null }
 
     /**
      * Whether the edited settings are to be stored as the defaults for new projects when they are applied.
@@ -131,7 +167,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             }
         }
 
-    private val rulesTable = FoldableRulesTable(settingsProperty).apply {
+    private val rulesTable = FoldableRulesTable(settingsProperty, project).apply {
         tableView.visibleRowCount = VISIBLE_RULES
         ClientProperty.put(tableView, JBViewport.FORCE_VISIBLE_ROW_COUNT_KEY, true)
     }
@@ -175,7 +211,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     private fun createProjectViewPane() = object : ProjectViewPane(project) {
 
         private val treeStructureProvider = FoldableTreeStructureProvider(project)
-            .withPreview(this, settingsProperty) { selectInPreview(ruleProperty.get()) }
+            .withPreview(this, resolvedProperty) { selectInPreview(ruleProperty.get()) }
             .also { previewProvider = it }
 
         override fun enableDnD() = Unit
@@ -223,6 +259,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 .bindSelected(settingsProperty, FoldableProjectSettings::foldingEnabled)
                 .comment(message("foldableProjectView.settings.foldingEnabled.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                 .applyToComponent { setMnemonic('e') }
+                .enabledIf(unlockedPredicate(RuleSetOptions::foldingEnabled))
         }
 
         // Indented to show that the options apply only when folding is enabled.
@@ -232,6 +269,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .bindSelected(settingsProperty, FoldableProjectSettings::caseSensitive)
                     .comment(message("foldableProjectView.settings.caseSensitive.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('c') }
+                    .enabledIf(unlockedPredicate(RuleSetOptions::caseSensitive))
             }
 
             row {
@@ -239,6 +277,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .bindSelected(settingsProperty, FoldableProjectSettings::matchDirectories)
                     .comment(message("foldableProjectView.settings.matchDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('d') }
+                    .enabledIf(unlockedPredicate(RuleSetOptions::matchDirectories))
             }
 
             row {
@@ -246,6 +285,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .bindSelected(settingsProperty, FoldableProjectSettings::foldNestedDirectories)
                     .comment(message("foldableProjectView.settings.foldNestedDirectories.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('n') }
+                    .enabledIf(unlockedPredicate(RuleSetOptions::foldNestedDirectories))
             }
 
             row {
@@ -253,8 +293,12 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .bindSelected(settingsProperty, FoldableProjectSettings::hideEmptyGroups)
                     .comment(message("foldableProjectView.settings.hideEmptyGroups.comment"), MAX_LINE_LENGTH_WORD_WRAP)
                     .applyToComponent { setMnemonic('h') }
+                    .enabledIf(unlockedPredicate(RuleSetOptions::hideEmptyGroups))
             }
         }.enabledIf(foldingEnabledPredicate)
+        row {
+            cell(lockedOptionsLabel)
+        }.visibleIf(resolvedProperty.createPredicate { !it.fileOptions.isEmpty })
 
         group(message("foldableProjectView.settings.foldingRules")) {
             row {
@@ -262,7 +306,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                     .align(AlignX.FILL)
             }
             row {
-                val rulesEditor = FoldableRulesEditor(ruleProperty, settingsProperty, project.takeUnless { it.isDefault }, disposable!!)
+                val rulesEditor = FoldableRulesEditor(ruleProperty, resolvedProperty, project.takeUnless { it.isDefault }, disposable!!)
                 cell(rulesEditor.createPanel().apply { registerValidators(disposable!!) })
                     .align(AlignX.FILL)
                     .applyIfEnabled()
@@ -290,7 +334,84 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
                 comment(message("foldableProjectView.settings.defaults.same"), MAX_LINE_LENGTH_WORD_WRAP)
             }.visibleIf(differsFromDefaultsPredicate.not())
         }
+        group(message("foldableProjectView.settings.ruleSets")) {
+            row {
+                comment(message("foldableProjectView.settings.ruleSets.description"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
+            if (!project.isDefault) {
+                row {
+                    cell(ruleSetsLabel)
+                        .align(AlignX.FILL)
+                }
+                row {
+                    cell(problemsLabel)
+                        .align(AlignX.FILL)
+                }.visibleIf(resolvedProperty.createPredicate { it.problems.isNotEmpty() })
+            }
+            row(message("foldableProjectView.settings.ruleSets.userDirectory")) {
+                textFieldWithBrowseButton(
+                    FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                        .withTitle(message("foldableProjectView.settings.ruleSets.userDirectory.title")),
+                    project.takeUnless { it.isDefault },
+                )
+                    .align(AlignX.FILL)
+                    .bindText(userDirectoryProperty)
+                    .applyToComponent { (textField as? JBTextField)?.emptyText?.text = FoldableProjectViewAppSettings.defaultUserDirectoryPath.toPresentableUserPath() }
+                    .comment(message("foldableProjectView.settings.ruleSets.userDirectory.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+            }
+        }
     }
+
+    /**
+     * Lists the rule set files in effect for the project, see [ResolvedState.ruleSets]; refreshed with the settings.
+     */
+    private val ruleSetsLabel = JBLabel().apply {
+        name = RULE_SETS_LABEL_NAME
+        foreground = UIUtil.getContextHelpForeground()
+        resolvedProperty.afterChange { text = ruleSetsText(it) }
+        text = ruleSetsText(resolvedProperty.get())
+    }
+
+    private fun ruleSetsText(state: ResolvedState) = when {
+        state.ruleSets.isEmpty() -> message("foldableProjectView.settings.ruleSets.none")
+        else -> message("foldableProjectView.settings.ruleSets.inEffect", state.ruleSets.joinToString { it.path?.toPresentableUserPath() ?: it.name })
+    }
+
+    /**
+     * Lists the rule set files that could not be read, see [ResolvedState.problems].
+     */
+    private val problemsLabel = JBLabel().apply {
+        icon = AllIcons.General.Warning
+        resolvedProperty.afterChange { text = problemsText(it) }
+        text = problemsText(resolvedProperty.get())
+    }
+
+    private fun problemsText(state: ResolvedState) = state.problems
+        .takeIf { it.isNotEmpty() }
+        ?.let { problems -> message("foldableProjectView.settings.ruleSets.problems", problems.joinToString("; ") { it.presentableMessage }) }
+        .orEmpty()
+
+    /**
+     * Lists the options set by the rule set files, which the checkboxes above cannot change, see [ResolvedState.fileOptions].
+     */
+    private val lockedOptionsLabel = JBLabel().apply {
+        foreground = UIUtil.getContextHelpForeground()
+        resolvedProperty.afterChange { text = lockedOptionsText(it) }
+        text = lockedOptionsText(resolvedProperty.get())
+    }
+
+    private fun lockedOptionsText(state: ResolvedState) = with(state.fileOptions) {
+        listOfNotNull(
+            foldingEnabled?.let { message("foldableProjectView.settings.foldingEnabled") to it },
+            caseSensitive?.let { message("foldableProjectView.settings.caseSensitive") to it },
+            matchDirectories?.let { message("foldableProjectView.settings.matchDirectories") to it },
+            foldNestedDirectories?.let { message("foldableProjectView.settings.foldNestedDirectories") to it },
+            hideEmptyGroups?.let { message("foldableProjectView.settings.hideEmptyGroups") to it },
+        )
+    }
+        .takeIf { it.isNotEmpty() }
+        ?.let { options -> message("foldableProjectView.settings.ruleSets.lockedOptions", options.joinToString { (name, value) -> "$name = ${if (value) "on" else "off"}" }) }
+        .orEmpty()
 
     /**
      * The live Project View preview. It is read-only: the Project View context menu is not available, and double-clicking
@@ -391,14 +512,14 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             tree.clearSelection()
             return
         }
-        if (tree.selectedGroupRule() === rule) {
+        if (rule.isSameAs(tree.selectedGroupRule())) {
             return
         }
         TreeUtil.promiseSelect(tree) { path ->
             val node = TreeUtil.getLastUserObject(path)
             when {
                 node is FoldableProjectViewNode -> when {
-                    node.value === rule -> TreeVisitor.Action.INTERRUPT
+                    rule.isSameAs(node.value) -> TreeVisitor.Action.INTERRUPT
                     else -> TreeVisitor.Action.SKIP_CHILDREN
                 }
 
@@ -416,16 +537,21 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
      */
     private fun selectInTable() {
         val rule = preview?.tree?.selectedGroupRule() ?: return
-        if (rulesTable.tableView.selectedObject !== rule) {
-            rulesTable.tableView.selection = listOf(rule)
+        if (!rule.isSameAs(rulesTable.tableView.selectedObject)) {
+            rulesTable.tableView.items.firstOrNull { rule.isSameAs(it) }?.let { rulesTable.tableView.selection = listOf(it) }
         }
     }
 
     private fun JTree.selectedGroupRule() = (TreeUtil.getLastUserObject(selectionPath) as? FoldableProjectViewNode)?.value
 
-    override fun isModified() = settingsProperty.get() != settings || storeAsDefaultsProperty.get()
+    override fun isModified() = settingsProperty.get() != settings || storeAsDefaultsProperty.get() || userDirectoryProperty.get().trim() != appSettings.userDirectory
 
     override fun apply() {
+        if (userDirectoryProperty.get().trim() != appSettings.userDirectory) {
+            appSettings.userDirectory = userDirectoryProperty.get()
+            userDirectoryProperty.set(appSettings.userDirectory)
+            repository.watchUserDirectory()
+        }
         when {
             project.isDefault -> {
                 settings.copyFrom(settingsProperty.get())
@@ -467,6 +593,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
 
     override fun reset() {
         storeAsDefaultsProperty.set(false)
+        userDirectoryProperty.set(appSettings.userDirectory)
         settingsProperty.set(settingsProperty.get().apply {
             copyFrom(settings)
         })
@@ -482,12 +609,13 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     }
 
     /**
-     * Reloads the table from the edited settings, keeping the selected row (or selecting the first one), so the rule editor
-     * does not go blank after Apply, Reset, or Copy from Defaults, and shows the first rule as soon as the page opens.
+     * Reloads the table from the edited settings merged with the rule set files, keeping the selected row (or selecting the
+     * first one), so the rule editor does not go blank after Apply, Reset, or Copy from Defaults, and shows the first rule
+     * as soon as the page opens.
      */
     private fun invalidateTable() = rulesTable.apply {
         val selectedRow = tableView.selectedRow
-        setValues(settingsProperty.get().rules)
+        reload()
         if (tableView.rowCount > 0) {
             val row = selectedRow.coerceIn(0, tableView.rowCount - 1)
             tableView.setRowSelectionInterval(row, row)

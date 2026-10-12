@@ -1,0 +1,7 @@
+name: Dotfiles
+description: Hidden files and directories
+tags: [general]
+rules:
+  - id: dotfiles
+    name: Dotfiles
+    patterns: [".*", "!.foldableprojectview.yaml"]

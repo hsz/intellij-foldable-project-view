@@ -11,6 +11,37 @@ object FoldableProjectViewConstants {
     const val PLUGIN_ID = "ski.chrzanow.foldableprojectview"
 
     /**
+     * Name of the rule set file looked up in the project root and in the module content roots, see `RuleSetRepository`.
+     */
+    const val RULE_SET_FILE = ".foldableprojectview.yaml"
+
+    /**
+     * Default directory of the user-level rule sets: the `rules.yaml` applied to every project and the YAML files of the
+     * `presets` subdirectory offered next to the built-in presets, relative to the user home.
+     * See `FoldableProjectViewAppSettings.userDirectory`.
+     */
+    const val USER_DIRECTORY = ".config/foldableprojectview"
+    const val USER_RULES_FILE = "rules.yaml"
+    const val USER_PRESETS_DIRECTORY = "presets"
+
+    /**
+     * Classpath directory of the built-in presets, one YAML rule set per file, listed in the [BUILTIN_PRESETS_INDEX].
+     */
+    const val BUILTIN_PRESETS_PATH = "/presets"
+    const val BUILTIN_PRESETS_INDEX = "$BUILTIN_PRESETS_PATH/index.txt"
+
+    /**
+     * JSON schema of the rule set files, attached to them by the IDE for completion and validation.
+     */
+    const val RULE_SET_SCHEMA_PATH = "/schemas/foldableprojectview.schema.json"
+
+    /**
+     * Prefixes of the rule set ids used by `extends`, see `RuleSetRepository`.
+     */
+    const val BUILTIN_PRESET_PREFIX = "builtin:"
+    const val USER_PRESET_PREFIX = "user:"
+
+    /**
      * Help topic of the settings page; the platform routes the topics prefixed with the plugin id to the plugin's
      * `WebHelpProvider`, see `FoldableProjectViewHelpProvider`.
      */

@@ -1,0 +1,7 @@
+name: Documentation
+description: READMEs, changelogs, licenses, and the docs directory
+tags: [docs, general]
+rules:
+  - id: docs
+    name: Documentation
+    patterns: ["*.md", "*.rst", "*.txt", "*.adoc", "LICENSE*", "NOTICE*", "docs/"]

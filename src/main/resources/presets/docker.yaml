@@ -1,0 +1,8 @@
+name: Docker
+description: Dockerfiles and Compose files
+tags: [docker, config]
+rules:
+  - id: docker
+    name: Docker
+    patterns: ["Dockerfile*", "*.dockerfile", ".dockerignore", "docker-compose*.yml", "docker-compose*.yaml", "compose.yml", "compose.yaml"]
+    background: Violet
