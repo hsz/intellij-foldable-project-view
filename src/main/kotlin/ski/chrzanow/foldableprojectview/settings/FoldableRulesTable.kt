@@ -16,10 +16,13 @@ import com.intellij.openapi.observable.util.transform
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.*
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.ListTableModel
@@ -32,12 +35,19 @@ import ski.chrzanow.foldableprojectview.rules.RuleSet
 import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
 import ski.chrzanow.foldableprojectview.rules.RuleSetYaml
 import java.awt.Component
+import java.awt.Cursor
+import java.awt.Point
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.nio.file.Path
+import javax.swing.BorderFactory
 import javax.swing.Icon
+import javax.swing.JLabel
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.TableCellRenderer
 import kotlin.io.path.exists
 
 /**
@@ -80,12 +90,52 @@ class FoldableRulesTable(
         tableView.apply {
             columnSelectionAllowed = false
             tableHeader.reorderingAllowed = false
-            listOf(0, 1, 2, 3).forEach { index ->
+            val headerIcons = listOf(
+                AllIcons.General.GreenCheckmark,
+                AllIcons.Actions.Colors,
+                AllIcons.Actions.ToggleVisibility,
+                AllIcons.FileTypes.Image,
+            )
+            headerIcons.forEachIndexed { index, headerIcon ->
                 columnModel.getColumn(index).apply {
                     maxWidth = JBUI.scale(24)
                     minWidth = JBUI.scale(24)
+                    headerRenderer = TableCellRenderer { table, value, isSelected, hasFocus, row, column ->
+                        tableHeader.defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+                            .apply {
+                                if (this is JLabel) {
+                                    text = ""
+                                    icon = headerIcon
+                                    horizontalAlignment = JLabel.CENTER
+                                    val insets = insets
+                                    border = BorderFactory.createEmptyBorder(insets.top, 0, insets.bottom, 0)
+                                }
+                            }
+                    }
                 }
             }
+            tableHeader.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    if (!SwingUtilities.isLeftMouseButton(e) || e.clickCount != 1) {
+                        return
+                    }
+                    if (tableHeader.cursor.type == Cursor.E_RESIZE_CURSOR || tableHeader.cursor.type == Cursor.W_RESIZE_CURSOR) {
+                        return
+                    }
+                    val column = tableHeader.columnAtPoint(e.point)
+                    if (column !in headerIcons.indices) {
+                        return
+                    }
+                    val explanation = tableHeader.getToolTipText(e) ?: return
+                    val bounds = tableHeader.getHeaderRect(column)
+                    JBPopupFactory.getInstance()
+                        .createHtmlTextBalloonBuilder(explanation, MessageType.INFO, null)
+                        .setHideOnClickOutside(true)
+                        .setHideOnKeyOutside(true)
+                        .createBalloon()
+                        .show(RelativePoint(tableHeader, Point(bounds.x + bounds.width / 2, bounds.y + bounds.height)), Balloon.Position.below)
+                }
+            })
             model.addTableModelListener {
                 rulesProperty.set(elements)
             }

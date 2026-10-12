@@ -290,6 +290,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
             row {
                 cell(rulesTable.component)
                     .align(AlignX.FILL)
+                    .comment(message("foldableProjectView.settings.foldingRules.headerHint"), MAX_LINE_LENGTH_WORD_WRAP)
             }
             row {
                 val rulesEditor = FoldableRulesEditor(ruleProperty, resolvedProperty, project.takeUnless { it.isDefault }, disposable!!)
