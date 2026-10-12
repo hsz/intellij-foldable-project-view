@@ -33,6 +33,7 @@ import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
 import ski.chrzanow.foldableprojectview.rules.RuleSetYaml
 import java.awt.Component
 import java.nio.file.Path
+import javax.swing.Icon
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
@@ -79,7 +80,7 @@ class FoldableRulesTable(
         tableView.apply {
             columnSelectionAllowed = false
             tableHeader.reorderingAllowed = false
-            listOf(0, 1, 2).forEach { index ->
+            listOf(0, 1, 2, 3).forEach { index ->
                 columnModel.getColumn(index).apply {
                     maxWidth = JBUI.scale(24)
                     minWidth = JBUI.scale(24)
@@ -108,7 +109,7 @@ class FoldableRulesTable(
 
     override fun shouldEditRowOnCreation() = false
 
-    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), NameColumn(), PatternsColumn(), OriginColumn())
+    override fun createListModel() = ListTableModel<Rule>(EnabledColumn(), ColorsColumn(), ActionColumn(), IconColumn(), NameColumn(), PatternsColumn(), OriginColumn())
 
     override fun createElement() = Rule()
 
@@ -330,6 +331,26 @@ class FoldableRulesTable(
         }
     }
 
+    private class IconColumn : ColumnInfo<Rule, Icon>(message("foldableProjectView.settings.icon")) {
+
+        override fun getName() = ""
+
+        override fun getTooltipText() = message("foldableProjectView.settings.icon.comment")
+
+        // Same icon as the group in the Project View, so a stale id falls back to the default one; hidden rules have no group
+        override fun valueOf(item: Rule?) = item?.takeIf { it.action == RuleAction.GROUP && it.icon != null }?.let(RuleIcons::icon)
+
+        override fun getRenderer(item: Rule?) = object : DefaultTableCellRenderer() {
+
+            override fun getTableCellRendererComponent(table: JTable?, value: Any?, isSelected: Boolean, hasFocus: Boolean, row: Int, column: Int): Component {
+                super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
+                horizontalAlignment = CENTER
+                icon = value as? Icon
+                return this
+            }
+        }
+    }
+
     /**
      * Shows the rule name, or a grayed placeholder for the rules that have no name yet.
      */
@@ -345,8 +366,6 @@ class FoldableRulesTable(
                     else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                 }
                 append(value?.toString().orEmpty(), attributes)
-                // Same icon as the group in the Project View, so a stale id falls back to the default one; hidden rules have no group
-                icon = item?.takeIf { it.action == RuleAction.GROUP && it.icon != null }?.let(RuleIcons::icon)
             }
         }
     }
