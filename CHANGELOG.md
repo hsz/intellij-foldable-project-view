@@ -86,7 +86,7 @@
 
 ### Fixed
 
-- Ignored files located outside of a module were not folded into the `Ignored files` group ([#11](https://github.com/hsz/intellij-foldable-project-view/issues/11))
+- Ignored files located outside a module were not folded into the `Ignored files` group ([#11](https://github.com/hsz/intellij-foldable-project-view/issues/11))
 - Avoid Project View refresh on the wrong thread, which could freeze Rider ([#28](https://github.com/hsz/intellij-foldable-project-view/issues/28))
 - Folding was not applied to folders attached to a Rider solution ([#46](https://github.com/hsz/intellij-foldable-project-view/issues/46))
 - Matched elements were duplicated in the Project View instead of being moved into the group, and folding was not applied to module roots reached through other Project View parent nodes or content roots ([#92](https://github.com/hsz/intellij-foldable-project-view/issues/92))

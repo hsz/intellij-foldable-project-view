@@ -113,7 +113,7 @@ class FoldableRulesTable(
 
     /**
      * The `+` button offers an empty rule and the presets – built-in and from the user directory, see [RuleSetRepository] –
-     * instead of adding a rule right away. A preset is copied into the settings, so it can be adjusted afterwards.
+     * instead of adding a rule right away. A preset is copied into the settings, so it can be adjusted afterward.
      */
     override fun createAddAction() = AnActionButtonRunnable { button ->
         val group = DefaultActionGroup().apply {

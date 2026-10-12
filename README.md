@@ -72,7 +72,7 @@ Patterns are matched against paths relative to the module content root:
 
 The <kbd>+</kbd> button of the rules table adds an empty rule or one of the presets (Documentation, CI/CD, Build,
 Configuration, Dotfiles, Gradle, Maven, Node.js, Python, Docker, IDE, plus your own – see [Rule set files](#rule-set-files))
-that can be adjusted afterwards. While editing, the rule editor shows how many elements of the
+that can be adjusted afterward. While editing, the rule editor shows how many elements of the
 project the rule matches with the current options – hover the counter to see the first matched paths – and the <kbd>?</kbd>
 icon next to the <kbd>Patterns</kbd> field recaps the pattern syntax.
 

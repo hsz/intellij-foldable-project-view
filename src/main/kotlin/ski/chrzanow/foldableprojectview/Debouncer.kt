@@ -22,7 +22,7 @@ import kotlin.time.Duration
 /**
  * Coalesces bursts of [request]s into a single run of the [action] on the EDT, [delay] after the last request.
  * The action runs in the modality state of the last request, so it reaches the components of a modal dialog
- * (e.g., the Settings dialog) the request was made from. Nothing runs once the [scope] is cancelled or the debouncer
+ * (e.g., the Settings dialog) the request was made from. Nothing runs once the [scope] is canceled or the debouncer
  * is [cancel]led.
  */
 @OptIn(FlowPreview::class)

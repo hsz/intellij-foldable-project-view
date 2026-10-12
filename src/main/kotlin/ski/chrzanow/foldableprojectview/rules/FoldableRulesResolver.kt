@@ -67,8 +67,8 @@ class ResolvedState(
  * [FoldableProjectSettings.ruleOverrides]. The built-in presets are never applied on their own.
  *
  * The files are re-read only when they change, and the resolved file rules are reused while their inputs are the same,
- * so the rule instances stay stable between the calls – the settings page relies on that to connect the table rows with
- * the preview groups.
+ * so the rule instances stay stable between the calls.
+ * The settings page relies on that to connect the table rows with the preview groups.
  */
 @Service(Service.Level.PROJECT)
 class FoldableRulesResolver(private val project: Project) {

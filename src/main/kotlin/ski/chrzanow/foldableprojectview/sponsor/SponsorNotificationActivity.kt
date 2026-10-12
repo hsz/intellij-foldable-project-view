@@ -69,7 +69,7 @@ class SponsorNotificationActivity : ProjectActivity {
     companion object {
 
         /**
-         * Id of the notification group declared in `plugin.xml`.
+         * ID of the notification group declared in `plugin.xml`.
          */
         const val GROUP_ID = "Foldable Project View"
     }

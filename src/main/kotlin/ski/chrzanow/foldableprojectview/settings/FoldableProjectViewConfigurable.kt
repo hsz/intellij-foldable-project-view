@@ -602,9 +602,10 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
     }
 
     /**
-     * Reloads the table from the edited settings merged with the rule set files, keeping the selected row (or selecting the
-     * first one), so the rule editor does not go blank after Apply, Reset, or Copy from Defaults, and shows the first rule
-     * as soon as the page opens.
+     * Reloads the table from the edited settings merged with the rule set files, keeping the selected row
+     * (or selecting the first one).
+     * The rule editor does not go blank after Apply, Reset, or Copy from Defaults, and shows the first rule as soon
+     * as the page opens.
      */
     private fun invalidateTable() = rulesTable.apply {
         val selectedRow = tableView.selectedRow

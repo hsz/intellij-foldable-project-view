@@ -56,7 +56,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     }
 
     /**
-     * Runs [block] with the application-level defaults replaced by [defaults], restoring the original ones afterwards.
+     * Runs [block] with the application-level defaults replaced by [defaults], restoring the original ones afterward.
      */
     private fun withDefaults(defaults: FoldableProjectSettings, block: () -> Unit) {
         val service = service<FoldableProjectDefaults>()
@@ -144,7 +144,7 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
     }
 
     /**
-     * Runs [block] with the project rules replaced by [rules], restoring the original ones afterwards.
+     * Runs [block] with the project rules replaced by [rules], restoring the original ones afterward.
      */
     private fun withRules(vararg rules: Rule, block: () -> Unit) {
         val settings = project.service<FoldableProjectSettings>()
