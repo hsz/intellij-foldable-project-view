@@ -371,6 +371,33 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
         }
     }
 
+    fun `test selecting an empty rule or rule without preview matches does not revert table selection`() = withRules(
+        Rule("Docs", "*.md"),
+        Rule("Empty", ""),
+        Rule.ignoredFiles(),
+    ) {
+        myFixture.addFileToProject("README.md", "")
+
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            val tree = component.previewTree()
+            val table = component.rulesTable()
+
+            // the first rule is selected and shown in the preview
+            assertEquals(0, table.selectedRow)
+            tree.assertSelectedGroupEventually(table.selectedObject as Rule)
+            assertEquals("Docs", tree.selectedGroupRule!!.name)
+
+            // selecting empty rule (index 1) or ignored files rule (index 2) must stay selected
+            component.selectRule(1)
+            tree.assertSelectedGroupEventually(null)
+            assertEquals(1, table.selectedRow)
+
+            component.selectRule(2)
+            tree.assertSelectedGroupEventually(null)
+            assertEquals(2, table.selectedRow)
+        }
+    }
+
     fun `test rule selection is kept after apply, reset, and copy from defaults`() = withRules(
         Rule("Docs", "*.md"),
         Rule("Build", "*.kts"),

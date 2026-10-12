@@ -60,6 +60,8 @@ import javax.swing.Scrollable
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.SwingConstants
+import javax.swing.tree.DefaultTreeSelectionModel
+import javax.swing.tree.TreeSelectionModel
 
 /**
  * Settings page: the options and the folding rules on the left, the live Project View preview filling the right side.
@@ -429,6 +431,12 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         pane.tree.apply {
             name = PREVIEW_TREE_NAME
             mouseListeners.filterIsInstance<PopupHandler>().forEach(::removeMouseListener)
+            treeSelectionListeners
+                .filter { it.javaClass.name.contains("RestoreSelectionListener") }
+                .forEach(::removeTreeSelectionListener)
+            (selectionModel as? DefaultTreeSelectionModel)?.treeSelectionListeners
+                ?.filter { it.javaClass.name.contains("RestoreSelectionListener") }
+                ?.forEach(selectionModel::removeTreeSelectionListener)
             addTreeSelectionListener { selectInTable() }
         }
         TreeUtil.promiseExpand(pane.tree, 2)
@@ -515,6 +523,7 @@ class FoldableProjectViewConfigurable(private val project: Project) : BoundSearc
         if (rule.isSameAs(tree.selectedGroupRule())) {
             return
         }
+        tree.clearSelection()
         TreeUtil.promiseSelect(tree) { path ->
             val node = TreeUtil.getLastUserObject(path)
             when {

@@ -14,6 +14,10 @@
 - Rules got a stable `id` (derived from the name when not set), used by `extends` and by the per-project overrides
 - A JSON schema is attached to the rule set files for completion, documentation, and validation, when the bundled JSON plugin is available
 
+### Fixed
+
+- Selecting an empty rule, a rule with no matches in the preview, or the built-in `Ignored files` rule in the settings table no longer causes selection to snap back to the previous rule
+
 ## [3.0.0] - 2026-10-11
 
 ### Added
