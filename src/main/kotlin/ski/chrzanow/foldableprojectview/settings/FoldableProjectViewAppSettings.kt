@@ -73,7 +73,7 @@ class FoldableProjectViewAppSettings : SimplePersistentStateComponent<FoldablePr
 }
 
 /**
- * Presents the [path] with the user home shortened to `~`.
+ * Presents the path with the user home shortened to `~`.
  */
 fun Path.toPresentableUserPath(): String {
     val home = Path.of(System.getProperty("user.home"))

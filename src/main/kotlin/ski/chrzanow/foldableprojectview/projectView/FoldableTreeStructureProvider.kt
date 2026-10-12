@@ -80,7 +80,7 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
 
         fun fold(rule: Rule, predicate: (AbstractTreeNode<*>) -> Boolean) {
             val matched = remaining.filter { it.isFoldable(state) && predicate(it) }
-            remaining -= matched
+            remaining -= matched.toSet()
 
             if (rule.action == RuleAction.HIDE) {
                 return

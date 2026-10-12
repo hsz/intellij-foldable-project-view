@@ -1,10 +1,10 @@
 package ski.chrzanow.foldableprojectview.settings
 
+import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure
 import com.intellij.ide.projectView.impl.ProjectViewPane
 import com.intellij.ide.util.PropertiesComponent
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.actionSystem.UiDataProvider
@@ -16,22 +16,11 @@ import com.intellij.openapi.options.BoundSearchableConfigurable
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.ClientProperty
-import com.intellij.ui.OnePixelSplitter
-import com.intellij.ui.PopupHandler
-import com.intellij.ui.ScrollPaneFactory
-import com.intellij.ui.TableUtil
+import com.intellij.ui.*
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.components.JBViewport
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.AlignX
-import com.intellij.ui.dsl.builder.BottomGap
-import com.intellij.ui.dsl.builder.MAX_LINE_LENGTH_WORD_WRAP
-import com.intellij.ui.dsl.builder.TopGap
-import com.intellij.ui.dsl.builder.bindSelected
-import com.intellij.ui.dsl.builder.bindText
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.not
 import com.intellij.ui.tree.TreeVisitor
 import com.intellij.util.ui.JBUI
@@ -53,15 +42,10 @@ import ski.chrzanow.foldableprojectview.rules.RuleSetOptions
 import ski.chrzanow.foldableprojectview.rules.RuleSetRepository
 import java.awt.Dimension
 import java.awt.Rectangle
-import javax.swing.JComponent
-import javax.swing.JScrollPane
-import javax.swing.JTree
-import javax.swing.Scrollable
+import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-import javax.swing.SwingConstants
 import javax.swing.tree.DefaultTreeSelectionModel
-import javax.swing.tree.TreeSelectionModel
 
 /**
  * Settings page: the options and the folding rules on the left, the live Project View preview filling the right side.
