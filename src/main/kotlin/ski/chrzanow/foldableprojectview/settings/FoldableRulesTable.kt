@@ -2,6 +2,7 @@ package ski.chrzanow.foldableprojectview.settings
 
 import com.intellij.execution.util.ListTableWithButtons
 import com.intellij.icons.AllIcons
+import com.intellij.ide.IdeCoreBundle
 import com.intellij.openapi.actionSystem.ActionToolbarPosition
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -188,9 +189,13 @@ class FoldableRulesTable(
             val descriptor = FileSaverDescriptor(
                 message("foldableProjectView.settings.ruleSets.export.title"),
                 message("foldableProjectView.settings.ruleSets.export.message"),
-                "yaml",
-                "yml",
-            )
+            ).apply {
+                withExtensionFilter(
+                    IdeCoreBundle.message("file.chooser.files.label", "YAML"),
+                    "yaml",
+                    "yml",
+                )
+            }
             val baseDir = project.takeUnless { it.isDefault }?.guessProjectDir()
             val target = FileChooserFactory.getInstance()
                 .createSaveFileDialog(descriptor, project.takeUnless { it.isDefault })
@@ -340,6 +345,8 @@ class FoldableRulesTable(
                     else -> SimpleTextAttributes.REGULAR_ATTRIBUTES
                 }
                 append(value?.toString().orEmpty(), attributes)
+                // Same icon as the group in the Project View, so a stale id falls back to the default one; hidden rules have no group
+                icon = item?.takeIf { it.action == RuleAction.GROUP && it.icon != null }?.let(RuleIcons::icon)
             }
         }
     }

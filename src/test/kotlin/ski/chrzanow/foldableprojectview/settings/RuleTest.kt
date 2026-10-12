@@ -21,6 +21,7 @@ class RuleTest {
         assertEquals(RuleAction.GROUP, rule.action)
         assertEquals(RuleType.PATTERN, rule.type)
         assertTrue(rule.enabled)
+        assertNull(rule.icon)
         assertFalse(rule.isActive)
     }
 
@@ -77,14 +78,15 @@ class RuleTest {
         assertNotEquals(Rule("a", "*.kt", Color.RED), Rule("a", "*.kt", Color.BLUE))
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", action = RuleAction.HIDE))
         assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", enabled = false))
+        assertNotEquals(Rule("a", "*.kt"), Rule("a", "*.kt", icon = "AllIcons.Nodes.Folder"))
         assertNotEquals(Rule("a", ""), Rule("a", "", type = RuleType.IGNORED_FILES))
         assertNotEquals(Rule("a", ".foldignore"), Rule("a", ".foldignore", type = RuleType.PATTERNS_FILE))
     }
 
     @Test
     fun `copy overrides only given fields`() {
-        val copy = Rule("a", "*.kt", Color.RED, Color.BLUE).copy(name = "b")
+        val copy = Rule("a", "*.kt", Color.RED, Color.BLUE, icon = "AllIcons.Nodes.Folder").copy(name = "b")
 
-        assertEquals(Rule("b", "*.kt", Color.RED, Color.BLUE), copy)
+        assertEquals(Rule("b", "*.kt", Color.RED, Color.BLUE, icon = "AllIcons.Nodes.Folder"), copy)
     }
 }

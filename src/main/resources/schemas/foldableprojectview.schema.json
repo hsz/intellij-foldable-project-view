@@ -90,6 +90,10 @@
         },
         "background": { "$ref": "#/definitions/color" },
         "foreground": { "$ref": "#/definitions/color" },
+        "icon": {
+          "type": "string",
+          "description": "Built-in IDE icon for the folding group, like `AllIcons.Nodes.Folder` or `Folder`."
+        },
         "action": {
           "type": "string",
           "description": "`group` moves the matched elements into a folding group (default), `hide` removes them from the Project View.",

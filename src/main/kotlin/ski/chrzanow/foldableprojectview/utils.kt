@@ -43,7 +43,11 @@ fun Cell<ColorPanel>.bindColor(graphProperty: ObservableMutableProperty<Rule?>, 
         }
     }
 
-fun Cell<JBCheckBox>.bindColorControl(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, Color?>, defaultValue: Color) =
+/**
+ * Checkbox toggling an optional [property] of the edited rule: checking it sets the [defaultValue] when the property
+ * is empty, unchecking it clears the property.
+ */
+fun <T : Any> Cell<JBCheckBox>.bindOptionalControl(graphProperty: ObservableMutableProperty<Rule?>, property: KMutableProperty1<Rule, T?>, defaultValue: T) =
     applyToComponent {
         bind(with(graphProperty) {
             transform(

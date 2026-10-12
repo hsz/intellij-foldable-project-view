@@ -6,6 +6,7 @@ import ski.chrzanow.foldableprojectview.settings.FoldableProjectSettings
 import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
 import ski.chrzanow.foldableprojectview.settings.RuleColors
+import ski.chrzanow.foldableprojectview.settings.RuleIcons
 import ski.chrzanow.foldableprojectview.settings.RuleType
 import java.awt.Color
 
@@ -36,10 +37,12 @@ class RuleSetYamlTest : LightPlatformTestCase() {
                 patterns: ["gradle/", "gradlew*", "*.gradle.kts", "My Notes.md"]
                 background: Blue
                 foreground: "#FF0000"
+                icon: Folder
                 action: hide
               - id: local
                 name: Local
                 patternsFiles: [.foldignore, .dockerignore]
+                icon: AllIcons.Nodes.Package
                 enabled: false
               - type: ignoredFiles
                 enabled: false
@@ -61,12 +64,14 @@ class RuleSetYamlTest : LightPlatformTestCase() {
         assertEquals(RuleType.PATTERN, build.type)
         assertSame(RuleColors.background("Blue"), build.background)
         assertEquals(Color(0xFF, 0x00, 0x00), build.foreground)
+        assertEquals("AllIcons.Nodes.Folder", build.icon)
         assertEquals(RuleAction.HIDE, build.action)
         assertNull(build.enabled)
 
         assertEquals("local", local.id)
         assertEquals(RuleType.PATTERNS_FILE, local.type)
         assertEquals(".foldignore .dockerignore", local.pattern)
+        assertEquals("AllIcons.Nodes.Package", local.icon)
         assertEquals(false, local.enabled)
 
         assertEquals(Rule.IGNORED_FILES_ID, ignored.id)
@@ -120,7 +125,7 @@ class RuleSetYamlTest : LightPlatformTestCase() {
         val settings = FoldableProjectSettings().apply {
             matchDirectories = true
             caseSensitive = false
-            rules.add(Rule("Docs", "*.md \"My Notes.md\" !CHANGELOG.md", background = RuleColors.background("Blue"), foreground = Color(0x10, 0x20, 0x30)))
+            rules.add(Rule("Docs", "*.md \"My Notes.md\" !CHANGELOG.md", background = RuleColors.background("Blue"), foreground = Color(0x10, 0x20, 0x30), icon = "AllIcons.Nodes.Folder"))
             rules.add(Rule("Local", ".foldignore", type = RuleType.PATTERNS_FILE, action = RuleAction.HIDE, enabled = false))
             rules.add(Rule.ignoredFiles(enabled = false))
             rules.add(Rule("From file", "*.kt", id = "file").apply { origin = RuleOrigin(RuleSetLayer.USER, "rules.yaml", null) })
@@ -139,7 +144,22 @@ class RuleSetYamlTest : LightPlatformTestCase() {
         assertEquals(settings.rules.take(3).map { it.copy(id = it.effectiveId) }, rules)
         assertSame(RuleColors.background("Blue"), rules[0].background)
         assertEquals(Color(0x10, 0x20, 0x30), rules[0].foreground)
+        assertEquals("AllIcons.Nodes.Folder", rules[0].icon)
         assertEquals(listOf("*.md", "My Notes.md", "!CHANGELOG.md"), GlobPatterns.split(rules[0].pattern))
+    }
+
+    fun `test icons are parsed and written in full and simple forms`() {
+        assertEquals("AllIcons.Nodes.Folder", RuleSetYaml.parseIcon("Folder"))
+        assertEquals("AllIcons.Nodes.Folder", RuleSetYaml.parseIcon("AllIcons.Nodes.Folder"))
+        assertEquals("AllIcons.Actions.CheckOut", RuleSetYaml.parseIcon("AllIcons.Actions.CheckOut"))
+    }
+
+    fun `test unknown icons are kept so rule sets load across IDE versions`() {
+        assertEquals("AllIcons.Providers.NotInThisIde", RuleSetYaml.parseIcon(" AllIcons.Providers.NotInThisIde "))
+
+        val rule = parse("rules:\n  - {id: a, name: A, icon: InvalidIcon}\n").rules.single()
+        assertEquals("InvalidIcon", rule.icon)
+        assertSame(RuleIcons.DEFAULT_ICON, RuleIcons.icon(rule.toRule()))
     }
 
     fun `test written yaml is readable and quotes the special scalars`() {

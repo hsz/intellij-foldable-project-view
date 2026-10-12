@@ -137,11 +137,14 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
      * The color combo box and the color picker editing the given rule color property (`foreground` or `background`).
      */
     private fun JComponent.colorChooser(property: String): Pair<ComboBox<*>, ColorPanel> {
-        val comboBoxes = UIUtil.findComponentsOfType(this, ComboBox::class.java)
+        val comboBoxes = UIUtil.findComponentsOfType(this, ComboBox::class.java).filter { it.name in listOf("foreground", "background") }
         val colorPanels = UIUtil.findComponentsOfType(this, ColorPanel::class.java)
         val index = comboBoxes.indexOfFirst { it.name == property }
         return comboBoxes[index] to colorPanels[index]
     }
+
+    private fun JComponent.iconChooser(): ComboBox<*> =
+        UIUtil.findComponentsOfType(this, ComboBox::class.java).single { it.name == "icon" }
 
     /**
      * Runs [block] with the project rules replaced by [rules], restoring the original ones afterward.
@@ -330,6 +333,33 @@ class FoldableProjectViewConfigurableTest : BasePlatformTestCase() {
             checkBox.isSelected = false
             apply()
             assertNull(project.service<FoldableProjectSettings>().rules[0].foreground)
+        }
+    }
+
+    fun `test rule icon is picked from the palette`() = withRules(Rule("Docs", "*.md")) {
+        withConfigurable(FoldableProjectViewConfigurable(project)) { component ->
+            component.selectRule(0)
+            val comboBox = component.iconChooser()
+            val checkBox = component.checkBox(message("foldableProjectView.settings.icon"))
+
+            assertEquals(RuleIcons.icons, (0 until comboBox.itemCount).map { comboBox.getItemAt(it) })
+            assertFalse(checkBox.isSelected)
+            assertFalse(comboBox.isEnabled)
+
+            checkBox.isSelected = true
+            assertTrue(comboBox.isEnabled)
+            assertEquals(RuleIcons.icons.first(), comboBox.selectedItem)
+
+            comboBox.selectedItem = RuleIcons.findRuleIcon("AllIcons.Nodes.Package")
+            assertTrue(isModified)
+            apply()
+
+            val stored = project.service<FoldableProjectSettings>().rules[0].icon
+            assertEquals("AllIcons.Nodes.Package", stored)
+
+            checkBox.isSelected = false
+            apply()
+            assertNull(project.service<FoldableProjectSettings>().rules[0].icon)
         }
     }
 

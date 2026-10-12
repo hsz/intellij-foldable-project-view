@@ -12,6 +12,7 @@ import ski.chrzanow.foldableprojectview.settings.Rule
 import ski.chrzanow.foldableprojectview.settings.RuleAction
 import ski.chrzanow.foldableprojectview.settings.RuleColor
 import ski.chrzanow.foldableprojectview.settings.RuleColors
+import ski.chrzanow.foldableprojectview.settings.RuleIcons
 import ski.chrzanow.foldableprojectview.settings.RuleType
 import java.awt.Color
 import java.nio.file.Path
@@ -62,6 +63,7 @@ object RuleSetYaml {
     private const val TYPE = "type"
     private const val BACKGROUND = "background"
     private const val FOREGROUND = "foreground"
+    private const val ICON = "icon"
     private const val ACTION = "action"
     private const val ENABLED = "enabled"
 
@@ -161,6 +163,7 @@ object RuleSetYaml {
             type = type,
             background = map[BACKGROUND]?.asString(BACKGROUND)?.let { parseColor(it, RuleColors.backgrounds) },
             foreground = map[FOREGROUND]?.asString(FOREGROUND)?.let { parseColor(it, RuleColors.foregrounds) },
+            icon = map[ICON]?.asString(ICON)?.let(::parseIcon),
             action = map[ACTION]?.asString(ACTION)?.let {
                 when (it) {
                     ACTION_GROUP -> RuleAction.GROUP
@@ -170,6 +173,16 @@ object RuleSetYaml {
             },
             enabled = map[ENABLED]?.asBoolean(ENABLED),
         )
+    }
+
+    /**
+     * Resolves an icon written as a full path (`AllIcons.Nodes.Folder`) or a simple name (`Folder`) to its full id.
+     * An icon unknown to this IDE is kept as written, so a rule set shared across IDE versions still loads;
+     * the group then falls back to the default icon, see [RuleIcons.icon].
+     */
+    fun parseIcon(text: String): String {
+        val trimmed = text.trim()
+        return RuleIcons.findRuleIcon(trimmed)?.id ?: trimmed
     }
 
     /**
@@ -240,6 +253,7 @@ object RuleSetYaml {
                 }
                 rule.background?.let { appendLine("    $BACKGROUND: ${scalar(formatColor(it))}") }
                 rule.foreground?.let { appendLine("    $FOREGROUND: ${scalar(formatColor(it))}") }
+                rule.icon?.let { appendLine("    $ICON: ${scalar(it)}") }
                 rule.action?.let { appendLine("    $ACTION: ${if (it == RuleAction.HIDE) ACTION_HIDE else ACTION_GROUP}") }
                 rule.enabled?.let { appendLine("    $ENABLED: $it") }
             }

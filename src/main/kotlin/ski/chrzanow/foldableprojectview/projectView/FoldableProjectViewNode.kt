@@ -1,6 +1,5 @@
 package ski.chrzanow.foldableprojectview.projectView
 
-import com.intellij.icons.AllIcons.General.CollapseComponent
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.projectView.ProjectViewNode
 import com.intellij.ide.projectView.ViewSettings
@@ -13,6 +12,7 @@ import com.intellij.ui.SimpleTextAttributes.GRAYED_ATTRIBUTES
 import com.intellij.ui.SimpleTextAttributes.STYLE_PLAIN
 import ski.chrzanow.foldableprojectview.FoldableProjectViewBundle.message
 import ski.chrzanow.foldableprojectview.settings.Rule
+import ski.chrzanow.foldableprojectview.settings.RuleIcons
 import ski.chrzanow.foldableprojectview.settings.RuleType
 
 /**
@@ -34,7 +34,7 @@ class FoldableProjectViewNode(
             }
             addText(ColoredFragment(rule.displayName, tooltip, SimpleTextAttributes(STYLE_PLAIN, rule.foreground)))
             addText(ColoredFragment(" ${children.size}", tooltip, GRAYED_ATTRIBUTES))
-            setIcon(CollapseComponent)
+            setIcon(RuleIcons.icon(rule))
         }
     }
 

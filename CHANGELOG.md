@@ -13,6 +13,7 @@
 - `Export Rules to File…` and `Save as User Defaults` actions in the toolbar of the rules table, writing the options and the rules of the settings to a `.foldableprojectview.yaml` or to the user `rules.yaml`
 - Rules got a stable `id` (derived from the name when not set), used by `extends` and by the per-project overrides
 - A JSON schema is attached to the rule set files for completion, documentation, and validation, when the bundled JSON plugin is available
+- Custom icons for folding rules: choose from a curated palette of built-in IDE icons in the rule editor or specify an icon identifier in rule set files (`icon` property) to customize group icons in the Project View and the rules table
 
 ### Fixed
 

@@ -93,6 +93,7 @@ data class RulePatch(
     val foreground: Color? = null,
     val action: RuleAction? = null,
     val enabled: Boolean? = null,
+    val icon: String? = null,
 ) {
 
     /**
@@ -107,6 +108,7 @@ data class RulePatch(
         foreground = other.foreground ?: foreground,
         action = other.action ?: action,
         enabled = other.enabled ?: enabled,
+        icon = other.icon ?: icon,
     )
 
     /**
@@ -126,6 +128,7 @@ data class RulePatch(
         foreground = foreground ?: rule.foreground,
         action = action ?: rule.action,
         enabled = enabled ?: rule.enabled,
+        icon = icon ?: rule.icon,
     )
 
     companion object {
@@ -142,6 +145,7 @@ data class RulePatch(
             foreground = rule.foreground,
             action = rule.action,
             enabled = rule.enabled,
+            icon = rule.icon,
         )
     }
 }

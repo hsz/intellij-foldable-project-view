@@ -99,6 +99,8 @@ data class Rule(
     var enabled: Boolean = true,
 
     var id: String = "",
+
+    var icon: String? = null,
 ) {
 
     /**

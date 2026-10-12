@@ -39,7 +39,7 @@ import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.MATCH_COUNT
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.MATCH_PREVIEW_LIMIT
 import ski.chrzanow.foldableprojectview.FoldableProjectViewConstants.REFRESH_DELAY
 import ski.chrzanow.foldableprojectview.bindColor
-import ski.chrzanow.foldableprojectview.bindColorControl
+import ski.chrzanow.foldableprojectview.bindOptionalControl
 import ski.chrzanow.foldableprojectview.bindSelectedItem
 import ski.chrzanow.foldableprojectview.bindText
 import ski.chrzanow.foldableprojectview.psi.search.GlobPatterns
@@ -228,16 +228,24 @@ class FoldableRulesEditor(
                     .bindSelectedItem(ruleProperty, Rule::action, RuleAction.GROUP)
             }.rowComment(message("foldableProjectView.settings.action.comment"), MAX_LINE_LENGTH_WORD_WRAP)
             row {
+                val iconCheckBox = checkBox(message("foldableProjectView.settings.icon"))
+                    .applyToComponent { setMnemonic('i') }
+                    .bindOptionalControl(ruleProperty, Rule::icon, RuleIcons.icons.first().id)
+
+                iconChooser(RuleIcons.icons, Rule::icon, iconCheckBox.selected)
+            }.rowComment(message("foldableProjectView.settings.icon.comment"), MAX_LINE_LENGTH_WORD_WRAP)
+                .enabledIf(groupActionPredicate)
+            row {
                 val foregroundCheckBox = checkBox(message("foldableProjectView.settings.foreground"))
                     .applyToComponent { setMnemonic('g') }
-                    .bindColorControl(ruleProperty, Rule::foreground, RuleColors.foregrounds.first())
+                    .bindOptionalControl(ruleProperty, Rule::foreground, RuleColors.foregrounds.first())
 
                 colorChooser(RuleColors.foregrounds, Rule::foreground, foregroundCheckBox.selected)
             }.enabledIf(groupActionPredicate)
             row {
                 val backgroundCheckBox = checkBox(message("foldableProjectView.settings.background"))
                     .applyToComponent { setMnemonic('b') }
-                    .bindColorControl(ruleProperty, Rule::background, RuleColors.backgrounds.first())
+                    .bindOptionalControl(ruleProperty, Rule::background, RuleColors.backgrounds.first())
 
                 colorChooser(RuleColors.backgrounds, Rule::background, backgroundCheckBox.selected)
             }.rowComment(message("foldableProjectView.settings.color.comment"), MAX_LINE_LENGTH_WORD_WRAP)
@@ -252,6 +260,62 @@ class FoldableRulesEditor(
         val project = project ?: return
         val path = ruleProperty.get()?.origin?.path ?: return
         LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)?.let { OpenFileDescriptor(project, it).navigate(true) }
+    }
+
+    /**
+     * Combo box with the built-in icons of the [palette].
+     */
+    private fun Row.iconChooser(
+        palette: List<RuleIcon>,
+        property: KMutableProperty1<Rule, String?>,
+        enabled: ComponentPredicate,
+    ) {
+        comboBox(palette, iconRenderer())
+            .applyToComponent { name = property.name }
+            .enabledIf(enabled)
+            .bindIconChoice(palette, property)
+    }
+
+    private fun iconRenderer() = SimpleListCellRenderer.create<RuleIcon> { label, value, _ ->
+        if (value != null) {
+            label.text = value.displayName
+            label.icon = value.icon
+        }
+    }
+
+    /**
+     * Keeps the selected item in sync with the icon of the edited rule.
+     */
+    private fun Cell<ComboBox<RuleIcon>>.bindIconChoice(
+        palette: List<RuleIcon>,
+        property: KMutableProperty1<Rule, String?>,
+    ) = applyToComponent {
+        val mutex = AtomicBoolean()
+
+        fun update(rule: Rule?) {
+            val iconId = rule?.let(property::get)
+            val item = if (iconId != null) {
+                val found = (0 until itemCount).map { getItemAt(it) }.firstOrNull { it.id.equals(iconId, ignoreCase = true) }
+                found ?: RuleIcons.findRuleIcon(iconId)?.also { addItem(it) } ?: palette.first()
+            } else {
+                palette.first()
+            }
+            selectedItem = item
+        }
+
+        update(ruleProperty.get())
+        ruleProperty.afterChange { rule ->
+            mutex.lockOrSkip { update(rule) }
+        }
+        addActionListener {
+            mutex.lockOrSkip {
+                ruleProperty.get()?.let { rule ->
+                    val selected = selectedItem as? RuleIcon
+                    property.set(rule, selected?.id)
+                    ruleProperty.set(rule)
+                }
+            }
+        }
     }
 
     /**
