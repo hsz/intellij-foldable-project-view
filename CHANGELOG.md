@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-21
+
 ### Added
 
 - Rule set files: folding rules and options can live in YAML files instead of the IDE settings – `.foldableprojectview.yaml` in the project root or a module content root (versioned with the project, no need to commit `.idea`), and `~/.config/foldableprojectview/rules.yaml` applied to every project. The files are merged with the IDE settings by rule `id`; the Project View is refreshed when they change
@@ -138,7 +140,8 @@
 - Live ProjectView preview
 - Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
 
-[Unreleased]: https://github.com/hsz/intellij-foldable-project-view/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/hsz/intellij-foldable-project-view/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.4...v2.1.0
 [1.1.4]: https://github.com/hsz/intellij-foldable-project-view/compare/v1.1.1...v1.1.4
