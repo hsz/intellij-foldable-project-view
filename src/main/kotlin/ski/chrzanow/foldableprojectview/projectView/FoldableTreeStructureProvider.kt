@@ -157,9 +157,10 @@ class FoldableTreeStructureProvider(private val project: Project) : TreeStructur
         }
         // Scope-based panes (`Project Files`, custom scopes) use the internal `ScopeViewTreeModel` nodes instead of the
         // `PsiDirectoryNode`s, and attach the content root node to the project node that has no virtual file.
+        // Folding groups also have no virtual file, but their children are not module roots.
         val parentNode = parent
         if (parentNode is ProjectViewNode<*> && parentNode !is PsiDirectoryNode &&
-            parentNode.virtualFile?.isDirectory != true
+            parentNode !is FoldableProjectViewNode && parentNode.virtualFile?.isDirectory != true
         ) {
             return true
         }

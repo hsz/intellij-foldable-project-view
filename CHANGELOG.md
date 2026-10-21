@@ -18,6 +18,7 @@
 ### Fixed
 
 - Selecting an empty rule, a rule with no matches in the preview, or the built-in `Ignored files` rule in the settings table no longer causes selection to snap back to the previous rule
+- Fix folding group nodes being treated as content roots
 
 ## [3.0.0] - 2026-10-11
 

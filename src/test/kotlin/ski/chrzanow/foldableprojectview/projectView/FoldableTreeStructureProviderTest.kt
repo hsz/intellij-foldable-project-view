@@ -318,6 +318,56 @@ class FoldableTreeStructureProviderTest : BasePlatformTestCase() {
         assertEquals(listOf("GUIDE.md"), result.names())
     }
 
+    fun `test ignored directories are not folded again inside the ignored files group`() {
+        settings.matchDirectories = true
+        settings.rules.add(Rule.ignoredFiles())
+
+        val file = myFixture.addFileToProject("ignored/nested/file.txt", "")
+        val ignoredDirectory = object : PsiDirectoryNode(project, file.containingDirectory.parentDirectory!!, ViewSettings.DEFAULT) {
+            override fun getFileStatus() = FileStatus.IGNORED
+        }
+        val nestedDirectory = object : PsiDirectoryNode(project, file.containingDirectory, ViewSettings.DEFAULT) {
+            override fun getFileStatus() = FileStatus.IGNORED
+        }
+        val ignoredFile = object : PsiFileNode(project, file, ViewSettings.DEFAULT) {
+            override fun getFileStatus() = FileStatus.IGNORED
+        }
+        val group = modify(children = listOf(ignoredDirectory)).groups().single()
+        assertEquals(listOf("ignored"), group.children.names())
+
+        // The Project View reparents the matched nodes when the group is expanded.
+        ignoredDirectory.setParent(group)
+        nestedDirectory.setParent(ignoredDirectory)
+        ignoredFile.setParent(nestedDirectory)
+
+        for (foldNestedDirectories in listOf(false, true)) {
+            settings.foldNestedDirectories = foldNestedDirectories
+
+            assertSameElements(
+                modify(parent = ignoredDirectory, children = listOf(nestedDirectory)),
+                listOf(nestedDirectory),
+            )
+            assertSameElements(
+                modify(parent = nestedDirectory, children = listOf(ignoredFile)),
+                listOf(ignoredFile),
+            )
+        }
+    }
+
+    fun `test directories in pattern groups are folded only when nested folding is enabled`() {
+        settings.matchDirectories = true
+        settings.rules.add(Rule("Docs", "docs/ *.md"))
+
+        val group = modify().groups().single()
+        val docs = group.children.filterIsInstance<PsiDirectoryNode>().single()
+        docs.setParent(group)
+
+        assertEquals(listOf("GUIDE.md"), modify(parent = docs).names())
+
+        settings.foldNestedDirectories = true
+        assertEquals(listOf("GUIDE.md"), modify(parent = docs).groups().single().children.names())
+    }
+
     fun `test rule edited in place is applied`() {
         val rule = Rule("Docs", "*.md")
         settings.rules.add(rule)
